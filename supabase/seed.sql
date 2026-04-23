@@ -1,0 +1,2 @@
+-- Optional dev fixtures. Core fund + UBI seed data lives in migrations.
+-- Example: INSERT extra test rows here after `supabase db reset`.
