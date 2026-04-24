@@ -13,7 +13,11 @@ COMMENT ON COLUMN parable_ledger.transactions.is_ubi IS 'True when revenue is ga
 COMMENT ON COLUMN parable_ledger.transactions.irs_category IS '990-oriented bucket label for exports (not a substitute for professional return prep).';
 COMMENT ON COLUMN parable_ledger.transactions.audit_flag IS 'Set at insert if automated rules flag for review; mutable only if append-only policy is relaxed.';
 
-CREATE OR REPLACE VIEW parable_ledger.v_transactions_compliance AS
+-- PG cannot rename view columns via CREATE OR REPLACE VIEW; drop dependents first.
+DROP VIEW IF EXISTS parable_ledger.rpt_irs_990t_summary CASCADE;
+DROP VIEW IF EXISTS parable_ledger.v_transactions_compliance CASCADE;
+
+CREATE VIEW parable_ledger.v_transactions_compliance AS
 SELECT
     t.id,
     t.fund_id,
@@ -39,6 +43,28 @@ SELECT
         ELSE COALESCE(NULLIF(trim(t.metadata ->> 'tax_lane'), ''), 'mission_exempt')
     END AS tax_category
 FROM parable_ledger.transactions t;
+
+CREATE OR REPLACE VIEW parable_ledger.rpt_irs_990t_summary AS
+SELECT
+    EXTRACT(YEAR FROM created_at)::integer AS tax_year,
+    SUM(amount) FILTER (
+        WHERE
+            is_ubi
+            AND tx_type <> 'reversal'
+    ) AS total_ubi_class_revenue,
+    CASE
+        WHEN COALESCE(
+            SUM(amount) FILTER (
+                WHERE
+                    is_ubi
+                    AND tx_type <> 'reversal'
+            ),
+            0
+        ) >= 1000 THEN 'REVIEW_990_T_THRESHOLD_TYPICALLY_1K_GROSS'
+        ELSE 'BELOW_COMMON_1K_INDICATOR'
+    END AS filing_indicator
+FROM parable_ledger.v_transactions_compliance
+GROUP BY 1;
 
 GRANT SELECT ON parable_ledger.v_transactions_compliance TO postgres, anon, authenticated, service_role;
 GRANT SELECT ON parable_ledger.rpt_irs_990t_summary TO postgres, anon, authenticated, service_role;

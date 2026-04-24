@@ -99,7 +99,7 @@ BEGIN
   SET
     is_locked = EXCLUDED.is_locked,
     locked_at = CASE WHEN EXCLUDED.is_locked THEN now() ELSE NULL END,
-    locked_by = CASE WHEN EXCLUDED.is_locked THEN auth.uid() ELSE NULL,
+    locked_by = CASE WHEN EXCLUDED.is_locked THEN auth.uid() ELSE NULL END,
     updated_at = now();
 END;
 $$;

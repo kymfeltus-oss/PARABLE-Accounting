@@ -1,6 +1,6 @@
 -- Multi-tenant white-label: tenants + tenant_id on transactions & compliance_mandates
 
-CREATE TABLE parable_ledger.tenants (
+CREATE TABLE IF NOT EXISTS parable_ledger.tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     slug TEXT NOT NULL UNIQUE,
     display_name TEXT NOT NULL,
@@ -16,9 +16,22 @@ CREATE TABLE parable_ledger.tenants (
 
 COMMENT ON COLUMN parable_ledger.tenants.legal_name IS 'Legal entity for board resolutions; app falls back to display_name when null.';
 
+-- Legacy bootstrap tables may require organization_name NOT NULL; multitenant-only rows omit it.
+INSERT INTO parable_ledger.tenants (slug, display_name, legal_name, primary_color, accent_color, organization_name)
+SELECT 'parable-main', 'PARABLE', 'PARABLE Ministry ERP (Demo)', '#22d3ee', '#050505', 'PARABLE Ministry ERP (Demo)'
+WHERE EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'tenants' AND column_name = 'organization_name'
+  )
+  AND NOT EXISTS (SELECT 1 FROM parable_ledger.tenants WHERE slug = 'parable-main');
+
 INSERT INTO parable_ledger.tenants (slug, display_name, legal_name, primary_color, accent_color)
-VALUES ('parable-main', 'PARABLE', 'PARABLE Ministry ERP (Demo)', '#22d3ee', '#050505')
-ON CONFLICT (slug) DO NOTHING;
+SELECT 'parable-main', 'PARABLE', 'PARABLE Ministry ERP (Demo)', '#22d3ee', '#050505'
+WHERE NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'tenants' AND column_name = 'organization_name'
+  )
+  AND NOT EXISTS (SELECT 1 FROM parable_ledger.tenants WHERE slug = 'parable-main');
 
 ALTER TABLE parable_ledger.transactions
 ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES parable_ledger.tenants (id);
@@ -89,5 +102,6 @@ GRANT INSERT, UPDATE, DELETE ON parable_ledger.tenants TO postgres, service_role
 
 ALTER TABLE parable_ledger.tenants ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS tenants_select_all ON parable_ledger.tenants;
 CREATE POLICY tenants_select_all
     ON parable_ledger.tenants FOR SELECT TO anon, authenticated USING (true);

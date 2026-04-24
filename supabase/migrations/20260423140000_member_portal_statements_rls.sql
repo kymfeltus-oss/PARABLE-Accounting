@@ -17,19 +17,45 @@ COMMENT ON COLUMN parable_ledger.congregation_members.auth_user_id IS
   'Supabase Auth user; when set, RLS on member_contributions can scope SELECT to this member.';
 
 -- Member-safe statement view (invoker RLS on underlying table)
-CREATE OR REPLACE VIEW parable_ledger.member_statements
-WITH (security_invoker = true) AS
-SELECT
-  mc.id,
-  mc.tenant_id,
-  mc.amount,
-  mf.fund_name,
-  COALESCE(mc."timestamp", mc.created_at) AS created_at,
-  mc.status
-FROM parable_ledger.member_contributions mc
-INNER JOIN parable_ledger.ministry_funds mf
-  ON mf.tenant_id = mc.tenant_id
- AND mf.fund_code = mc.fund_id;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'member_contributions' AND column_name = 'timestamp'
+  ) THEN
+    EXECUTE $vk$
+      CREATE OR REPLACE VIEW parable_ledger.member_statements
+      WITH (security_invoker = true) AS
+      SELECT
+        mc.id,
+        mc.tenant_id,
+        mc.amount,
+        mf.fund_name,
+        COALESCE(mc."timestamp", mc.created_at) AS created_at,
+        mc.status
+      FROM parable_ledger.member_contributions mc
+      INNER JOIN parable_ledger.ministry_funds mf
+        ON mf.tenant_id = mc.tenant_id
+       AND mf.fund_code = mc.fund_id
+    $vk$;
+  ELSE
+    EXECUTE $vk$
+      CREATE OR REPLACE VIEW parable_ledger.member_statements
+      WITH (security_invoker = true) AS
+      SELECT
+        mc.id,
+        mc.tenant_id,
+        mc.amount,
+        mf.fund_name,
+        mc.created_at AS created_at,
+        mc.status
+      FROM parable_ledger.member_contributions mc
+      INNER JOIN parable_ledger.ministry_funds mf
+        ON mf.tenant_id = mc.tenant_id
+       AND mf.fund_code = mc.fund_id
+    $vk$;
+  END IF;
+END $$;
 
 COMMENT ON VIEW parable_ledger.member_statements IS
   'YTD / history for members. Uses RLS on member_contributions for authenticated; anon ERP unchanged.';

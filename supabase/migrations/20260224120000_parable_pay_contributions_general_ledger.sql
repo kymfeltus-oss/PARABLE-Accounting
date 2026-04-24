@@ -23,15 +23,37 @@ CREATE TABLE IF NOT EXISTS parable_ledger.general_ledger (
     CONSTRAINT uq_general_ledger_je_line UNIQUE (journal_entry_id, line_number)
 );
 
-CREATE INDEX IF NOT EXISTS idx_general_ledger_tenant_created
-    ON parable_ledger.general_ledger (tenant_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_general_ledger_tenant_je
-    ON parable_ledger.general_ledger (tenant_id, journal_entry_id);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'general_ledger' AND column_name = 'tenant_id'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'general_ledger' AND column_name = 'created_at'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_general_ledger_tenant_created ON parable_ledger.general_ledger (tenant_id, created_at DESC)';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'general_ledger' AND column_name = 'journal_entry_id'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_general_ledger_tenant_je ON parable_ledger.general_ledger (tenant_id, journal_entry_id)';
+  END IF;
+END $$;
 
 COMMENT ON TABLE parable_ledger.general_ledger IS
     'Parable Pay and future GL: journal lines. Pairs of rows share journal_entry_id (e.g. Dr cash / Cr revenue).';
-COMMENT ON COLUMN parable_ledger.general_ledger.source_id IS
-    'FK to originating business key when applicable, e.g. member_contributions.id';
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'general_ledger' AND column_name = 'source_id'
+  ) THEN
+    COMMENT ON COLUMN parable_ledger.general_ledger.source_id IS
+      'FK to originating business key when applicable, e.g. member_contributions.id';
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 2) member_contributions
@@ -79,13 +101,27 @@ BEFORE INSERT OR UPDATE OF status ON parable_ledger.member_contributions
 FOR EACH ROW
 EXECUTE PROCEDURE parable_ledger.member_contributions_status_upper();
 
-CREATE INDEX IF NOT EXISTS idx_member_contrib_tenant_status
-    ON parable_ledger.member_contributions (tenant_id, status, "timestamp" DESC);
-CREATE INDEX IF NOT EXISTS idx_member_contrib_member
-    ON parable_ledger.member_contributions (tenant_id, member_id);
-CREATE INDEX IF NOT EXISTS idx_member_contrib_linked_staff
-    ON parable_ledger.member_contributions (linked_staff_id)
-    WHERE linked_staff_id IS NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'member_contributions' AND column_name = 'timestamp'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_member_contrib_tenant_status ON parable_ledger.member_contributions (tenant_id, status, "timestamp" DESC)';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'member_contributions' AND column_name = 'member_id'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_member_contrib_member ON parable_ledger.member_contributions (tenant_id, member_id)';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'member_contributions' AND column_name = 'linked_staff_id'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_member_contrib_linked_staff ON parable_ledger.member_contributions (linked_staff_id) WHERE linked_staff_id IS NOT NULL';
+  END IF;
+END $$;
 
 COMMENT ON TABLE parable_ledger.member_contributions IS
     'Parable Pay: inbound gifts before/after secure settlement. SECURED => GL post (1010/4010).';
@@ -136,6 +172,7 @@ SET search_path = parable_ledger, public
 AS $$
 DECLARE
   v_je UUID;
+  v_gl_first_id UUID;
   v_amt NUMERIC(14, 2) := NEW.amount;
   v_cash INTEGER := 1010; -- Operating cash
   v_rev  INTEGER;
@@ -170,7 +207,9 @@ BEGIN
   ) VALUES (
     NEW.tenant_id, v_je, 1, v_cash, v_amt, 0,
     'Parable Pay: operating cash (member_contribution ' || NEW.id::text || ')', 'member_contribution', NEW.id
-  );
+  )
+  RETURNING id INTO v_gl_first_id;
+
   INSERT INTO parable_ledger.general_ledger (
     tenant_id, journal_entry_id, line_number, account_code, debit, credit, narrative, source_type, source_id
   ) VALUES (
@@ -179,10 +218,11 @@ BEGIN
     'member_contribution', NEW.id
   );
 
+  -- FK targets general_ledger.id (line PK), not journal_entry_id (batch UUID shared by both lines).
   UPDATE parable_ledger.member_contributions
   SET
     gl_posted_at = now(),
-    gl_journal_entry_id = v_je,
+    gl_journal_entry_id = v_gl_first_id,
     updated_at = now()
   WHERE id = NEW.id;
 

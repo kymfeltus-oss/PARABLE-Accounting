@@ -11,11 +11,21 @@ CREATE TABLE IF NOT EXISTS parable_ledger.erp_payroll (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_erp_payroll_tenant_date
-  ON parable_ledger.erp_payroll (tenant_id, pay_date DESC);
-
-CREATE INDEX IF NOT EXISTS idx_erp_payroll_tenant_wage
-  ON parable_ledger.erp_payroll (tenant_id, wage_type);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'erp_payroll' AND column_name = 'pay_date'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_erp_payroll_tenant_date ON parable_ledger.erp_payroll (tenant_id, pay_date DESC)';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'erp_payroll' AND column_name = 'wage_type'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_erp_payroll_tenant_wage ON parable_ledger.erp_payroll (tenant_id, wage_type)';
+  END IF;
+END $$;
 
 COMMENT ON TABLE parable_ledger.erp_payroll IS
   'Per-line payroll amounts; hub sums ministerial_housing vs secular_wage for the UTC calendar month.';

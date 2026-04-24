@@ -29,9 +29,30 @@ CREATE TABLE IF NOT EXISTS parable_ledger.staff_onboarding (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_staff_onboarding_tenant ON parable_ledger.staff_onboarding (tenant_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_staff_onboarding_role ON parable_ledger.staff_onboarding (tenant_id, role_type);
-CREATE INDEX IF NOT EXISTS idx_staff_onboarding_status ON parable_ledger.staff_onboarding (tenant_id, onboarding_status);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'staff_onboarding' AND column_name = 'tenant_id'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'staff_onboarding' AND column_name = 'created_at'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_staff_onboarding_tenant ON parable_ledger.staff_onboarding (tenant_id, created_at DESC)';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'staff_onboarding' AND column_name = 'role_type'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_staff_onboarding_role ON parable_ledger.staff_onboarding (tenant_id, role_type)';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'parable_ledger' AND table_name = 'staff_onboarding' AND column_name = 'onboarding_status'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_staff_onboarding_status ON parable_ledger.staff_onboarding (tenant_id, onboarding_status)';
+  END IF;
+END $$;
 
 COMMENT ON TABLE parable_ledger.staff_onboarding IS
   'Employment onboarding + tax classification. Ministers: first payroll blocked until housing resolution in vault (app logic).';
@@ -46,6 +67,7 @@ CREATE POLICY staff_onboarding_all ON parable_ledger.staff_onboarding
   FOR ALL TO postgres, service_role, authenticated, anon
   USING (true) WITH CHECK (true);
 
+DROP TRIGGER IF EXISTS tr_staff_onboarding_updated ON parable_ledger.staff_onboarding;
 CREATE TRIGGER tr_staff_onboarding_updated
   BEFORE UPDATE ON parable_ledger.staff_onboarding
   FOR EACH ROW

@@ -47,30 +47,49 @@ export function Give({ onClose }: { onClose: () => void }) {
   const [txId, setTxId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  /** null = still checking; true = cash + revenue lines present; false = missing or query error */
   const [ucoa, setUcoa] = useState<boolean | null>(null);
+  const [coaCheckMessage, setCoaCheckMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!supabase || !tenantId) return;
     void (async () => {
-      const { data } = await supabase
+      setCoaCheckMessage(null);
+      const { data, error } = await supabase
         .schema("parable_ledger")
         .from("chart_of_accounts")
         .select("account_code")
         .eq("tenant_id", tenantId)
         .in("account_code", [1010, 4010]);
+      if (error) {
+        setUcoa(false);
+        setCoaCheckMessage(
+          `Could not read chart_of_accounts (${error.message}). Check RLS and that parable_ledger is exposed.`,
+        );
+        return;
+      }
       const s = new Set((data ?? []).map((r: { account_code: number }) => r.account_code));
-      setUcoa(s.has(1010) && s.has(4010));
+      const ok = s.has(1010) && s.has(4010);
+      setUcoa(ok);
+      if (!ok) {
+        setCoaCheckMessage(
+          "This tenant has no UCOA rows for account codes 1010 (cash) and 4010 (revenue). Seed chart_of_accounts for this tenant (see import_coa.sql / migrations) so ledger posting can validate.",
+        );
+      }
     })();
   }, [supabase, tenantId]);
 
   const onConfirm = useCallback(async () => {
-    if (!supabase || !tenantId || !linkedMember || amount == null || !fund || !freq) return;
-    if (ucoa === false) {
-      setErr("UCOA 1010/4010 missing for GL post.");
+    if (!supabase || !tenantId || !linkedMember || amount == null || !fund || !freq) {
+      setErr("Missing member, amount, fund, or frequency — go back a step.");
       return;
     }
     if (ucoa === null) {
-      setErr("UCOA check loading — wait a second.");
+      setErr("Still checking chart of accounts — wait a moment, then try again.");
+      return;
+    }
+    if (ucoa === false && !demoMode) {
+      setErr("UCOA 1010 and 4010 are required for this tenant. Seed chart_of_accounts, then try again.");
       return;
     }
     setErr(null);
@@ -277,12 +296,23 @@ export function Give({ onClose }: { onClose: () => void }) {
                 <p className="mt-1 font-mono text-lg tracking-widest text-white/90">VISA ···· 4242</p>
                 <p className="text-[9px] text-white/30">Stripe / Plaid vault — production</p>
               </div>
+              {coaCheckMessage && (
+                <p className="mx-auto mt-3 max-w-sm text-center text-[10px] leading-snug text-amber-200/85">{coaCheckMessage}</p>
+              )}
+              {ucoa === null && !coaCheckMessage && (
+                <p className="mx-auto mt-3 max-w-sm text-center text-[10px] text-white/45">Checking chart of accounts (1010 / 4010)…</p>
+              )}
+              {demoMode && ucoa === false && (
+                <p className="mx-auto mt-2 max-w-sm text-center text-[10px] text-cyan-200/70">
+                  Demo: UCOA lines missing — tap below to attempt insert anyway (DB may still error if ministry_funds or RLS block).
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => void onConfirm()}
                 className="mt-6 w-full max-w-sm rounded-2xl py-4 text-sm font-black uppercase tracking-widest text-[#0a0a0a] disabled:opacity-40"
                 style={{ background: GLOW, boxShadow: `0 0 36px color-mix(in srgb, ${GLOW} 45%, transparent)` }}
-                disabled={ucoa === false || ucoa === null}
+                disabled={syncing || (ucoa === false && !demoMode) || ucoa === null}
               >
                 1-TAP GIVE NOW
               </button>
