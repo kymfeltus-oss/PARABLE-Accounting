@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!_next/|_vercel/|api/|favicon\\.ico|.*\\..*).*)",
+      "destination": "/"
+    }
+  ]
+}
