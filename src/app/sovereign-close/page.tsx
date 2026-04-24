@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SovereignCloseWizard from "@/components/close/SovereignCloseWizard";
+import AutonomousCloseEngine from "@/components/close/AutonomousCloseEngine";
 import MinistryAppShell from "@/components/MinistryAppShell";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function SovereignClosePage() {
   return (
     <MinistryAppShell>
-      <SovereignCloseWizard />
+      <AutonomousCloseEngine />
     </MinistryAppShell>
   );
 }

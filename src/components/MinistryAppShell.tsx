@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import AuditModeToggle from "@/components/AuditModeToggle";
 import { useBrand } from "@/components/branding/BrandProvider";
@@ -18,74 +18,8 @@ import {
   downloadTextFile,
 } from "@/lib/exportLedgerCsv";
 import { seedDemoTenant } from "../../seedDemoData.js";
-
-type NavItem = { href: string; label: string };
-type NavSection = { title: string; items: NavItem[] };
-
-const FULL_NAV: NavSection[] = [
-  {
-    title: "Finance",
-    items: [
-      { href: "/autonomous-close", label: "Autonomous close" },
-      { href: "/sovereign-close", label: "Sovereign close" },
-      { href: "/erp-hub", label: "Financial hub (AP/AR)" },
-      { href: "/contractor-dashboard", label: "1099 contractors" },
-      { href: "/green-room", label: "Green Room payout" },
-      { href: "/chart-of-accounts", label: "Chart of accounts" },
-      { href: "/import-export", label: "Data sovereignty" },
-      { href: "#", label: "Journal entries" },
-      { href: "#", label: "Bank reconciliation" },
-    ],
-  },
-  {
-    title: "Ministry",
-    items: [
-      { href: "/member-hub", label: "Member hub" },
-      { href: "/staff-onboarding", label: "Staff Genesis" },
-      { href: "/ai-comm", label: "AI comm hub" },
-      { href: "/growth-command-center", label: "Growth command" },
-      { href: "/building-projects", label: "Building / CapEx" },
-      { href: "#", label: "Funds & designations" },
-      { href: "#", label: "Giving batches" },
-      { href: "#", label: "Vendors & bills" },
-    ],
-  },
-  {
-    title: "Insight",
-    items: [
-      { href: "/sovereign-accord", label: "Sovereign Accord" },
-      { href: "/irs-guardian", label: "IRS Guardian" },
-      { href: "/compliance", label: "990 prep & UBI" },
-      { href: "/quarterly-review", label: "EOQ 941" },
-      { href: "/cfo-summary", label: "CFO compliance" },
-      { href: "/sovereign-vault", label: "Sovereign vault" },
-      { href: "/contractor-dashboard", label: "1099 contractors" },
-      { href: "#", label: "Reports" },
-      { href: "#", label: "Budget vs actual" },
-    ],
-  },
-];
-
-const AUDIT_NAV: NavSection[] = [
-  {
-    title: "Compliance",
-    items: [
-      { href: "/sovereign-accord", label: "Sovereign Accord" },
-      { href: "/compliance", label: "990 / UBI" },
-      { href: "/quarterly-review", label: "EOQ 941" },
-      { href: "/cfo-summary", label: "CFO compliance" },
-      { href: "/sovereign-vault", label: "Sovereign vault" },
-      { href: "/contractor-dashboard", label: "1099 contractors" },
-    ],
-  },
-  {
-    title: "Records",
-    items: [
-      { href: "/erp-hub", label: "Financial hub" },
-      { href: "#", label: "General ledger (CSV)" },
-    ],
-  },
-];
+import Sidebar from "@/components/Sidebar";
+import BackToDashboardButton from "@/components/navigation/BackToDashboardButton";
 
 function playTermBeep() {
   if (typeof window === "undefined") return;
@@ -115,7 +49,6 @@ export default function MinistryAppShell({ children }: { children: React.ReactNo
   const [simGlitch, setSimGlitch] = useState(0);
   const [seedBusy, setSeedBusy] = useState(false);
   const [seedNote, setSeedNote] = useState<string | null>(null);
-  const nav = useMemo(() => (auditMode ? AUDIT_NAV : FULL_NAV), [auditMode]);
   const displayName = tenant?.display_name ?? "PARABLE";
 
   const onSimToggle = useCallback(
@@ -243,45 +176,7 @@ export default function MinistryAppShell({ children }: { children: React.ReactNo
             <SimulationModeBar {...simBarProps} />
           </motion.div>
         </div>
-        <nav className="ministry-scroll flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
-          {nav.map((section) => (
-            <div key={section.title}>
-              <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
-                {section.title}
-              </p>
-              <ul className="flex flex-col gap-0.5">
-                {section.items.map((item) => {
-                  const accent =
-                    auditMode && (item.href === "/sovereign-accord" || item.href === "/compliance");
-                  const rowClass = [
-                    "block w-full rounded-lg px-2 py-2 text-left text-sm transition",
-                    accent
-                      ? "bg-neutral-200 font-semibold text-neutral-900 ring-1 ring-neutral-400"
-                      : auditMode
-                        ? "text-neutral-700 hover:bg-neutral-200"
-                        : "text-white/65 hover:bg-white/[0.06] hover:text-[var(--brand-cyber)]",
-                  ].join(" ");
-                  if (item.label === "General ledger (CSV)") {
-                    return (
-                      <li key={item.label}>
-                        <button type="button" onClick={onGlCsv} className={rowClass}>
-                          {item.label}
-                        </button>
-                      </li>
-                    );
-                  }
-                  return (
-                    <li key={item.label}>
-                      <Link href={item.href} className={rowClass}>
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </nav>
+        <Sidebar auditMode={auditMode} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -352,7 +247,10 @@ export default function MinistryAppShell({ children }: { children: React.ReactNo
           </div>
         </header>
 
-        <main className="ministry-scroll min-h-0 flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
+        <main className="ministry-scroll min-h-0 flex-1 overflow-y-auto p-4 md:p-8">
+          <BackToDashboardButton />
+          {children}
+        </main>
       </div>
       </div>
     </div>

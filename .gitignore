@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Sunday scheduler / Node staging (autonomous health JSON)
+/data
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

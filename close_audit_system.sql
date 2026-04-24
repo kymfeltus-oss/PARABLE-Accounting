@@ -1,0 +1,66 @@
+-- =============================================================================
+-- PARABLE: Institutional audit log for month-end close (per task, per period)
+-- Run in Supabase SQL Editor after parable_ledger and staff_onboarding exist.
+-- Timestamps are written with DEFAULT now() in PostgreSQL (server time).
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS parable_ledger.close_checklists (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES parable_ledger.tenants (id) ON DELETE CASCADE,
+    reporting_period TEXT NOT NULL,
+    gate_number INT NOT NULL CHECK (gate_number >= 1 AND gate_number <= 4),
+    task_name TEXT NOT NULL,
+    completed_by_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+    verifier_name TEXT,
+    completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_close_checklist_period_task UNIQUE (tenant_id, reporting_period, task_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_close_checklist_tenant_period
+    ON parable_ledger.close_checklists (tenant_id, reporting_period, gate_number);
+
+COMMENT ON TABLE parable_ledger.close_checklists IS
+    'Legal audit chain for close: one row per task per (tenant, mm/yy period); completed_at is database time.';
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON parable_ledger.close_checklists TO postgres, service_role, authenticated, anon;
+ALTER TABLE parable_ledger.close_checklists ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS close_checklists_all ON parable_ledger.close_checklists;
+CREATE POLICY close_checklists_all ON parable_ledger.close_checklists
+    FOR ALL TO postgres, service_role, authenticated, anon USING (true) WITH CHECK (true);
+
+ALTER TABLE parable_ledger.close_checklists
+    ADD COLUMN IF NOT EXISTS verifier_staff_id UUID REFERENCES parable_ledger.staff_onboarding (id) ON DELETE SET NULL;
+
+ALTER TABLE parable_ledger.close_checklists
+    ADD COLUMN IF NOT EXISTS attestation_sha256 TEXT;
+
+-- Staff for dropdown: ministry roster (id + display name) — not auth users
+CREATE OR REPLACE VIEW parable_ledger.view_staff_directory AS
+SELECT
+    so.id AS id,
+    so.full_name AS staff_name,
+    so.tenant_id
+FROM parable_ledger.staff_onboarding so
+WHERE so.full_name IS NOT NULL AND btrim(so.full_name) <> '';
+
+GRANT SELECT ON parable_ledger.view_staff_directory TO postgres, service_role, authenticated, anon;
+
+-- Enforce server-side timestamp on any insert/update
+CREATE OR REPLACE FUNCTION parable_ledger.close_checklists_set_completed_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.completed_at := now();
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS tr_close_checklists_at ON parable_ledger.close_checklists;
+CREATE TRIGGER tr_close_checklists_at
+    BEFORE INSERT OR UPDATE ON parable_ledger.close_checklists
+    FOR EACH ROW
+    EXECUTE PROCEDURE parable_ledger.close_checklists_set_completed_at();
+
+-- Optional: add current auth user to completed_by on insert (client still sends name from dropdown)
+NOTIFY pgrst, 'reload schema';

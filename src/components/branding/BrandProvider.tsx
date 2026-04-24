@@ -1,7 +1,8 @@
 "use client";
 
 import { getSupabaseBrowser } from "@/lib/supabase/browser-client";
-import { applyTenantCssVars } from "@/lib/brandCss";
+import { PARABLE_DEFAULT_TENANT_SLUG } from "@sovereign/supabaseClient.js";
+import { applyTenantCssVars, TENANT_GLOW_FALLBACK } from "@/lib/brandCss";
 import type { TenantRow } from "@/types/tenant";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -16,11 +17,11 @@ export type BrandContextValue = {
 
 const BrandContext = createContext<BrandContextValue | null>(null);
 
-const DEFAULT_SLUG = "parable-main";
+const DEFAULT_SLUG = PARABLE_DEFAULT_TENANT_SLUG;
 
 function defaultTenantCss() {
   if (typeof document === "undefined") return;
-  applyTenantCssVars(document.documentElement, "#22d3ee", "#050505", "#00f2ff");
+  applyTenantCssVars(document.documentElement, TENANT_GLOW_FALLBACK, "#050505", TENANT_GLOW_FALLBACK);
 }
 
 export function BrandProvider({ children }: { children: ReactNode }) {
@@ -84,7 +85,12 @@ export function BrandProvider({ children }: { children: ReactNode }) {
       setTenant(row);
       setError(null);
       setReady(true);
-      applyTenantCssVars(document.documentElement, row.primary_color, row.accent_color, row.primary_color);
+      applyTenantCssVars(
+        document.documentElement,
+        (row.primary_color && row.primary_color.trim()) || TENANT_GLOW_FALLBACK,
+        (row.accent_color && row.accent_color.trim()) || "#0a0a0a",
+        (row.primary_color && row.primary_color.trim()) || TENANT_GLOW_FALLBACK,
+      );
     };
 
     void run();

@@ -74,7 +74,7 @@ export async function handleStreamRevenue(supabase, payload) {
     const tenantSlug =
       payload.tenantSlug ??
       (typeof Deno !== "undefined" ? Deno.env.get("DEFAULT_TENANT_SLUG") : undefined) ??
-      "parable-main";
+      "parable-master";
     const { data: tenantRow, error: tenantErr } = await supabase
       .schema("parable_ledger")
       .from("tenants")

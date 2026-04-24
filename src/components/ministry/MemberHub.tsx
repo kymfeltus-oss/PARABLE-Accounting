@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useBrand } from "@/components/branding/BrandProvider";
+import { useActiveMember } from "@/context/ActiveMemberContext";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-client";
 import { averageMonthlyGivingSustainability, calculateMemberYOY } from "@/lib/growthFromRoot.js";
 import MemberDossier, { type DossierMember } from "@/components/ministry/MemberDossier";
@@ -25,6 +26,7 @@ const DEMO: Member[] = [
 
 export default function MemberHub() {
   const { tenant, ready } = useBrand();
+  const { setActiveMember } = useActiveMember();
   const supabase = getSupabaseBrowser();
   const [members, setMembers] = useState<Member[]>([]);
   const [ytdByMember, setYtdByMember] = useState<Record<string, number>>({});
@@ -125,10 +127,14 @@ export default function MemberHub() {
 
   return (
     <div className="space-y-10 p-2 text-white sm:p-4" style={{ background: "linear-gradient(180deg,#0a0a0a, #050505 40%)" }}>
-      <p className="text-center text-[9px] uppercase tracking-widest text-zinc-500">
+        <p className="text-center text-[9px] uppercase tracking-widest text-zinc-500">
         Congregation side — org payroll &amp; staff onboarding:{" "}
         <Link href="/staff-onboarding" className="text-cyan-500/80 hover:underline">
           Staff Genesis
+        </Link>
+        {" · "}
+        <Link href="/members/parable-pay" className="text-cyan-500/80 hover:underline">
+          Parable Pay
         </Link>
       </p>
       {useDemo && <p className="text-center text-xs text-amber-200/80">Demo sample — add rows to congregation_members to replace.</p>}
@@ -182,7 +188,8 @@ export default function MemberHub() {
               <tr
                 key={m.id}
                 className="hover:bg-white/[0.04] cursor-pointer"
-                onClick={() =>
+                onClick={() => {
+                  setActiveMember({ id: m.id, full_name: m.full_name });
                   setDossier({
                     id: m.id,
                     full_name: m.full_name,
@@ -190,8 +197,8 @@ export default function MemberHub() {
                     joined_at: m.joined_at,
                     created_at: m.created_at,
                     onboarding_stage: m.onboarding_stage,
-                  })
-                }
+                  });
+                }}
               >
                 <td className="p-4 font-semibold">{m.full_name}</td>
                 <td className="p-4 font-mono text-xs opacity-70">{(m.joined_at || m.created_at).slice(0, 10)}</td>

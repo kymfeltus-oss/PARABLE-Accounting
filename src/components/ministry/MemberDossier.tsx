@@ -152,6 +152,26 @@ export default function MemberDossier({ member, onClose, ytdCentsOrUsd, useDemoD
     void load();
   }, [load]);
 
+  // Parable Pay → member_contributions: refresh giving history as soon as a new SECURED post lands.
+  useEffect(() => {
+    if (!supabase || !tenant?.id || !member || useDemoData) {
+      return;
+    }
+    const ch = supabase
+      .channel(`dossier-member-pp-${member.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "parable_ledger", table: "member_contributions", filter: `member_id=eq.${member.id}` },
+        () => {
+          void load();
+        }
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(ch);
+    };
+  }, [supabase, tenant?.id, member, useDemoData, load]);
+
   const st = member
     ? effectiveOnboardingStage(
         { onboarding_stage: member.onboarding_stage, joined_at: member.joined_at, created_at: member.created_at },
@@ -264,7 +284,8 @@ export default function MemberDossier({ member, onClose, ytdCentsOrUsd, useDemoD
                   Giving history
                 </h3>
                 <p className="text-xs text-zinc-500">
-                  Revenue / donation lines · restricted ${report.restricted.toFixed(2)} / unrestricted ${report.unrestricted.toFixed(2)} · YTD {report.year}
+                  Donations (metadata) + Parable Pay (SECURED) · restricted ${report.restricted.toFixed(2)} / unrestricted $
+                  {report.unrestricted.toFixed(2)} · YTD {report.year}
                 </p>
                 <div className="rounded-2xl border border-white/10 bg-black/40 p-3">{lineChart(report.monthly, { accent: "#4ade80", w: 220, h: 72 })}</div>
                 <p className="text-sm leading-snug text-zinc-200">

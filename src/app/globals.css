@@ -116,6 +116,38 @@ body {
   background: rgb(var(--brand-cyber-rgb) / 0.4);
 }
 
+/* Accounting sub-menu: thin rail; thumb appears on hover (Foundry sidebar) */
+.sovereign-sidebar-rail {
+  min-height: 0;
+}
+
+.sovereign-submenu-hover-scroll {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sovereign-submenu-hover-scroll:hover {
+  scrollbar-color: rgb(var(--brand-cyber-rgb) / 0.4) transparent;
+}
+
+.sovereign-submenu-hover-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sovereign-submenu-hover-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.sovereign-submenu-hover-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgb(var(--brand-cyber-rgb) / 0.28);
+}
+
+.sovereign-submenu-hover-scroll:hover::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--brand-cyber-rgb) / 0.45);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Audit Mode — institutional high-contrast (html.audit-mode)                */
 /* -------------------------------------------------------------------------- */
@@ -152,6 +184,14 @@ html.audit-mode .ministry-scroll {
 }
 
 html.audit-mode .ministry-scroll::-webkit-scrollbar-thumb {
+  background: #b0b0b0;
+}
+
+html.audit-mode .sovereign-submenu-hover-scroll:hover {
+  scrollbar-color: #999 transparent;
+}
+
+html.audit-mode .sovereign-submenu-hover-scroll:hover::-webkit-scrollbar-thumb {
   background: #b0b0b0;
 }
 

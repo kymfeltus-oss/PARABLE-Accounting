@@ -18,12 +18,26 @@ export function hexToRgbSpace(hex: string): string | null {
   return `${r} ${g} ${b}`;
 }
 
+/**
+ * Autonomous / Sovereign close and shell components use `var(--tenant-glow, #22d3ee)` for
+ * “SECURED” and progress—mirrors institutional `tenants.primary_color` with safe fallback.
+ */
+export const TENANT_GLOW_FALLBACK = "#22d3ee";
+
+/** Use with `var(--tenant-glow)` set on `:root` by `applyTenantCssVars` / tenant fetch. */
+export function cssTenantGlow(percent: number) {
+  return `color-mix(in srgb, var(--tenant-glow, ${TENANT_GLOW_FALLBACK}) ${percent}%, transparent)`;
+}
+
 export function applyTenantCssVars(root: HTMLElement, primaryHex: string, accentHex: string, cyberHex?: string) {
-  const glowRgb = hexToRgbSpace(primaryHex);
+  const pr = (primaryHex || "").trim() || TENANT_GLOW_FALLBACK;
+  const glowRgb = hexToRgbSpace(pr);
   const accentRgb = hexToRgbSpace(accentHex);
-  const cyber = cyberHex ?? primaryHex;
+  const cyber = (cyberHex && cyberHex.trim()) || pr;
   const cyberRgb = hexToRgbSpace(cyber) ?? glowRgb;
-  root.style.setProperty("--brand-glow", primaryHex);
+  root.style.setProperty("--tenant-glow", pr);
+  if (glowRgb) root.style.setProperty("--tenant-glow-rgb", glowRgb);
+  root.style.setProperty("--brand-glow", pr);
   if (glowRgb) root.style.setProperty("--brand-glow-rgb", glowRgb);
   root.style.setProperty("--brand-surface", accentHex);
   if (accentRgb) root.style.setProperty("--brand-surface-rgb", accentRgb);

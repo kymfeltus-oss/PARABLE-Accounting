@@ -9,6 +9,9 @@ import { evaluateApW9Compliance, type ApW9Compliance } from "@/lib/apW9Complianc
 import { loadHousingShieldForHub } from "@/lib/housingHubStatus";
 import Link from "next/link";
 import MonthEndClose from "./MonthEndClose";
+import PlaidLinkPanel from "./PlaidLinkPanel";
+import ParablePayArLiveFeed from "./ParablePayArLiveFeed";
+import TitheCheckoutButton from "./TitheCheckoutButton";
 
 function GlassButton({
   children,
@@ -188,6 +191,24 @@ export default function FinancialHub() {
         </div>
       )}
 
+      <section
+        className="rounded-3xl border border-cyan-500/15 p-5 sm:p-6"
+        style={{ background: "linear-gradient(180deg, rgba(0,242,255,0.04), #080808)" }}
+        aria-label="Sovereign financial architecture"
+      >
+        <h2
+          className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-300/80"
+          style={{ textShadow: "0 0 20px var(--brand-glow-rgb, 34, 211, 238, 0.15)" }}
+        >
+          Financial architecture
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500">Stripe (tithes → UCOA 4010 metadata) & Plaid (bank → <code>erp_ledger</code> / unverified import).</p>
+        <div className="mt-4 grid gap-5 lg:grid-cols-2">
+          {tenant?.id ? <TitheCheckoutButton tenantId={tenant.id} /> : null}
+          <PlaidLinkPanel />
+        </div>
+      </section>
+
       {housingHub && !housingHub.skipped && housingHub.ministerCount > 0 && (
         <div
           className={`rounded-2xl border p-3 text-sm ${
@@ -308,6 +329,7 @@ export default function FinancialHub() {
         >
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Receivables (AR) — sub-ledger</h2>
           <p className="mt-1 text-sm text-zinc-500">Pledge collection integrity (restricted AR vs scheduled)</p>
+          <ParablePayArLiveFeed tenantId={tenant?.id} />
           {pledgeAr.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-500">No restricted pledge lines — seed `accounts_receivable` with is_restricted = true.</p>
           ) : (

@@ -2,6 +2,7 @@
   "name": "parable-ministry-erp",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev -p 3004",
     "build": "next build",
@@ -11,15 +12,20 @@
     "db:stop": "npx supabase@latest stop",
     "db:reset": "npx supabase@latest db reset",
     "db:push": "npx supabase@latest db push",
-    "db:types": "npx supabase@latest gen types typescript --linked > src/types/database.types.ts"
+    "db:types": "npx supabase@latest gen types typescript --linked > src/types/database.types.ts",
+    "scheduler:sunday": "node --env-file=.env.local ./sundayScheduler.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
     "framer-motion": "^12.38.0",
     "jszip": "^3.10.1",
     "next": "16.2.4",
+    "node-cron": "^3.0.3",
+    "plaid": "^42.1.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-plaid-link": "^4.1.1",
+    "stripe": "^22.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

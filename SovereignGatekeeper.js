@@ -31,9 +31,12 @@ export function getNextGateId(current) {
 /**
  * Rich gate payload (partial allowed). Names align with UI / Supabase fetches.
  * @typedef {object} GateData
- * @property {number} [pendingAuditCount] - Audit Guard: rows missing receipt or W-9 (high spend)
- * @property {boolean} [givingCategorized] - tithes/streams/venue giving bucketed
- * @property {boolean} [apBillsEntered] - AP has bills for the month
+ * @property {boolean} [checklistG1Complete] - All Gate 1 checklist rows attested
+ * @property {boolean} [checklistG2Complete] - All Gate 2 checklist rows attested
+ * @property {boolean} [checklistG3Complete] - All Gate 3 checklist rows attested
+ * @property {boolean} [checklistG4Complete] - All Gate 4 checklist rows attested
+ * @property {boolean} [institutionalReconciliationZero] - G2: API verified $0.00 bucket variance
+ * @property {boolean} [certificateOfFinancialIntegrity] - G4: board pack + dual sign + capturable signature
  * @property {number} [unresolvedViolations] - any open compliance rows
  * @property {number} [unresolvedCriticalViolations] - CRITICAL or POLIT* not resolved
  * @property {number} [level2ViolationCount] - e.g. HIGH (optional breach email tier)
@@ -61,23 +64,23 @@ export function evaluateCurrentGate(gate, d) {
   const g = d ?? {};
   switch (gate) {
     case "GATE_INPUT": {
-      const aud = g.pendingAuditCount ?? 0;
-      if (aud > 0) {
+      if (g.checklistG1Complete !== true) {
         return {
           ok: false,
-          code: "INPUT_AUDIT",
-          message: "Audit Guard: one or more items are pending (receipt, W-9, or other documentation).",
+          code: "G1_CL",
+          message: "Complete the Gate 1 checklist: tithes/offerings attested and timestamped in the audit chain for this period.",
         };
-      }
-      if (g.givingCategorized === false) {
-        return { ok: false, code: "INPUT_GIVING", message: "Categorize tithes, streams, and in-person giving for the period." };
-      }
-      if (g.apBillsEntered === false) {
-        return { ok: false, code: "INPUT_AP", message: "Enter or import AP bills (maintenance, guest honoraria, operations) for the pre-close month." };
       }
       return { ok: true };
     }
     case "GATE_SHIELD": {
+      if (g.checklistG3Complete !== true) {
+        return {
+          ok: false,
+          code: "G3_CL",
+          message: "Complete the Gate 3 checklist (AI internal controls, adjusting entries) with verifier and timestamp for each line.",
+        };
+      }
       const n = g.unresolvedViolations ?? 0;
       if (g.boardOverrideAcknowledged) {
         return { ok: true };
@@ -116,6 +119,20 @@ export function evaluateCurrentGate(gate, d) {
           message: `Contractor 1099 watch: ${c} high-spend line(s) without active W-9 / watchlist coverage.`,
         };
       }
+      if (g.institutionalReconciliationZero !== true) {
+        return {
+          ok: false,
+          code: "REC_INST",
+          message: "Institutional reconciliation: cash, restricted, AP, and AR buckets must show $0.00 net variance before advancing.",
+        };
+      }
+      if (g.checklistG2Complete !== true) {
+        return {
+          ok: false,
+          code: "G2_CL",
+          message: "Complete the Gate 2 checklist: bank, restricted, AP, and AR rows attested with verifier and timestamp.",
+        };
+      }
       return { ok: true };
     }
     case "GATE_RESTRICTED": {
@@ -128,6 +145,13 @@ export function evaluateCurrentGate(gate, d) {
       return { ok: true };
     }
     case "GATE_SEAL": {
+      if (g.checklistG4Complete !== true) {
+        return {
+          ok: false,
+          code: "G4_CL",
+          message: "Complete the Gate 4 checklist: financial distribution (incl. balance sheet, P&L, cash flow, analysis) with attestation for each line.",
+        };
+      }
       if (g.vaultGeneralLiabilityOk === false) {
         return {
           ok: false,
@@ -141,6 +165,14 @@ export function evaluateCurrentGate(gate, d) {
       }
       if (!g.secondSignerDone) {
         return { ok: false, code: "SEAL_2", message: "Second sign-off (treasurer or lead pastor) required to vault-lock the month." };
+      }
+      if (g.certificateOfFinancialIntegrity !== true) {
+        return {
+          ok: false,
+          code: "SEAL_CERT",
+          message:
+            "Open the board pack (print/save PDF), complete both attestations, and capture the digital line to issue the Certificate of Financial Integrity.",
+        };
       }
       return { ok: true };
     }
