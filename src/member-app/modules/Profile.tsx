@@ -41,8 +41,11 @@ export function Profile() {
           <p className="mt-1 text-amber-200/90">
             Not connected. Current <span className="font-mono">NEXT_PUBLIC_TENANT_SLUG</span>:{" "}
             <span className="font-mono">{tenantSlugEnv?.trim() || "(unset — app defaults to parable-master)"}</span>
-            {brandError ? ` — ${brandError}` : ""}. If your DB slug differs, set the env var to that slug or run{" "}
-            <span className="font-mono">fix_tenant_slug.sql</span>.
+            {brandError ? ` — ${brandError}` : ""}. In Supabase SQL Editor run{" "}
+            <span className="font-mono">select slug from parable_ledger.tenants;</span> — if there is no{" "}
+            <span className="font-mono">parable-master</span> row, run <span className="font-mono">fix_tenant_slug.sql</span>{" "}
+            (it inserts one) or apply migration <span className="font-mono">20260423170000_seed_tenant_parable_master_if_missing.sql</span>
+            , then <span className="font-mono">NOTIFY pgrst, &apos;reload schema&apos;;</span>. If a different slug appears, set the env var to match it.
           </p>
         )}
       </div>

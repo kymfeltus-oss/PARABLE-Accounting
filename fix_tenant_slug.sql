@@ -60,5 +60,18 @@ $$;
 ALTER TABLE parable_ledger.tenants
     ALTER COLUMN slug SET NOT NULL;
 
--- 8) Refresh PostgREST
+-- 8) Canonical row if the table had no parable-master (e.g. empty or only random slugs from step 5)
+-- Requires white-label / multitenant columns: slug, display_name, legal_name, primary_color, accent_color.
+INSERT INTO parable_ledger.tenants (slug, display_name, legal_name, primary_color, accent_color)
+SELECT
+  'parable-master',
+  'PARABLE Master Entity',
+  'PARABLE Ministry ERP (Demo)',
+  '#22d3ee',
+  '#050505'
+WHERE NOT EXISTS (
+  SELECT 1 FROM parable_ledger.tenants WHERE slug = 'parable-master'
+);
+
+-- 9) Refresh PostgREST
 NOTIFY pgrst, 'reload schema';
