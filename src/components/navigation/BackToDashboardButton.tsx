@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuditMode } from "@/context/AuditModeContext";
 
-const STAFF_DASHBOARD_HREF = "/command-center";
+const STAFF_DASHBOARD_HREF = "/operations";
 
 type Props = {
   /** Default: staff command center (Operations dashboard). Home `/` is the member hub. */

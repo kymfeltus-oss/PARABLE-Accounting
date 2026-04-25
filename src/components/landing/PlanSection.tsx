@@ -4,12 +4,28 @@ import Link from "next/link";
 import { useState } from "react";
 import { Check, PlayCircle, Sparkles, ChevronUp } from "lucide-react";
 import SmallBusinessPlanColumns from "@/components/landing/SmallBusinessPlanColumns";
+import { findPlanByName, parseCurrencyValue, saveSelectedPlan } from "@/lib/pricing";
 
 type Segment = "small" | "midsize";
 
 export default function PlanSection() {
   const [segment, setSegment] = useState<Segment>("small");
   const [freeTrial, setFreeTrial] = useState(true);
+
+  const handleChooseAdvanced = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const card = e.currentTarget.closest("article");
+    if (!card) return;
+    const planName = card.getAttribute("data-plan-name") ?? "Advanced";
+    const displayedPrice = card.getAttribute("data-plan-price") ?? "$0";
+    const matched = findPlanByName(planName);
+    if (!matched) return;
+    saveSelectedPlan({
+      planId: matched.id,
+      planName,
+      monthlyPrice: parseCurrencyValue(displayedPrice),
+      discountLabel: matched.discountLabel,
+    });
+  };
 
   return (
     <section
@@ -73,14 +89,9 @@ export default function PlanSection() {
 
         <div className="mx-auto mt-6 flex w-full max-w-4xl flex-col items-stretch justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-4 sm:mt-8 sm:flex-row sm:items-center sm:gap-6 sm:px-5">
           <p className="min-w-0 text-left text-sm font-medium leading-snug text-slate-800">
-            <span className="font-bold text-slate-950">
-              50% off
-            </span>{" "}
-            for 3 months* and
-            <br className="hidden sm:block" />{" "}
             <span className="whitespace-nowrap sm:whitespace-normal">Live Expert Assisted FREE for 30 days*</span>
             <span className="mt-1 block text-xs font-normal text-slate-600">
-              Choose plan first, add payroll, then checkout
+              Choose plan first, add PARABLE Giving, then checkout
             </span>
           </p>
           <div className="flex shrink-0 items-center justify-center gap-3 sm:justify-end">
@@ -123,7 +134,11 @@ export default function PlanSection() {
           <SmallBusinessPlanColumns />
         ) : (
           <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
-            <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <article
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+              data-plan-name="Advanced"
+              data-plan-price="$137.50"
+            >
               <div className="bg-slate-950 px-4 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-white">
                 Best of PARABLE
               </div>
@@ -138,6 +153,7 @@ export default function PlanSection() {
                 <p className="mt-1 text-xs text-slate-600">Save 50% for 3 months*</p>
                 <Link
                   href="/register"
+                  onClick={handleChooseAdvanced}
                   className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-slate-950 px-3 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-slate-800"
                 >
                   Choose plan
@@ -246,7 +262,7 @@ export default function PlanSection() {
                 across multi-site campuses, restricted funds, and finance teams.
               </p>
               <Link
-                href="/command-center"
+                href="/operations"
                 className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-slate-950 px-3 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-slate-800"
               >
                 Learn more
@@ -282,7 +298,7 @@ export default function PlanSection() {
               </div>
 
               <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                {["Payroll", "Commerce", "Support"].map((item) => (
+                {["PARABLE Giving", "Commerce", "Support"].map((item) => (
                   <button
                     key={item}
                     type="button"

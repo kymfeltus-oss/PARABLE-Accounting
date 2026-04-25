@@ -14,9 +14,9 @@ export default function HomePage() {
       >
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-16 pb-6 sm:gap-10 sm:pt-20 sm:pb-8 md:px-8 lg:min-h-[min(80dvh,45rem)] lg:grid-cols-2 lg:items-start lg:gap-12 lg:pt-24">
           <div className="z-10">
-            <div className="mb-12 inline-flex max-w-full items-baseline gap-2.5">
+            <div className="mb-12 inline-flex max-w-[90vw] flex-wrap items-center gap-x-2.5 gap-y-1 overflow-visible sm:max-w-full sm:items-baseline">
               <img src="/logo.svg" alt="Parable" className="hero-parable-alive h-10 w-auto sm:h-12" />
-              <span className="text-[clamp(1.25rem,4.8vw,1.875rem)] font-normal tracking-tight text-white">Accounting</span>
+              <span className="text-[clamp(1rem,4.2vw,1.5rem)] font-normal tracking-tight text-white sm:text-[clamp(1.25rem,4.8vw,1.875rem)]">Accounting</span>
             </div>
             <div className="mt-3">
               <p className="text-lg font-semibold text-[#4169E1] sm:text-2xl" style={{ textShadow: "0 0 10px rgba(65, 105, 225, 0.35)" }}>

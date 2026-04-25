@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { Check, ChevronUp, PlayCircle, Sparkles } from "lucide-react";
+import {
+  findPlanByName,
+  formatUsd,
+  parseCurrencyValue,
+  saveSelectedPlan,
+} from "@/lib/pricing";
 
 type CtaStyle = "primary" | "dark";
 
@@ -18,7 +24,7 @@ const PLANS: {
 }[] = [
   {
     name: "Simple Start",
-    price: "$19",
+    price: formatUsd(findPlanByName("Simple Start")?.monthlyPrice ?? 19),
     users: "1 user",
     accountants: "With access for 2 accountants",
     cta: "primary",
@@ -38,7 +44,7 @@ const PLANS: {
   },
   {
     name: "Essentials",
-    price: "$37.50",
+    price: formatUsd(findPlanByName("Essentials")?.monthlyPrice ?? 37.5),
     users: "3 users",
     accountants: "With access for 2 accountants",
     cta: "primary",
@@ -58,7 +64,7 @@ const PLANS: {
   },
   {
     name: "Plus",
-    price: "$57.50",
+    price: formatUsd(findPlanByName("Plus")?.monthlyPrice ?? 57.5),
     users: "5 users",
     accountants: "With access for 2 accountants",
     cta: "primary",
@@ -81,8 +87,8 @@ const PLANS: {
   },
   {
     name: "Advanced",
-    price: "$137.50",
-    compareAt: "$275",
+    price: formatUsd(findPlanByName("Advanced")?.monthlyPrice ?? 137.5),
+    compareAt: formatUsd(findPlanByName("Advanced")?.compareAtMonthlyPrice ?? 275),
     users: "25 users",
     accountants: "With access for 3 accountants",
     cta: "dark",
@@ -114,12 +120,29 @@ const ctaDark =
   "mt-3 inline-flex w-full items-center justify-center rounded bg-slate-950 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-slate-800";
 
 export default function SmallBusinessPlanColumns() {
+  const handleChoosePlan = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const card = e.currentTarget.closest("article");
+    if (!card) return;
+    const name = card.getAttribute("data-plan-name") ?? "";
+    const price = parseCurrencyValue(card.getAttribute("data-plan-price") ?? "$0");
+    const matched = findPlanByName(name);
+    if (!matched) return;
+    saveSelectedPlan({
+      planId: matched.id,
+      planName: name,
+      monthlyPrice: price,
+      discountLabel: matched.discountLabel,
+    });
+  };
+
   return (
     <div className="mx-auto mt-8 max-w-7xl">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {PLANS.map((plan) => (
           <article
             key={plan.name}
+            data-plan-name={plan.name}
+            data-plan-price={plan.price}
             className="flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-900 shadow-sm"
           >
             <div className="p-3 sm:p-4">
@@ -143,6 +166,7 @@ export default function SmallBusinessPlanColumns() {
 
               <Link
                 href="/register"
+                onClick={handleChoosePlan}
                 className={plan.cta === "primary" ? ctaPrimary : ctaDark}
                 aria-label={`Choose ${plan.name} plan`}
               >

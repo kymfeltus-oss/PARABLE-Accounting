@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [glitter, setGlitter] = useState<any[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [trialCardSaved, setTrialCardSaved] = useState(false);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -15,6 +16,15 @@ export default function LoginPage() {
     supabaseUrl && supabaseAnonKey
       ? createBrowserClient(supabaseUrl, supabaseAnonKey)
       : null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("trial_setup") === "1") {
+      setTrialCardSaved(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -67,6 +77,13 @@ export default function LoginPage() {
           <h2 className="font-[family-name:var(--font-inter)] text-[0.7rem] font-bold uppercase tracking-[0.5em] text-cyan-200/80 mb-12">
             ACCOUNTING ERP SYSTEM FOR MINISTRIES
           </h2>
+
+          {trialCardSaved && (
+            <p className="mb-6 rounded-xl border border-cyan-500/30 bg-cyan-950/40 px-4 py-3 text-left text-[11px] leading-relaxed text-cyan-100/90">
+              Your trial payment method is on file ($0 charged today). You will not be billed during the 30-day trial;
+              cancel before it ends to avoid subscription charges. Confirm your email if prompted, then sign in.
+            </p>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <input 

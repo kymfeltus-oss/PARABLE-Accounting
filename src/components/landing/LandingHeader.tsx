@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 
 type MenuId = "products" | "topFeatures" | "businessTypes" | "resources" | null;
@@ -15,9 +16,23 @@ function NavChevron({ open }: { open: boolean }) {
   );
 }
 
+const PRODUCTS_CHILDREN: { href: string; label: string }[] = [
+  { href: "/#plans", label: "Plans overview" },
+  { href: "/giving-member-tools", label: "Giving & member tools" },
+  { href: "/accounting-workspace", label: "Accounting workspace" },
+  { href: "/command-center", label: "Command center" },
+];
+
+function isProductChildActive(pathname: string, href: string) {
+  if (href === "/#plans") return pathname === "/";
+  return pathname === href;
+}
+
 export default function LandingHeader() {
+  const pathname = usePathname() ?? "";
   const [openId, setOpenId] = useState<MenuId>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(true);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => {
@@ -48,6 +63,20 @@ export default function LandingHeader() {
     "absolute left-0 top-full z-50 mt-1 min-w-[220px] rounded-md border border-slate-700 bg-slate-900 py-2 text-sm shadow-xl";
 
   const item = "block px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
+
+  const productItemBase = "block border-l-2 border-transparent px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
+  const productItemActive =
+    "block border-l-2 border-[var(--brand-cyber)] bg-slate-800/90 px-4 py-2 font-medium text-cyan-100 transition hover:bg-slate-800 hover:text-white";
+
+  const desktopProductClass = (href: string) =>
+    isProductChildActive(pathname, href) ? productItemActive : productItemBase;
+
+  const mobileRowBase =
+    "inline-flex min-h-11 w-full items-center rounded-r-md py-2 pr-3 text-sm font-medium text-white/95 transition hover:bg-white/10";
+  const mobileRowActive =
+    "inline-flex min-h-11 w-full items-center rounded-r-md border-l-2 border-[var(--brand-cyber)] bg-white/15 py-2 pr-3 text-sm font-semibold text-white transition";
+  const mobileProductClass = (href: string) =>
+    `${isProductChildActive(pathname, href) ? mobileRowActive : mobileRowBase} pl-6`;
 
   return (
     <header
@@ -92,18 +121,17 @@ export default function LandingHeader() {
               </button>
               {openId === "products" && (
                 <div className={panel} role="menu">
-                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                    Plans overview
-                  </Link>
-                  <Link href="/giving" className={item} role="menuitem" onClick={close}>
-                    Giving &amp; member tools
-                  </Link>
-                  <Link href="/accounting" className={item} role="menuitem" onClick={close}>
-                    Accounting workspace
-                  </Link>
-                  <Link href="/command-center" className={item} role="menuitem" onClick={close}>
-                    Command center
-                  </Link>
+                  {PRODUCTS_CHILDREN.map(({ href, label }) => (
+                    <Link
+                      key={href + label}
+                      href={href}
+                      className={desktopProductClass(href)}
+                      role="menuitem"
+                      onClick={close}
+                    >
+                      {label}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
@@ -229,13 +257,38 @@ export default function LandingHeader() {
 
         {mobileOpen && (
           <div className="border-t border-white/10 bg-[#4169E1] md:hidden">
-            <nav className="mx-auto flex max-w-7xl flex-col px-4 py-2" aria-label="Mobile Primary">
+            <nav className="mx-auto flex max-w-7xl flex-col px-2 py-2" aria-label="Mobile Primary">
+              <button
+                type="button"
+                className="inline-flex min-h-11 w-full items-center justify-between rounded px-2 py-2 text-left text-sm font-semibold text-white/95 hover:bg-white/10"
+                aria-expanded={mobileProductsOpen}
+                onClick={() => setMobileProductsOpen((o) => !o)}
+              >
+                Products &amp; Services
+                <NavChevron open={mobileProductsOpen} />
+              </button>
+              {mobileProductsOpen && (
+                <div className="flex flex-col border-l border-white/10 pb-1 pl-1">
+                  {PRODUCTS_CHILDREN.map(({ href, label }) => (
+                    <Link
+                      key={href + label}
+                      href={href}
+                      onClick={close}
+                      className={mobileProductClass(href)}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
               {[
-                { href: "/#plans", label: "Products & Services" },
                 { href: "/#plans", label: "Plans & Pricing" },
-                { href: "/#plans", label: "Top features" },
-                { href: "/#plans", label: "Business types" },
-                { href: "/#plans", label: "Resources" },
+                { href: "/reporting", label: "Top features · Reporting" },
+                { href: "/compliance", label: "Top features · Compliance" },
+                { href: "/member-portal", label: "Business types · Ministries" },
+                { href: "/intro", label: "Resources · Product tour" },
+                { href: "/register", label: "Resources · Get started" },
                 { href: "/contact", label: "Talk to Sales" },
               ].map((link) => (
                 <Link

@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { Lock } from "lucide-react";
+import {
+  ADD_ONS,
+  formatUsd,
+  getPlanById,
+  loadSelectedPlan,
+  type PlanId,
+} from "@/lib/pricing";
+import { addLocalCalendarDays, formatDateLongLocal, toLocalIsoDate } from "@/lib/trial";
 
 const field =
   "h-12 w-full rounded-md border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none ring-0 transition placeholder:text-slate-400 focus:border-[var(--brand-cyber)] focus:ring-2 focus:ring-[var(--brand-cyber)]/30";
@@ -14,7 +22,13 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [marketing, setMarketing] = useState(true);
+  const [includeGiving, setIncludeGiving] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [planId, setPlanId] = useState<PlanId>("plus");
+  const [planName, setPlanName] = useState("Plus");
+  const [baseMonthlyPrice, setBaseMonthlyPrice] = useState(getPlanById("plus")?.monthlyPrice ?? 57.5);
+  const [discountLabel, setDiscountLabel] = useState("50% off for 3 months*");
+  const [setupCancelledNotice, setSetupCancelledNotice] = useState(false);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,6 +36,27 @@ export default function RegisterPage() {
     supabaseUrl && supabaseAnonKey
       ? createBrowserClient(supabaseUrl, supabaseAnonKey)
       : null;
+
+  useEffect(() => {
+    const selected = loadSelectedPlan();
+    if (!selected) return;
+    setPlanId(selected.planId);
+    setPlanName(selected.planName);
+    setBaseMonthlyPrice(selected.monthlyPrice);
+    if (selected.discountLabel) setDiscountLabel(selected.discountLabel);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("trial_setup") === "cancelled") {
+      setSetupCancelledNotice(true);
+      window.history.replaceState({}, "", "/register");
+    }
+  }, []);
+
+  const monthlyAddOns = includeGiving ? ADD_ONS.givingMonthly : 0;
+  const recurringMonthlyTotal = useMemo(() => baseMonthlyPrice + monthlyAddOns, [baseMonthlyPrice, monthlyAddOns]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +68,14 @@ export default function RegisterPage() {
       window.alert("Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
       return;
     }
+    const now = new Date();
+    const trialEnd = addLocalCalendarDays(now, 30);
+    const trialEndsOn = toLocalIsoDate(trialEnd);
+    const trialEndsDisplay = formatDateLongLocal(trialEnd);
+
     setBusy(true);
+    // Supabase Auth Hook or custom SMTP template can send a “Trial starting” email using user_metadata
+    // (trial_ends_on, trial_ends_display, subscription_rate_after_trial, plan_name).
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -41,13 +83,51 @@ export default function RegisterPage() {
         data: {
           phone: phone.trim() || null,
           marketing_opt_in: marketing,
-          plan_selection: "plus_trial",
+          plan_selection: planId,
+          plan_name: planName,
+          plan_monthly_total: recurringMonthlyTotal,
+          plan_discount: discountLabel,
+          giving_add_on: includeGiving,
+          trial_started_on: toLocalIsoDate(now),
+          trial_ends_on: trialEndsOn,
+          trial_ends_display: trialEndsDisplay,
+          trial_duration_days: 30,
+          subscription_rate_after_trial: recurringMonthlyTotal,
+          trial_disclosure_version: "2026-04",
         },
       },
     });
+    if (error) {
+      setBusy(false);
+      window.alert(error.message);
+      return;
+    }
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    try {
+      const setupRes = await fetch("/api/stripe/create-trial-setup-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          successUrl: `${origin}/login?trial_setup=1&session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/register?trial_setup=cancelled`,
+          planId,
+          planName,
+        }),
+      });
+      if (setupRes.ok) {
+        const j = (await setupRes.json()) as { url?: string };
+        if (j.url) {
+          window.location.href = j.url;
+          return;
+        }
+      }
+    } catch {
+      /* Stripe optional — continue to app */
+    }
     setBusy(false);
-    if (error) window.alert(error.message);
-    else window.location.href = "/member";
+    window.location.href = "/member";
   };
 
   return (
@@ -79,12 +159,27 @@ export default function RegisterPage() {
               <div className="w-full border-slate-200 p-6 sm:p-8 md:w-[55%] md:border-r">
                 <div className="mb-7 flex items-center gap-2">
                   <img src="/logo.svg" alt="" className="h-6 w-auto" />
-                  <span className="text-sm font-bold text-slate-800 sm:text-base">Parable</span>
+                  <span className="text-sm font-bold text-slate-800 sm:text-base">Accounting</span>
                 </div>
                 <h1 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-3xl">
                   Let&apos;s get you in
                 </h1>
                 <p className="mt-1.5 text-sm text-slate-500">30-day free trial · no charge until the trial ends</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-md border border-fuchsia-500/30 bg-fuchsia-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white sm:text-xs">
+                    Free trial
+                  </span>
+                  <span className="text-xs text-slate-600 sm:text-sm">
+                    Selected plan: <span className="font-semibold text-slate-800">{planName}</span>
+                  </span>
+                </div>
+
+                {setupCancelledNotice && (
+                  <p className="mt-3 rounded-md border border-amber-500/40 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                    Card setup was cancelled. Your trial can still begin — add a payment method in billing before the
+                    trial ends to avoid interruption.
+                  </p>
+                )}
 
                 <form onSubmit={handleRegister} className="mt-6 space-y-4">
                   <div>
@@ -171,7 +266,7 @@ export default function RegisterPage() {
                     style={{ backgroundColor: "var(--brand-cyber)" }}
                   >
                     <Lock className="h-4 w-4" />
-                    {busy ? "Creating account…" : "Create a Parable account"}
+                    {busy ? "Starting trial…" : "Start 30-day free trial"}
                   </button>
                 </form>
 
@@ -186,7 +281,7 @@ export default function RegisterPage() {
                 </p>
                 <p className="mt-3 text-center text-xs">
                   <Link href="/register/full" className="text-slate-500 underline decoration-slate-300 hover:text-slate-800">
-                    Full institutional onboarding (advanced)
+                    Full Ministry Onboarding
                   </Link>
                 </p>
               </div>
@@ -195,13 +290,25 @@ export default function RegisterPage() {
                 <div>
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-700">Your current plan</p>
-                    <span className="shrink-0 rounded-md bg-fuchsia-600 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-white">
-                      Free trial
+                    <span className="shrink-0 rounded-md border border-fuchsia-400/40 bg-fuchsia-600 px-2.5 py-1 text-center text-[10px] font-bold uppercase leading-tight tracking-wide text-white shadow-sm sm:text-xs">
+                      <span className="block">Free trial</span>
+                      <span className="mt-0.5 block text-[9px] font-semibold normal-case tracking-normal text-fuchsia-100">
+                        30 days
+                      </span>
                     </span>
                   </div>
-                  <p className="text-base font-bold text-slate-900 sm:text-lg">Parable Accounting — Plus</p>
-                  <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900 sm:text-4xl">$57.50</p>
-                  <p className="text-sm text-slate-500">/month (after 50% intro period*)</p>
+                  <p className="text-base font-bold text-slate-900 sm:text-lg">Parable Accounting — {planName}</p>
+                  <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900 sm:text-4xl">{formatUsd(baseMonthlyPrice)}</p>
+                  <p className="text-sm text-slate-500">/month</p>
+                  <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+                    <span>Add PARABLE Giving (+{formatUsd(ADD_ONS.givingMonthly)}/mo)</span>
+                    <input
+                      type="checkbox"
+                      checked={includeGiving}
+                      onChange={(e) => setIncludeGiving(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                  </label>
                   <ul className="mt-4 space-y-2.5 text-sm text-slate-700">
                     <li className="flex gap-2">
                       <span className="mt-0.5 text-[var(--brand-cyber)]" aria-hidden>
@@ -231,12 +338,18 @@ export default function RegisterPage() {
                 <div className="mt-6 border-t border-slate-200/90 pt-4 text-sm text-slate-600">
                   <div className="flex justify-between gap-2">
                     <span>Recurring</span>
-                    <span className="text-right font-medium">$57.50/mo</span>
+                    <span className="text-right font-medium">{formatUsd(recurringMonthlyTotal)}/mo</span>
                   </div>
-                  <p className="text-xs text-slate-500">After 1-month free trial · taxes not included</p>
+                  {includeGiving && (
+                    <div className="mt-1 flex justify-between gap-2 text-xs text-slate-500">
+                      <span>PARABLE Giving add-on</span>
+                      <span>{formatUsd(ADD_ONS.givingMonthly)}/mo</span>
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-500">After 30-day free trial · taxes not included</p>
                   <div className="mt-3 flex items-end justify-between border-t border-slate-200 pt-3">
                     <span className="text-base font-bold text-slate-900">Total due today</span>
-                    <span className="text-2xl font-bold text-slate-900">$0</span>
+                    <span className="text-2xl font-bold text-slate-900">{formatUsd(0)}</span>
                   </div>
                 </div>
               </aside>

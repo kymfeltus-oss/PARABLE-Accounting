@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import OperationsDashboard from "@/components/dashboard/OperationsDashboard";
-import MinistryAppShell from "@/components/MinistryAppShell";
+import ProductWorkspacePlaceholder from "@/components/workspace/ProductWorkspacePlaceholder";
 
 export const metadata: Metadata = {
-  title: "Command center",
-  description: "Ministry operations: accounting, reporting, members, building fund, documents, and quick access.",
+  title: "Command center | PARABLE",
+  description: "Ministry command center — workspace entry and navigation hub.",
 };
 
-export default function CommandCenterPage() {
-  return (
-    <MinistryAppShell>
-      <OperationsDashboard />
-    </MinistryAppShell>
-  );
+export default function CommandCenterWorkspacePage() {
+  return <ProductWorkspacePlaceholder title="Command center" slug="/command-center" />;
 }
