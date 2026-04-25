@@ -59,19 +59,19 @@ export default function LoginPage() {
             transition={{ duration: 4, repeat: Infinity }}
           />
           <h2 className="font-[family-name:var(--font-inter)] text-[0.7rem] font-bold uppercase tracking-[0.5em] text-cyan-200/80 mb-12">
-            Institutional Access
+            ACCOUNTING ERP SYSTEM FOR MINISTRIES
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <input 
               type="email" 
-              placeholder="System Identity (Email)" 
+              placeholder="EMAIL/USERNAME" 
               className="w-full h-14 bg-slate-900/40 border border-slate-800 rounded-2xl px-6 text-white placeholder:text-slate-600 focus:border-cyan-500/50 outline-none transition-all font-mono text-sm"
               onChange={(e) => setEmail(e.target.value)}
             />
             <input 
               type="password" 
-              placeholder="Security Key" 
+              placeholder="PASSWORD" 
               className="w-full h-14 bg-slate-900/40 border border-slate-800 rounded-2xl px-6 text-white placeholder:text-slate-600 focus:border-cyan-500/50 outline-none transition-all font-mono text-sm"
               onChange={(e) => setPassword(e.target.value)}
             />

@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import IntroFlashClient from "./IntroFlashClient";
 
-/** Brand flash lives on `/`; keep `/intro` for bookmarks. */
-export default function IntroRedirectPage() {
-  redirect("/");
+/** Keep the original flash experience available at /intro. */
+export default function IntroPage() {
+  return <IntroFlashClient appType="accounting" />;
 }

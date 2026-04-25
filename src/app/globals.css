@@ -3,7 +3,9 @@
 /* PARABLE brand tokens — aligned with C:\Users\kymfe\Downloads\PARABLE\src\app\globals.css */
 @theme {
   --color-sanctuary: #010101;
+  /* PARABLE logo / primary UI accent — set in stone sitewide */
   --color-cyber: #00f2ff;
+  --color-parable-cyber: #00f2ff;
   --color-app-shell: #070708;
   --font-parable: var(--font-inter), system-ui, sans-serif;
 }

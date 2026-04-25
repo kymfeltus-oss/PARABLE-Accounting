@@ -5,11 +5,9 @@ export default function MemberGatewayPage() {
   return (
     <IntroFlashClient 
       appType="giving"
-      subtitle="Sovereign Giving Portal" 
-      primaryLabel="Contribute" 
-      primaryHref="/give"
-      secondaryLabel="My Legacy"
-      secondaryHref="/portal/history"
+      subtitle="" // PURGED: No blurb on the member side
+      firstInputPlaceholder="EMAIL"
+      secondInputPlaceholder="PASSWORD"
     />
   );
 }
