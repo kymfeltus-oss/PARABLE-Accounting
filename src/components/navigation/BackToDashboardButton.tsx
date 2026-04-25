@@ -4,20 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuditMode } from "@/context/AuditModeContext";
 
+const STAFF_DASHBOARD_HREF = "/command-center";
+
 type Props = {
-  /** Default: home command center at `/` */
+  /** Default: staff command center (Operations dashboard). Home `/` is the member hub. */
   href?: string;
   className?: string;
 };
 
 /**
- * Shown in the app shell on every screen except the dashboard home. Returns to the main command center.
+ * Shown in the app shell on every screen except the staff dashboard. Returns to the main command center.
  */
-export default function BackToDashboardButton({ href = "/", className = "" }: Props) {
+export default function BackToDashboardButton({ href = STAFF_DASHBOARD_HREF, className = "" }: Props) {
   const pathname = usePathname() ?? "";
   const { auditMode } = useAuditMode();
 
-  if (pathname === "/" || pathname === href) {
+  if (pathname === href) {
     return null;
   }
 
