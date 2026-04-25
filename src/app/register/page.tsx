@@ -63,9 +63,12 @@ export default function RegisterPage() {
             <img src="/logo.svg" alt="" className="h-8 w-auto" />
             <span className="text-sm font-semibold text-slate-100 sm:text-base">Accounting</span>
           </Link>
-          <a href="tel:18777825795" className="shrink-0 text-sm text-slate-200/90 sm:text-sm">
-            For sales: 1-877-782-5795
-          </a>
+          <Link
+            href="/contact"
+            className="inline-flex shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+          >
+            Contact
+          </Link>
         </div>
 
         <div className="my-auto flex w-full flex-1 items-center justify-center py-8">

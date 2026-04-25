@@ -50,7 +50,7 @@ export default function LandingHeader() {
   const item = "block px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
 
   return (
-    <header ref={wrapRef} className="bg-[#000040] text-white">
+    <header ref={wrapRef} className="bg-[#4169E1] text-white">
       {/* Brand row: Cyan background, black text/logo, navy promo accent */}
       <div className="bg-[var(--brand-cyber)] border-b border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-2 md:px-8 md:py-3">
@@ -63,10 +63,10 @@ export default function LandingHeader() {
               alt="Parable"
               className="h-8 w-auto sm:h-9 brightness-0" 
             />
-            <span className="text-sm font-bold tracking-tight text-black sm:text-base">Accounting</span>
+            <span className="text-sm font-bold tracking-tight text-[#4169E1] sm:text-base">Accounting</span>
           </Link>
           <p className="min-w-0 pl-0 text-left text-xs font-semibold text-black/80 sm:border-l sm:border-black/20 sm:pl-3 sm:text-sm md:pl-4">
-            Get <span className="font-extrabold text-[#000040]">50% OFF</span> Accounting for 3 months
+            Get <span className="font-extrabold text-[#4169E1]">50% OFF</span> Accounting for 3 months
             <span className="ml-0.5 text-black/40">*</span>
           </p>
         </div>

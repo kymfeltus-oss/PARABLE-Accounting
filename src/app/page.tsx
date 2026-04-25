@@ -27,17 +27,17 @@ export default function HomePage() {
             </p>
             
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/#plans" className="inline-flex items-center justify-center rounded-md bg-[#8F00FF] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#7A00DB] hover:shadow-[0_0_20px_rgba(143,0,255,0.4)]">
+              <Link href="/#plans" className="inline-flex items-center justify-center rounded-md bg-[#4169E1] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#3557c7] hover:shadow-[0_0_20px_rgba(65,105,225,0.45)]">
                 Buy now and save
               </Link>
-              <Link href="/register" className="inline-flex items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-transparent px-6 py-3 text-sm font-bold tracking-wide text-[var(--brand-cyber)] transition hover:bg-[var(--brand-cyber)]/10">
+              <Link href="/register" className="inline-flex items-center justify-center rounded-md border-2 border-[#4169E1] bg-transparent px-6 py-3 text-sm font-bold tracking-wide text-[#4169E1] transition hover:bg-[#4169E1]/10">
                 Try it free for 30 days
               </Link>
             </div>
           </div>
 
           <div className="relative mx-auto w-full max-w-lg lg:ml-auto lg:max-w-xl xl:max-w-2xl">
-            <div className="relative w-full overflow-hidden rounded-lg border-2 border-[#8F00FF]/50 bg-black shadow-[0_0_50px_rgba(143,0,255,0.25)] h-[min(48svh,380px)] sm:h-[min(52svh,420px)] lg:h-[min(72svh,640px)]">
+            <div className="relative w-full overflow-hidden rounded-lg border-2 border-[#4169E1]/50 bg-black shadow-[0_0_50px_rgba(65,105,225,0.28)] h-[min(48svh,380px)] sm:h-[min(52svh,420px)] lg:h-[min(72svh,640px)]">
               <img src="/videos/church%20photo.jpg" alt="Community" className="h-full w-full object-cover" />
             </div>
           </div>
