@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
 
@@ -16,17 +15,7 @@ function NavChevron({ open }: { open: boolean }) {
   );
 }
 
-function quickLinkClass(active: boolean) {
-  return (
-    "shrink-0 text-[var(--brand-cyber)] transition hover:brightness-110 " +
-    (active
-      ? "font-extrabold underline decoration-2 decoration-[var(--brand-cyber)] underline-offset-4"
-      : "font-bold")
-  );
-}
-
 export default function LandingHeader() {
-  const pathname = usePathname();
   const [openId, setOpenId] = useState<MenuId>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -192,7 +181,7 @@ export default function LandingHeader() {
             {openId === "resources" && (
               <div className={panel} role="menu">
                 <Link href="/intro" className={item} role="menuitem" onClick={close}>
-                  Product tour (flash)
+                  Product tour
                 </Link>
                 <Link href="/onboarding" className={item} role="menuitem" onClick={close}>
                   Onboarding
@@ -208,41 +197,12 @@ export default function LandingHeader() {
           </div>
         </nav>
 
-        <div className="hidden h-5 w-px shrink-0 bg-slate-600/60 xl:block" aria-hidden />
-
-        <nav
-          className="hidden shrink-0 items-center gap-2 text-[11px] xl:flex xl:gap-4 2xl:text-[13px]"
-          aria-label="Quick links"
+        <a
+          href="mailto:contact@parable.com?subject=Accounting%20inquiry"
+          className="hidden shrink-0 items-center justify-center rounded-none border-2 border-[var(--brand-cyber)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)] transition hover:bg-cyan-400/10 xl:inline-flex"
         >
-          <Link
-            href="/intro"
-            className={quickLinkClass(pathname === "/intro" || pathname?.startsWith("/intro/"))}
-          >
-            Flash
-          </Link>
-          <Link
-            href="/member-portal"
-            className={quickLinkClass(
-              pathname === "/member-portal" || pathname?.startsWith("/member-portal/"),
-            )}
-          >
-            Member portal
-          </Link>
-          <Link
-            href="/command-center"
-            className={quickLinkClass(
-              pathname === "/command-center" || pathname?.startsWith("/command-center/"),
-            )}
-          >
-            Staff hub
-          </Link>
-          <a
-            href="mailto:contact@parable.com?subject=Accounting%20inquiry"
-            className="inline-flex shrink-0 items-center justify-center rounded-none border-2 border-[var(--brand-cyber)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)] transition hover:bg-cyan-400/10"
-          >
-            Contact us
-          </a>
-        </nav>
+          Contact us
+        </a>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <button
@@ -291,46 +251,10 @@ export default function LandingHeader() {
                 Buy now
               </Link>
             </div>
-            <div className="mb-2 flex flex-wrap gap-2 border-b border-slate-800 pb-3">
-              <Link
-                href="/intro"
-                className={
-                  "rounded px-2 py-1.5 " +
-                  (pathname === "/intro" || pathname?.startsWith("/intro/")
-                    ? "font-extrabold text-[var(--brand-cyber)] underline decoration-2"
-                    : "font-bold text-[var(--brand-cyber)]")
-                }
-                onClick={close}
-              >
-                Flash
-              </Link>
-              <Link
-                href="/member-portal"
-                className={
-                  "rounded px-2 py-1.5 " +
-                  (pathname === "/member-portal" || pathname?.startsWith("/member-portal/")
-                    ? "font-extrabold text-[var(--brand-cyber)] underline decoration-2"
-                    : "font-bold text-[var(--brand-cyber)]")
-                }
-                onClick={close}
-              >
-                Member portal
-              </Link>
-              <Link
-                href="/command-center"
-                className={
-                  "rounded px-2 py-1.5 " +
-                  (pathname === "/command-center" || pathname?.startsWith("/command-center/")
-                    ? "font-extrabold text-[var(--brand-cyber)] underline decoration-2"
-                    : "font-bold text-[var(--brand-cyber)]")
-                }
-                onClick={close}
-              >
-                Staff hub
-              </Link>
+            <div className="mb-2 border-b border-slate-800 pb-3">
               <a
                 href="mailto:contact@parable.com?subject=Accounting%20inquiry"
-                className="rounded-none border-2 border-[var(--brand-cyber)] px-2 py-1.5 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)]"
+                className="inline-block rounded-none border-2 border-[var(--brand-cyber)] px-2 py-1.5 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)]"
                 onClick={close}
               >
                 Contact us
