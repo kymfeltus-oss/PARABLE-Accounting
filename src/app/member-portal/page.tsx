@@ -10,10 +10,10 @@ export default function MemberPortalPage() {
   return (
     <div className="min-h-dvh" style={{ background: "#050505" }}>
       <a
-        href="/"
+        href="/command-center"
         className="absolute left-3 top-3 z-20 text-[9px] font-bold uppercase tracking-widest text-white/35 hover:text-[#00FFFF]"
       >
-        ← App
+        ← Command center
       </a>
       <MemberPortal />
     </div>
