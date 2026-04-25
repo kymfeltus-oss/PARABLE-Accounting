@@ -27,18 +27,21 @@ function MemberPortalInner() {
   }
 
   return (
-    <div className="min-h-dvh pb-16" style={{ background: SOVEREIGN.SHELL, color: "#fff" }}>
+    <div
+      className="min-h-dvh w-full min-w-0 pb-[max(4rem,env(safe-area-inset-bottom,0px)+3.5rem)]"
+      style={{ background: SOVEREIGN.SHELL, color: "#fff" }}
+    >
       {tab === "home" && <Home onGive={() => setGive(true)} />}
       {tab === "stewardship" && <Stewardship />}
       {tab === "funds" && <FundTrackers />}
       {tab === "profile" && <Profile />}
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-10 border-t border-white/10 bg-black/80 px-1 py-1 backdrop-blur-md"
+        className="fixed bottom-0 left-0 right-0 z-10 border-t border-white/10 bg-black/80 px-1 py-1 pb-[max(0.25rem,env(safe-area-inset-bottom,0px))] pt-1 backdrop-blur-md"
         style={{ boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}
         aria-label="Member app"
       >
-        <ul className="mx-auto flex max-w-md items-stretch justify-between gap-0.5 text-[9px] font-bold uppercase tracking-wide">
+        <ul className="mx-auto flex w-full max-w-2xl items-stretch justify-between gap-0.5 px-1 sm:max-w-3xl md:max-w-4xl text-[9px] font-bold uppercase tracking-wide sm:text-[10px]">
           {(
             [
               { id: "home" as const, label: "Home" },

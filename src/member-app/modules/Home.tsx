@@ -7,7 +7,10 @@ const bg =
 
 export function Home({ onGive }: { onGive: () => void }) {
   return (
-    <div className="flex min-h-[calc(100dvh-5.5rem)] flex-col" style={{ background: SOVEREIGN.MATTE }}>
+    <div
+      className="mx-auto flex min-h-[calc(100dvh-5.5rem)] w-full min-w-0 max-w-4xl flex-col lg:min-h-[min(calc(100dvh-5.5rem),52rem)]"
+      style={{ background: SOVEREIGN.MATTE }}
+    >
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div className="absolute inset-0 min-h-[56vh] bg-black" />
         <div
@@ -20,9 +23,9 @@ export function Home({ onGive }: { onGive: () => void }) {
             background: `linear-gradient(180deg, ${SOVEREIGN.MATTE} 0%, transparent 32%, rgba(0,0,0,0.5) 55%, ${SOVEREIGN.MATTE} 100%)`,
           }}
         />
-        <div className="absolute bottom-36 left-0 right-0 px-4 text-center">
+        <div className="absolute bottom-36 left-0 right-0 max-w-2xl px-4 text-center sm:mx-auto sm:bottom-32 md:bottom-40">
           <h1
-            className="text-3xl font-black uppercase tracking-[0.2em] text-white"
+            className="text-2xl font-black uppercase tracking-[0.2em] text-white sm:text-3xl"
             style={{ textShadow: `0 0 50px color-mix(in srgb, ${SOVEREIGN.GLOW} 30%, transparent)` }}
           >
             Sanctuary

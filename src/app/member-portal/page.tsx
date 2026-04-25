@@ -11,7 +11,11 @@ export default function MemberPortalPage() {
     <div className="min-h-dvh" style={{ background: "#050505" }}>
       <a
         href="/command-center"
-        className="absolute left-3 top-3 z-20 text-[9px] font-bold uppercase tracking-widest text-white/35 hover:text-[#00FFFF]"
+        className="absolute z-20 text-[9px] font-bold uppercase tracking-widest text-white/35 hover:text-[#00FFFF]"
+        style={{
+          left: "max(0.75rem, env(safe-area-inset-left, 0px))",
+          top: "max(0.75rem, env(safe-area-inset-top, 0px))",
+        }}
       >
         ← Command center
       </a>

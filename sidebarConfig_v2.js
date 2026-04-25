@@ -8,6 +8,7 @@ export const sidebarNavigation = [
   { name: "Accounting", icon: "CalculatorIcon", path: "/accounting" },
   { name: "Reporting", icon: "ChartBarIcon", path: "/reporting" },
   { name: "Members", icon: "UsersIcon", path: "/members" },
+  { name: "Member portal", icon: "GiftIcon", path: "/member-portal" },
   { name: "Parable Giving", icon: "GiftIcon", path: "/giving" },
   { name: "Project Building Fund", icon: "OfficeBuildingIcon", path: "/building-fund" },
   { name: "Documents", icon: "FolderIcon", path: "/vault" },

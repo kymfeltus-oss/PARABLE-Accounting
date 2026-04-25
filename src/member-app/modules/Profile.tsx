@@ -23,7 +23,10 @@ export function Profile() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <div className="space-y-4 p-4 pb-24" style={{ background: SOVEREIGN.MATTE, minHeight: "60vh" }}>
+    <div
+      className="mx-auto min-h-[min(70dvh,32rem)] w-full min-w-0 max-w-3xl space-y-4 p-4 pb-24 sm:p-6"
+      style={{ background: SOVEREIGN.MATTE }}
+    >
       <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50">Profile</h2>
       <p className="text-xs text-white/40">1-tap payment methods are stored as Stripe/Plaid tokens in production. No card numbers in this app shell.</p>
 

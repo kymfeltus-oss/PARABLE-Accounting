@@ -132,7 +132,7 @@ export function Give({ onClose }: { onClose: () => void }) {
 
   if (!linkedMember) {
     return (
-      <div className="flex min-h-[80dvh] flex-col items-center justify-center p-4 text-center">
+      <div className="mx-auto flex min-h-[80dvh] w-full min-w-0 max-w-3xl flex-col items-center justify-center p-4 text-center">
         <p className="text-sm text-amber-200/90">Link a member profile: sign in with the same email as the roster, or use Demo on Profile (anon preview).</p>
         <button type="button" onClick={onClose} className="mt-4 rounded-xl border border-white/15 px-4 py-2 text-xs font-bold text-white/80">
           Back
@@ -142,8 +142,8 @@ export function Give({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col" style={{ background: MATTE }}>
-      <div className="flex items-center justify-between border-b border-white/5 px-3 py-2">
+    <div className="relative mx-auto flex min-h-dvh w-full min-w-0 max-w-3xl flex-col" style={{ background: MATTE }}>
+      <div className="flex items-center justify-between border-b border-white/5 px-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-2">
         <button
           type="button"
           onClick={onClose}

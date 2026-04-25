@@ -53,7 +53,10 @@ export function FundTrackers() {
   }, [load]);
 
   return (
-    <div className="space-y-4 p-4 pb-24" style={{ background: SOVEREIGN.MATTE, minHeight: "60vh" }}>
+    <div
+      className="mx-auto min-h-[min(70dvh,32rem)] w-full min-w-0 max-w-3xl space-y-4 p-4 pb-24 sm:p-6"
+      style={{ background: SOVEREIGN.MATTE }}
+    >
       <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50">Fund track</h2>
       {tenant?.legal_name && <p className="text-xs text-white/40">{tenant.legal_name}</p>}
       {err && <p className="text-amber-200/80">{err}</p>}

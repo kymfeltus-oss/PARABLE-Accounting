@@ -27,6 +27,7 @@ function moduleTopIcon(icon: string): Parameters<typeof FoundryNavIcon>[0]["name
 }
 
 const QUICK: { href: string; label: string; sub: string }[] = [
+  { href: "/member-portal", label: "Member portal", sub: "Home, give, funds, profile (member app)" },
   { href: "/giving", label: "Parable Giving", sub: "Tithes, offerings, Parable Pay" },
   { href: "/member-hub", label: "Member hub", sub: "Contributors & giving" },
   { href: "/erp-hub", label: "Financial hub (legacy)", sub: "AP / AR in one view" },
@@ -89,6 +90,8 @@ export default function OperationsDashboard() {
                   ? "Board packs, cadence, exports"
                   : mod.name === "Members"
                     ? "Contributor hub & relationships"
+                    : mod.name === "Member portal"
+                      ? "Member app: home, give, funds, profile"
                     : mod.name === "Project Building Fund"
                       ? "Restricted capital campaigns"
                       : mod.name === "Documents"
