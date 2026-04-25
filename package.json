@@ -16,6 +16,7 @@
     "scheduler:sunday": "node --env-file=.env.local ./sundayScheduler.js"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.1",
     "framer-motion": "^12.38.0",
     "jszip": "^3.10.1",

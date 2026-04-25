@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import MinistryAppShell from "@/components/MinistryAppShell";
+import CoaAddAccountSheet from "@/components/dashboard/CoaAddAccountSheet";
 
 export type CoaListRow = {
   id: string;
@@ -60,18 +61,21 @@ export default function MasterCoaAccounts({ tenantLabel, accounts, error }: Prop
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white md:text-3xl">Chart of accounts</h1>
               <p className="mt-1 text-sm text-white/45">Master UCOA — {tenantLabel}</p>
             </div>
-            <div className="w-full sm:max-w-xs">
-              <label className="sr-only" htmlFor="coa-search">
-                Search accounts
-              </label>
-              <input
-                id="coa-search"
-                type="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search code, name, category…"
-                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none ring-cyan-400/40 transition focus:ring-2"
-              />
+            <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:max-w-md sm:flex-row sm:items-end sm:gap-2">
+              <CoaAddAccountSheet />
+              <div className="w-full min-w-0 sm:min-w-[220px] sm:max-w-xs sm:flex-1">
+                <label className="sr-only" htmlFor="coa-search">
+                  Search accounts
+                </label>
+                <input
+                  id="coa-search"
+                  type="search"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search code, name, category…"
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none ring-cyan-400/40 transition focus:ring-2"
+                />
+              </div>
             </div>
           </div>
 
