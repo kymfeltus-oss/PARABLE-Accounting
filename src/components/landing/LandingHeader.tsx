@@ -56,7 +56,7 @@ export default function LandingHeader() {
     >
       {/* Brand row: Cyan background, black text/logo, navy promo accent */}
       <div className="bg-[var(--brand-cyber)] border-b border-black/10">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-1 px-4 py-0.5 sm:grid-cols-3 sm:items-center md:px-8 md:py-1">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-1 px-4 py-0 sm:grid-cols-3 sm:items-center md:px-8 md:py-0.5">
           <div className="hidden sm:block" aria-hidden />
           <Link
             href="/"
@@ -65,7 +65,7 @@ export default function LandingHeader() {
             <img
               src="/logo.svg"
               alt="Parable"
-              className="h-8 w-auto sm:h-9 brightness-0" 
+              className="h-5 w-auto sm:h-6 brightness-0"
             />
           </Link>
           <p className="min-w-0 text-right text-xs font-semibold text-black/80 sm:justify-self-end sm:text-sm">

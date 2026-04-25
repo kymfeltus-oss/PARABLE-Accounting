@@ -12,7 +12,7 @@ export default function HomePage() {
         className="relative w-full overflow-x-hidden text-white"
         style={{ background: "linear-gradient(to bottom, #000028 0%, #050a18 100%)" }}
       >
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-4 pb-4 sm:gap-10 sm:pt-6 sm:pb-6 md:px-8 lg:min-h-[min(80dvh,45rem)] lg:grid-cols-2 lg:items-start lg:gap-12">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-16 pb-6 sm:gap-10 sm:pt-20 sm:pb-8 md:px-8 lg:min-h-[min(80dvh,45rem)] lg:grid-cols-2 lg:items-start lg:gap-12 lg:pt-24">
           <div className="z-10">
             <div className="mb-12 inline-flex max-w-full items-baseline gap-2.5">
               <img src="/logo.svg" alt="Parable" className="hero-parable-alive h-10 w-auto sm:h-12" />
@@ -45,8 +45,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-lg lg:ml-auto lg:max-w-xl xl:max-w-2xl">
-            <div className="relative w-full overflow-hidden rounded-lg border-2 border-[#4169E1]/50 bg-black shadow-[0_0_50px_rgba(65,105,225,0.28)] h-[min(48svh,380px)] sm:h-[min(52svh,420px)] lg:h-[min(72svh,640px)]">
+          <div className="relative mx-auto w-full max-w-[19rem] sm:max-w-md lg:ml-auto lg:max-w-lg xl:max-w-xl">
+            <div className="relative w-full overflow-hidden rounded-lg border-2 border-[#4169E1]/50 bg-black shadow-[0_0_50px_rgba(65,105,225,0.28)] h-[min(30svh,200px)] sm:h-[min(38svh,280px)] lg:h-[min(56svh,480px)]">
               <img src="/videos/church%20photo.jpg" alt="Community" className="h-full w-full object-cover" />
             </div>
           </div>
