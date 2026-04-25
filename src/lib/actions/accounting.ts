@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PARABLE_DEFAULT_TENANT_SLUG } from "@sovereign/supabaseClient.js";
 import { createServerSupabase } from "@/lib/supabase/server-cookies";
+import { FOUNDRY_TENANT_ID } from "@/lib/accounting/foundry";
 
 const COA_CATEGORIES = ["Asset", "Liability", "Net Asset", "Income", "Expense"] as const;
 type CoaCategory = (typeof COA_CATEGORIES)[number];
@@ -34,23 +34,11 @@ function str(v: FormDataEntryValue | null): string {
 }
 
 /**
- * Resolves current tenant (same as dashboard COA) for inserts.
- */
-async function resolveTenantId(supabase: Awaited<ReturnType<typeof createServerSupabase>>) {
-  const slug = process.env.NEXT_PUBLIC_TENANT_SLUG?.trim() || PARABLE_DEFAULT_TENANT_SLUG;
-  const { data, error } = await supabase.from("tenants").select("id").eq("slug", slug).maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data?.id) throw new Error(`No tenant for slug “${slug}”.`);
-  return data.id as string;
-}
-
-/**
- * Inserts a row into `parable_ledger.chart_of_accounts`.
- * The database has no `normal_balance` column; category encodes reporting (and normal is implied).
+ * Inserts into `parable_ledger.chart_of_accounts` for the Foundry tenant
+ * (`00000000-0000-0000-0000-000000000000`).
  */
 export async function addAccount(formData: FormData) {
   const supabase = await createServerSupabase();
-  const tenantId = await resolveTenantId(supabase);
 
   const codeRaw = str(formData.get("account_code"));
   const account_name = str(formData.get("account_name"));
@@ -75,7 +63,7 @@ export async function addAccount(formData: FormData) {
     const isDebit = normalBalance === "debit";
     if (wantDebit !== isDebit) {
       throw new Error(
-        "Normal balance does not match category: Asset & Expense are debit-normal; Liability, Net Asset, and Income are credit-normal.",
+        "Normal balance does not match category: Asset and Expense are debit-normal; Liability, Net Asset, and Income are credit-normal.",
       );
     }
   }
@@ -86,12 +74,12 @@ export async function addAccount(formData: FormData) {
       : accountTypeForCategory(category);
 
   const { error } = await supabase.from("chart_of_accounts").insert({
-    tenant_id: tenantId,
+    tenant_id: FOUNDRY_TENANT_ID,
     account_code,
     account_name,
     account_type,
     category,
-    sub_category: "Manual entry",
+    sub_category: "Fund / manual",
     is_restricted: false,
     parent_account_id: null,
   });

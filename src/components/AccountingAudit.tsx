@@ -1,67 +1,37 @@
+import AuditMarqueeClient from "@/components/AuditMarqueeClient";
+import { FOUNDRY_TENANT_ID } from "@/lib/accounting/foundry";
 import { getSupabaseServerAnon } from "@/lib/supabase/server-anon";
+import type { AccountingAlertRow } from "@/types/accounting";
 
-export type AccountingAlertRow = {
-  account_code: number;
-  account_name: string;
-  health_status: string;
-  normal_balance: string;
-  tenant_id?: string;
-};
+export type { AccountingAlertRow } from "@/types/accounting";
 
-function AlertIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
-    </svg>
-  );
+function isAbnormal(alert: AccountingAlertRow): boolean {
+  const s = String(alert.health_status ?? "").toLowerCase().trim();
+  if (!s) return false;
+  if (s === "ok" || s === "healthy" || s === "normal" || s === "nominal" || s === "balanced") {
+    return false;
+  }
+  return true;
 }
 
-type Props = {
-  /** When set, filters alerts for this tenant (if the view exposes `tenant_id`). */
-  tenantId?: string;
-};
-
 /**
- * Renders rows from `parable_ledger.view_accounting_alerts` (create the view in Supabase).
- * Renders nothing when the view is missing, empty, or the query errors.
+ * Fetches `parable_ledger.view_accounting_alerts` and renders a destructive
+ * (red) marquee when abnormal / non-healthy rows exist.
  */
-export default async function AccountingAudit({ tenantId }: Props) {
+export default async function AccountingAudit() {
   const supabase = getSupabaseServerAnon();
   if (!supabase) return null;
 
-  let q = supabase.from("view_accounting_alerts").select("*");
-  if (tenantId) {
-    q = q.eq("tenant_id", tenantId);
-  }
-  const { data: alerts, error } = await q;
+  const { data, error } = await supabase
+    .from("view_accounting_alerts")
+    .select("*")
+    .eq("tenant_id", FOUNDRY_TENANT_ID);
 
   if (error) return null;
-  if (!alerts?.length) return null;
+  if (!data?.length) return null;
 
-  const rows = alerts as AccountingAlertRow[];
+  const rows = (data as AccountingAlertRow[]).filter(isAbnormal);
+  if (!rows.length) return null;
 
-  return (
-    <div className="mb-6 space-y-3" role="region" aria-label="Accounting audit alerts">
-      {rows.map((alert, i) => (
-        <div
-          key={`${String(alert.account_code)}-${alert.account_name}-${i}`}
-          className="flex gap-3 rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-left shadow-[0_0_0_1px_rgba(248,113,113,0.2)]"
-        >
-          <AlertIcon className="h-4 w-4 shrink-0 text-red-300" />
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-tight text-red-200/95">
-              Institutional audit alert: abnormal balance
-            </p>
-            <p className="mt-1 text-sm text-red-100/90">
-              Account <strong className="font-semibold text-white">{alert.account_code}</strong> (
-              <strong className="font-medium">{alert.account_name}</strong>) is showing a{" "}
-              <strong>{alert.health_status}</strong>. Normal balance should be{" "}
-              {String(alert.normal_balance ?? "").toUpperCase() || "—"}.
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <AuditMarqueeClient alerts={rows} />;
 }

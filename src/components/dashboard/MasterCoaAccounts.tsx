@@ -3,16 +3,9 @@
 import { useMemo, useState, type ReactNode } from "react";
 import MinistryAppShell from "@/components/MinistryAppShell";
 import CoaAddAccountSheet from "@/components/dashboard/CoaAddAccountSheet";
+import type { CoaListRow } from "@/types/accounting";
 
-export type CoaListRow = {
-  id: string;
-  account_code: number;
-  account_name: string;
-  category: string;
-  sub_category: string | null;
-  account_type: string | null;
-  is_restricted: boolean;
-};
+export type { CoaListRow };
 
 function normalForCategory(category: string): { label: string; className: string } {
   if (category === "Asset" || category === "Expense") {

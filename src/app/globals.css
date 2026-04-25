@@ -199,3 +199,31 @@ html.audit-mode img[data-brand-logo] {
   filter: grayscale(1) contrast(1.1);
   opacity: 0.92;
 }
+
+@keyframes accounting-audit-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.accounting-audit-marquee {
+  animation: accounting-audit-marquee 50s linear infinite;
+}
+
+@keyframes ledger-ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ledger-ticker-anim {
+  display: flex;
+  width: max-content;
+  animation: ledger-ticker 90s linear infinite;
+}
