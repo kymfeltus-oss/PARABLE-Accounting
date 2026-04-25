@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, PlayCircle, Sparkles, ChevronUp } from "lucide-react";
 import SmallBusinessPlanColumns from "@/components/landing/SmallBusinessPlanColumns";
-import { findPlanByName, parseCurrencyValue, saveSelectedPlan } from "@/lib/pricing";
+import { findPlanByName, loadSelectedPlan, parseCurrencyValue, saveSelectedPlan } from "@/lib/pricing";
 
 type Segment = "small" | "midsize";
 
@@ -24,8 +24,22 @@ export default function PlanSection() {
       planName,
       monthlyPrice: parseCurrencyValue(displayedPrice),
       discountLabel: matched.discountLabel,
+      freeTrial30Day: freeTrial,
     });
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const prev = loadSelectedPlan();
+    if (!prev?.planId) return;
+    saveSelectedPlan({
+      planId: prev.planId,
+      planName: prev.planName,
+      monthlyPrice: prev.monthlyPrice,
+      discountLabel: prev.discountLabel,
+      freeTrial30Day: freeTrial,
+    });
+  }, [freeTrial]);
 
   return (
     <section
@@ -131,7 +145,7 @@ export default function PlanSection() {
         </div>
 
         {segment === "small" ? (
-          <SmallBusinessPlanColumns />
+          <SmallBusinessPlanColumns freeTrial30={freeTrial} />
         ) : (
           <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
             <article

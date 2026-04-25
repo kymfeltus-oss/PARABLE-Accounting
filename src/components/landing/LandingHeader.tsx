@@ -23,9 +23,29 @@ const PRODUCTS_CHILDREN: { href: string; label: string }[] = [
   { href: "/command-center", label: "Command center" },
 ];
 
-function isProductChildActive(pathname: string, href: string) {
+const TOP_FEATURES_CHILDREN: { href: string; label: string }[] = [
+  { href: "/demo/connected-intelligence", label: "Connected intelligence" },
+  { href: "/demo/reporting-dashboards", label: "Reporting & dashboards" },
+  { href: "/demo/compliance-audit-trails", label: "Compliance & audit trails" },
+  { href: "/demo/data-portability", label: "Import / export" },
+];
+
+const BUSINESS_TYPES_CHILDREN: { href: string; label: string }[] = [
+  { href: "/business-types/small-ministry", label: "Small ministry" },
+  { href: "/business-types/mid-size-ministry", label: "Mid-size ministry" },
+  { href: "/business-types/ministries-churches", label: "Ministries & churches" },
+];
+
+const RESOURCES_CHILDREN: { href: string; label: string }[] = [
+  { href: "/resources/product-tour", label: "Product tour" },
+  { href: "/resources/onboarding", label: "Onboarding" },
+  { href: "/resources/staff-onboarding", label: "Staff onboarding" },
+  { href: "/resources/get-started", label: "Get started" },
+];
+
+function isDropdownLinkActive(pathname: string, href: string) {
   if (href === "/#plans") return pathname === "/";
-  return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export default function LandingHeader() {
@@ -33,6 +53,9 @@ export default function LandingHeader() {
   const [openId, setOpenId] = useState<MenuId>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(true);
+  const [mobileTopFeaturesOpen, setMobileTopFeaturesOpen] = useState(true);
+  const [mobileBusinessTypesOpen, setMobileBusinessTypesOpen] = useState(true);
+  const [mobileResourcesOpen, setMobileResourcesOpen] = useState(true);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => {
@@ -62,21 +85,19 @@ export default function LandingHeader() {
   const panel =
     "absolute left-0 top-full z-50 mt-1 min-w-[220px] rounded-md border border-slate-700 bg-slate-900 py-2 text-sm shadow-xl";
 
-  const item = "block px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
-
   const productItemBase = "block border-l-2 border-transparent px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
   const productItemActive =
     "block border-l-2 border-[var(--brand-cyber)] bg-slate-800/90 px-4 py-2 font-medium text-cyan-100 transition hover:bg-slate-800 hover:text-white";
 
-  const desktopProductClass = (href: string) =>
-    isProductChildActive(pathname, href) ? productItemActive : productItemBase;
+  const desktopDropdownLinkClass = (href: string) =>
+    isDropdownLinkActive(pathname, href) ? productItemActive : productItemBase;
 
   const mobileRowBase =
-    "inline-flex min-h-11 w-full items-center rounded-r-md py-2 pr-3 text-sm font-medium text-white/95 transition hover:bg-white/10";
+    "inline-flex min-h-11 w-full min-w-0 items-center rounded-r-md py-2.5 pr-2 text-sm font-medium text-white/95 transition hover:bg-white/10";
   const mobileRowActive =
-    "inline-flex min-h-11 w-full items-center rounded-r-md border-l-2 border-[var(--brand-cyber)] bg-white/15 py-2 pr-3 text-sm font-semibold text-white transition";
-  const mobileProductClass = (href: string) =>
-    `${isProductChildActive(pathname, href) ? mobileRowActive : mobileRowBase} pl-6`;
+    "inline-flex min-h-11 w-full min-w-0 items-center rounded-r-md border-l-2 border-[var(--brand-cyber)] bg-white/15 py-2.5 pr-2 text-sm font-semibold text-white transition";
+  const mobileDropdownLinkClass = (href: string) =>
+    `${isDropdownLinkActive(pathname, href) ? mobileRowActive : mobileRowBase} pl-5 break-words`;
 
   return (
     <header
@@ -85,7 +106,7 @@ export default function LandingHeader() {
     >
       {/* Brand row: Cyan background, black text/logo, navy promo accent */}
       <div className="bg-[var(--brand-cyber)] border-b border-black/10">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-1 px-4 py-0 sm:grid-cols-3 sm:items-center md:px-8 md:py-0.5">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-0.5 px-4 py-0 sm:grid-cols-3 sm:items-center md:px-8">
           <div className="hidden sm:block" aria-hidden />
           <Link
             href="/"
@@ -106,12 +127,12 @@ export default function LandingHeader() {
 
       {/* Main nav bar — Midnight Navy */}
       <div>
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-1 md:gap-3 md:px-8 md:py-1.5">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-0.5 md:gap-3 md:px-8 md:py-1">
           <nav className="hidden flex-1 min-w-0 items-center gap-0.5 md:flex" aria-label="Primary">
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "products"}
                 aria-haspopup="menu"
                 onClick={() => toggle("products")}
@@ -125,7 +146,7 @@ export default function LandingHeader() {
                     <Link
                       key={href + label}
                       href={href}
-                      className={desktopProductClass(href)}
+                      className={desktopDropdownLinkClass(href)}
                       role="menuitem"
                       onClick={close}
                     >
@@ -138,7 +159,7 @@ export default function LandingHeader() {
 
             <Link
               href="/#plans"
-              className="whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+              className="whitespace-nowrap rounded px-2 py-1 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
             >
               Plans &amp; Pricing
             </Link>
@@ -146,7 +167,7 @@ export default function LandingHeader() {
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "topFeatures"}
                 aria-haspopup="menu"
                 onClick={() => toggle("topFeatures")}
@@ -156,18 +177,17 @@ export default function LandingHeader() {
               </button>
               {openId === "topFeatures" && (
                 <div className={panel} role="menu">
-                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                    Connected intelligence
-                  </Link>
-                  <Link href="/reporting" className={item} role="menuitem" onClick={close}>
-                    Reporting &amp; dashboards
-                  </Link>
-                  <Link href="/compliance" className={item} role="menuitem" onClick={close}>
-                    Compliance &amp; audit trails
-                  </Link>
-                  <Link href="/import-export" className={item} role="menuitem" onClick={close}>
-                    Import / export
-                  </Link>
+                  {TOP_FEATURES_CHILDREN.map(({ href, label }) => (
+                    <Link
+                      key={href + label}
+                      href={href}
+                      className={desktopDropdownLinkClass(href)}
+                      role="menuitem"
+                      onClick={close}
+                    >
+                      {label}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
@@ -175,7 +195,7 @@ export default function LandingHeader() {
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "businessTypes"}
                 aria-haspopup="menu"
                 onClick={() => toggle("businessTypes")}
@@ -185,15 +205,17 @@ export default function LandingHeader() {
               </button>
               {openId === "businessTypes" && (
                 <div className={panel} role="menu">
-                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                    Small ministry
-                  </Link>
-                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                    Mid-size ministry
-                  </Link>
-                  <Link href="/member-portal" className={item} role="menuitem" onClick={close}>
-                    Ministries &amp; churches
-                  </Link>
+                  {BUSINESS_TYPES_CHILDREN.map(({ href, label }) => (
+                    <Link
+                      key={href + label}
+                      href={href}
+                      className={desktopDropdownLinkClass(href)}
+                      role="menuitem"
+                      onClick={close}
+                    >
+                      {label}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
@@ -201,7 +223,7 @@ export default function LandingHeader() {
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "resources"}
                 aria-haspopup="menu"
                 onClick={() => toggle("resources")}
@@ -211,18 +233,17 @@ export default function LandingHeader() {
               </button>
               {openId === "resources" && (
                 <div className={panel} role="menu">
-                  <Link href="/intro" className={item} role="menuitem" onClick={close}>
-                    Product tour
-                  </Link>
-                  <Link href="/onboarding" className={item} role="menuitem" onClick={close}>
-                    Onboarding
-                  </Link>
-                  <Link href="/staff-onboarding" className={item} role="menuitem" onClick={close}>
-                    Staff onboarding
-                  </Link>
-                  <Link href="/register" className={item} role="menuitem" onClick={close}>
-                    Get started
-                  </Link>
+                  {RESOURCES_CHILDREN.map(({ href, label }) => (
+                    <Link
+                      key={href + label}
+                      href={href}
+                      className={desktopDropdownLinkClass(href)}
+                      role="menuitem"
+                      onClick={close}
+                    >
+                      {label}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
@@ -256,11 +277,11 @@ export default function LandingHeader() {
         </div>
 
         {mobileOpen && (
-          <div className="border-t border-white/10 bg-[#4169E1] md:hidden">
-            <nav className="mx-auto flex max-w-7xl flex-col px-2 py-2" aria-label="Mobile Primary">
+          <div className="max-h-[min(78dvh,32rem)] overflow-y-auto overscroll-contain border-t border-white/10 bg-[#4169E1] md:hidden">
+            <nav className="mx-auto flex max-w-7xl flex-col px-2 py-2 pb-4" aria-label="Mobile Primary">
               <button
                 type="button"
-                className="inline-flex min-h-11 w-full items-center justify-between rounded px-2 py-2 text-left text-sm font-semibold text-white/95 hover:bg-white/10"
+                className="inline-flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm font-semibold text-white/95 hover:bg-white/10"
                 aria-expanded={mobileProductsOpen}
                 onClick={() => setMobileProductsOpen((o) => !o)}
               >
@@ -268,13 +289,13 @@ export default function LandingHeader() {
                 <NavChevron open={mobileProductsOpen} />
               </button>
               {mobileProductsOpen && (
-                <div className="flex flex-col border-l border-white/10 pb-1 pl-1">
+                <div className="flex flex-col border-l border-white/10 pb-2 pl-1">
                   {PRODUCTS_CHILDREN.map(({ href, label }) => (
                     <Link
                       key={href + label}
                       href={href}
                       onClick={close}
-                      className={mobileProductClass(href)}
+                      className={mobileDropdownLinkClass(href)}
                     >
                       {label}
                     </Link>
@@ -282,24 +303,78 @@ export default function LandingHeader() {
                 </div>
               )}
 
-              {[
-                { href: "/#plans", label: "Plans & Pricing" },
-                { href: "/reporting", label: "Top features · Reporting" },
-                { href: "/compliance", label: "Top features · Compliance" },
-                { href: "/member-portal", label: "Business types · Ministries" },
-                { href: "/intro", label: "Resources · Product tour" },
-                { href: "/register", label: "Resources · Get started" },
-                { href: "/contact", label: "Talk to Sales" },
-              ].map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  onClick={close}
-                  className="inline-flex min-h-11 items-center rounded px-2 py-2 text-sm font-medium text-white/95 hover:bg-white/10"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <Link
+                href="/#plans"
+                onClick={close}
+                className="inline-flex min-h-11 items-center rounded px-2 py-2 text-sm font-medium text-white/95 hover:bg-white/10"
+              >
+                Plans &amp; Pricing
+              </Link>
+
+              <button
+                type="button"
+                className="inline-flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm font-semibold text-white/95 hover:bg-white/10"
+                aria-expanded={mobileTopFeaturesOpen}
+                onClick={() => setMobileTopFeaturesOpen((o) => !o)}
+              >
+                Top features
+                <NavChevron open={mobileTopFeaturesOpen} />
+              </button>
+              {mobileTopFeaturesOpen && (
+                <div className="flex flex-col border-l border-white/10 pb-2 pl-1">
+                  {TOP_FEATURES_CHILDREN.map(({ href, label }) => (
+                    <Link key={href + label} href={href} onClick={close} className={mobileDropdownLinkClass(href)}>
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                className="inline-flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm font-semibold text-white/95 hover:bg-white/10"
+                aria-expanded={mobileBusinessTypesOpen}
+                onClick={() => setMobileBusinessTypesOpen((o) => !o)}
+              >
+                Business types
+                <NavChevron open={mobileBusinessTypesOpen} />
+              </button>
+              {mobileBusinessTypesOpen && (
+                <div className="flex flex-col border-l border-white/10 pb-2 pl-1">
+                  {BUSINESS_TYPES_CHILDREN.map(({ href, label }) => (
+                    <Link key={href + label} href={href} onClick={close} className={mobileDropdownLinkClass(href)}>
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                className="inline-flex min-h-11 w-full shrink-0 items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm font-semibold text-white/95 hover:bg-white/10"
+                aria-expanded={mobileResourcesOpen}
+                onClick={() => setMobileResourcesOpen((o) => !o)}
+              >
+                Resources
+                <NavChevron open={mobileResourcesOpen} />
+              </button>
+              {mobileResourcesOpen && (
+                <div className="flex flex-col border-l border-white/10 pb-2 pl-1">
+                  {RESOURCES_CHILDREN.map(({ href, label }) => (
+                    <Link key={href + label} href={href} onClick={close} className={mobileDropdownLinkClass(href)}>
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              <Link
+                href="/contact"
+                onClick={close}
+                className="inline-flex min-h-11 items-center rounded px-2 py-2 text-sm font-medium text-white/95 hover:bg-white/10"
+              >
+                Talk to Sales
+              </Link>
             </nav>
           </div>
         )}

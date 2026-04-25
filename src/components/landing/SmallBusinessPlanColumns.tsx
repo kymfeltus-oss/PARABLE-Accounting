@@ -119,7 +119,12 @@ const ctaPrimary =
 const ctaDark =
   "mt-3 inline-flex w-full items-center justify-center rounded bg-slate-950 py-2.5 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-slate-800";
 
-export default function SmallBusinessPlanColumns() {
+type Props = {
+  /** Mirrors Plan section “Free trial for 30 days” toggle — stored with plan selection for /register. */
+  freeTrial30: boolean;
+};
+
+export default function SmallBusinessPlanColumns({ freeTrial30 }: Props) {
   const handleChoosePlan = (e: React.MouseEvent<HTMLAnchorElement>) => {
     const card = e.currentTarget.closest("article");
     if (!card) return;
@@ -132,6 +137,7 @@ export default function SmallBusinessPlanColumns() {
       planName: name,
       monthlyPrice: price,
       discountLabel: matched.discountLabel,
+      freeTrial30Day: freeTrial30,
     });
   };
 

@@ -6,6 +6,7 @@ import { useState } from "react";
 const field =
   "h-11 w-full rounded-md border border-slate-300 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--brand-cyber)] focus:ring-2 focus:ring-[var(--brand-cyber)]/30";
 
+const OFFICIAL_SITE = "https://www.parableaccountant.com";
 const CONTACT_EMAIL = "info@parableaccountant.com";
 
 export default function ContactPage() {
@@ -13,13 +14,10 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [formErr, setFormErr] = useState<string | null>(null);
 
-  const openInquiryMail = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim()) {
-      window.alert("Please enter a message.");
-      return;
-    }
+  const openInquiryMail = () => {
     const body = [
       name.trim() && `Name: ${name.trim()}`,
       email.trim() && `Reply email: ${email.trim()}`,
@@ -28,8 +26,49 @@ export default function ContactPage() {
     ]
       .filter(Boolean)
       .join("\n");
-    const subj = subject.trim() || "Parable Accounting inquiry";
+    const subj = subject.trim() || "PARABLE Accounting inquiry";
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormErr(null);
+    if (!message.trim()) {
+      window.alert("Please enter a message.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          subject: subject.trim() || "PARABLE Accounting inquiry",
+          message: message.trim(),
+        }),
+      });
+      if (res.ok) {
+        window.alert("Thank you — your message was sent. We will reply soon.");
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+        setBusy(false);
+        return;
+      }
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.status === 503) {
+        openInquiryMail();
+        setBusy(false);
+        return;
+      }
+      setFormErr(j.error ?? "Could not send. Try again or use your email app.");
+    } catch {
+      openInquiryMail();
+    }
+    setBusy(false);
   };
 
   return (
@@ -44,14 +83,18 @@ export default function ContactPage() {
 
         <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Contact us</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          Send an inquiry using the form below (opens your email app), or reach us directly at{" "}
+          Questions about PARABLE Accounting on{" "}
+          <a href={OFFICIAL_SITE} className="font-semibold text-[#0a1628] underline hover:no-underline">
+            www.parableaccountant.com
+          </a>
+          ? Send a message below (we deliver via secure Zoho SMTP when configured), or email{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-[#0a1628] underline hover:no-underline">
             {CONTACT_EMAIL}
           </a>
           .
         </p>
 
-        <form onSubmit={openInquiryMail} className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
             <label htmlFor="inq-name" className="mb-1.5 block text-sm font-medium text-slate-700">
               Name
@@ -109,15 +152,17 @@ export default function ContactPage() {
               placeholder="How can we help?"
             />
           </div>
+          {formErr && <p className="text-sm text-red-600">{formErr}</p>}
           <button
             type="submit"
-            className="w-full rounded-md border-2 border-cyan-500/20 py-3 text-sm font-bold uppercase tracking-wide text-slate-950 transition hover:brightness-105"
+            disabled={busy}
+            className="w-full rounded-md border-2 border-cyan-500/20 py-3 text-sm font-bold uppercase tracking-wide text-slate-950 transition hover:brightness-105 disabled:opacity-60"
             style={{ backgroundColor: "var(--brand-cyber)" }}
           >
-            Send inquiry
+            {busy ? "Sending…" : "Send inquiry"}
           </button>
           <p className="text-center text-xs text-slate-500">
-            Opens your default email app addressed to {CONTACT_EMAIL}.
+            If the server cannot use SMTP yet, we open your mail app to {CONTACT_EMAIL} instead.
           </p>
         </form>
       </div>

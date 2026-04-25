@@ -9,9 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.parableaccountant.com"),
   title: "PARABLE Accounting — Ministry fund accounting",
   description:
-    "PARABLE Accounting: audit-oriented ledger for churches and ministries — fund segregation, append-only events, and alignment with the PARABLE ecosystem (streaming, giving, compliance).",
+    "PARABLE Accounting (www.parableaccountant.com): audit-oriented ledger for churches and ministries — fund segregation, append-only events, and alignment with the PARABLE ecosystem (streaming, giving, compliance).",
 };
 
 /** Scales to phone / tablet / desktop; allows pinch-zoom (accessibility). */

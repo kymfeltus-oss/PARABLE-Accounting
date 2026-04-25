@@ -12,13 +12,15 @@ export default function HomePage() {
         className="relative w-full overflow-x-hidden text-white"
         style={{ background: "linear-gradient(to bottom, #000028 0%, #050a18 100%)" }}
       >
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-16 pb-6 sm:gap-10 sm:pt-20 sm:pb-8 md:px-8 lg:min-h-[min(80dvh,45rem)] lg:grid-cols-2 lg:items-start lg:gap-12 lg:pt-24">
-          <div className="z-10">
-            <div className="mb-12 inline-flex max-w-[90vw] flex-wrap items-center gap-x-2.5 gap-y-1 overflow-visible sm:max-w-full sm:items-baseline">
-              <img src="/logo.svg" alt="Parable" className="hero-parable-alive h-10 w-auto sm:h-12" />
-              <span className="text-[clamp(1rem,4.2vw,1.5rem)] font-normal tracking-tight text-white sm:text-[clamp(1.25rem,4.8vw,1.875rem)]">Accounting</span>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 pt-20 pb-6 sm:gap-10 sm:pt-24 sm:pb-8 md:px-8 lg:min-h-[min(80dvh,45rem)] lg:grid-cols-2 lg:items-start lg:gap-12 lg:pt-28">
+          <div className="z-10 min-w-0">
+            <div className="mb-16 inline-flex max-w-full flex-wrap items-baseline gap-x-2.5 gap-y-2 overflow-visible sm:mb-20 sm:max-w-full">
+              <img src="/logo.svg" alt="Parable" className="hero-parable-alive h-10 w-auto shrink-0 sm:h-12" />
+              <span className="min-w-0 max-w-full break-words text-[clamp(0.8125rem,3.6vw,1.5rem)] font-normal leading-tight tracking-tight text-white sm:text-[clamp(1.125rem,4.2vw,1.875rem)]">
+                Accounting
+              </span>
             </div>
-            <div className="mt-3">
+            <div className="mt-4 sm:mt-6">
               <p className="text-lg font-semibold text-[#4169E1] sm:text-2xl" style={{ textShadow: "0 0 10px rgba(65, 105, 225, 0.35)" }}>
                 Automation where it counts.
               </p>
