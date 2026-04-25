@@ -34,7 +34,7 @@ export default function PlanSection() {
                 : "w-full min-h-[3rem] rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm sm:w-[min(100%,220px)]"
             }
           >
-            Small ministry
+            Small business
           </button>
           <button
             type="button"
@@ -46,7 +46,7 @@ export default function PlanSection() {
                 : "w-full min-h-[3rem] rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm sm:w-[min(100%,220px)]"
             }
           >
-            Mid-size ministry
+            Mid-size business
           </button>
         </div>
 
@@ -125,7 +125,7 @@ export default function PlanSection() {
           <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
             <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="bg-slate-950 px-4 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-white">
-                Best of Accounting
+                Best of QuickBooks
               </div>
               <div className="p-5 sm:p-6">
                 <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">Advanced</h3>
@@ -149,121 +149,88 @@ export default function PlanSection() {
                   aria-hidden
                 />
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-sky-100 bg-sky-50/90 p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                          <Sparkles className="h-4 w-4 text-cyan-600" />
-                          Accounting
-                        </div>
-                        <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
-                      </div>
-                      <ul className="mt-3 space-y-2.5 text-sm leading-snug text-slate-800">
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          Everything in Plus
-                        </li>
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          <span className="flex flex-wrap items-center gap-2">
-                            Guides setup and gives ongoing guidance
-                            <span
-                              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-300 text-[10px] font-semibold text-slate-700"
-                              aria-hidden
-                            >
-                              PM
-                            </span>
-                            <span className="rounded bg-slate-200/90 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-slate-600">
-                              BETA
-                            </span>
-                          </span>
-                        </li>
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          Personalizes business intelligence metrics
-                        </li>
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          Create custom KPIs, dashboards, and reports
-                        </li>
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          Integrates project management with Project Management AI
-                        </li>
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          Gives tailored financial insights with Finance AI
-                        </li>
-                        <li className="flex gap-2">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                          <span>
-                            Chat for instant insights
-                            <span className="mt-0.5 block text-xs italic text-slate-600">25 questions per month</span>
-                          </span>
-                        </li>
-                      </ul>
-                      <button
-                        type="button"
-                        className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-700 transition hover:text-cyan-800"
-                      >
-                        <PlayCircle className="h-4 w-4" />
-                        Play demo
-                      </button>
+                <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      <Sparkles className="h-4 w-4 text-cyan-600" />
+                      Intuit Intelligence
                     </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                      <p className="text-base font-semibold text-slate-900">Top features</p>
-                      <ul className="mt-2 space-y-1.5 text-sm text-slate-800">
-                        {[
-                          "Everything in Plus",
-                          "Customize user permissions and access",
-                          "Automate workflows",
-                          "Sync data from Excel",
-                          "Forecast cash flow and profit",
-                          "Send batch invoices and expenses",
-                          "Backup and restore",
-                          "Get priority support and training",
-                        ].map((t) => (
-                          <li key={t} className="flex gap-2">
-                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyber)]" />
-                            {t}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                        <Sparkles className="h-4 w-4 text-cyan-600" />
-                        Accounting
-                      </div>
-                      <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
-                    </div>
-                    <p className="mt-3 flex items-start gap-2 text-sm font-medium text-slate-900">
-                      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                      Personalizes business intelligence metrics
-                    </p>
-                    <p className="mb-1 mt-4 text-sm font-semibold text-slate-900">Top features</p>
-                    <ul className="space-y-2.5 text-sm text-slate-700">
-                      <li>
-                        <span className="font-semibold text-slate-900">Multi-dimensional reporting</span> for high-level
-                        and granular control
+                  <div className="px-4 py-4">
+                    <ul className="space-y-2.5 text-sm leading-snug text-slate-800">
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        Everything in Plus
                       </li>
-                      <li>
-                        <span className="font-semibold text-slate-900">Integrated project and workflow management</span>{" "}
-                        to delegate at scale
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        <span className="flex flex-wrap items-center gap-2">
+                          Guides setup and gives ongoing guidance
+                          <span
+                            className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-300 text-[10px] font-semibold text-slate-700"
+                            aria-hidden
+                          >
+                            PM
+                          </span>
+                          <span className="rounded bg-slate-200/90 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-slate-600">
+                            BETA
+                          </span>
+                        </span>
                       </li>
-                      <li>
-                        <span className="font-semibold text-slate-900">Advanced planning and analytics</span> to shape
-                        strategic decision-making
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        Personalizes business intelligence metrics
                       </li>
-                      <li>
-                        <span className="font-semibold text-slate-900">Dedicated customer support manager</span> to
-                        optimize your suite
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        Create custom KPIs, dashboards, and reports
                       </li>
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        Integrates project management with Project Management AI
+                      </li>
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        Gives tailored financial insights with Finance AI
+                      </li>
+                      <li className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        <span>
+                          Chat for instant insights
+                          <span className="mt-0.5 block text-xs italic text-slate-600">25 questions per month</span>
+                        </span>
+                      </li>
+                    </ul>
+
+                    <button
+                      type="button"
+                      className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-700 transition hover:text-cyan-800"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      Play demo
+                    </button>
+                  </div>
+
+                  <div className="border-t border-slate-200 px-4 py-4">
+                    <p className="text-base font-semibold text-slate-900">Top features</p>
+                    <ul className="mt-2 space-y-1.5 text-sm text-slate-800">
+                      {[
+                        "Everything in Plus",
+                        "Customize user permissions and access",
+                        "Automate workflows",
+                        "Sync data from Excel",
+                        "Forecast cash flow and profit",
+                        "Send batch invoices and expenses",
+                        "Backup and restore",
+                        "Get priority support and training",
+                      ].map((t) => (
+                        <li key={t} className="flex gap-2">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyber)]" />
+                          {t}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -271,9 +238,8 @@ export default function PlanSection() {
             </article>
 
             <article className="overflow-hidden rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <h3 className="text-xl font-bold tracking-tight sm:text-2xl md:text-3xl">
-                <span className="font-bold text-[var(--brand-cyber)]">Enterprise</span>{" "}
-                <span className="text-slate-900">Ministry</span>
+              <h3 className="text-xl font-bold tracking-tight text-[var(--brand-cyber)] sm:text-2xl md:text-3xl">
+                Enterprise Ministry
               </h3>
               <p className="mt-2 text-base text-slate-600">
                 Simplify your organization at scale with an ERP-level solution designed for operational sophistication
@@ -290,33 +256,58 @@ export default function PlanSection() {
                 See it in action (3:42) — product tour
               </p>
 
-              <div className="mt-6 rounded-xl border border-sky-100 bg-sky-50/80 p-4">
-                <div className="flex items-center justify-between gap-2">
+              <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                   <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <Sparkles className="h-4 w-4 text-cyan-600" />
-                    Accounting
+                    Intuit Intelligence
                   </div>
                   <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
                 </div>
-                <ul className="mt-3 space-y-2 text-sm text-slate-800">
-                  {[
-                    "Entity consolidation and intercompany eliminations",
-                    "Role-based approval chains and segregation of duties",
-                    "Policy-driven close calendar with attestations",
-                  ].map((t) => (
-                    <li key={t} className="flex gap-2">
-                      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                      {t}
+
+                <div className="px-4 py-4">
+                  <p className="flex items-start gap-2 text-sm font-medium text-slate-900">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                    Personalizes business intelligence metrics
+                  </p>
+                </div>
+
+                <div className="border-t border-slate-200 px-4 py-4">
+                  <p className="mb-1 text-sm font-semibold text-slate-900">Top features:</p>
+                  <ul className="space-y-2.5 text-sm text-slate-700">
+                    <li>
+                      <span className="font-semibold text-slate-900">Multi-dimensional reporting</span> for high-level
+                      and granular control
                     </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-700"
-                >
-                  <PlayCircle className="h-4 w-4" />
-                  Play demo
-                </button>
+                    <li>
+                      <span className="font-semibold text-slate-900">Integrated project and workflow management</span>{" "}
+                      to delegate at scale
+                    </li>
+                    <li>
+                      <span className="font-semibold text-slate-900">Advanced planning and analytics</span> to shape
+                      strategic decision-making
+                    </li>
+                    <li>
+                      <span className="font-semibold text-slate-900">Dedicated customer support manager</span> to
+                      optimize your suite
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                {["Payroll", "Commerce", "Support"].map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className="flex w-full items-center justify-between border-b border-slate-200 px-4 py-3 text-left text-sm font-semibold text-slate-800 last:border-b-0"
+                  >
+                    {item}
+                    <span aria-hidden className="text-slate-400">
+                      +
+                    </span>
+                  </button>
+                ))}
               </div>
             </article>
           </div>

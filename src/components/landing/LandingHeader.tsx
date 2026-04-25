@@ -50,7 +50,10 @@ export default function LandingHeader() {
   const item = "block px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
 
   return (
-    <header ref={wrapRef} className="bg-[#4169E1] text-white">
+    <header
+      ref={wrapRef}
+      className="sticky top-0 z-[100] bg-[#4169E1] text-white shadow-[0_6px_18px_rgba(0,0,0,0.25)]"
+    >
       {/* Brand row: Cyan background, black text/logo, navy promo accent */}
       <div className="bg-[var(--brand-cyber)] border-b border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-2 md:px-8 md:py-3">

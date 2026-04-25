@@ -14,7 +14,11 @@ export default function HomePage() {
       >
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pt-12 pb-6 sm:gap-10 sm:pt-16 sm:pb-8 md:px-8 lg:min-h-[min(80dvh,45rem)] lg:grid-cols-2 lg:items-center lg:gap-12">
           <div className="z-10">
-            <p className="text-lg font-semibold sm:text-2xl text-[var(--brand-cyber)]" style={{ textShadow: "0 0 10px rgba(0, 255, 255, 0.4)" }}>
+            <div className="mb-6 inline-flex items-center gap-3">
+              <img src="/logo.svg" alt="Parable" className="h-10 w-auto sm:h-12" />
+              <span className="text-xl font-bold tracking-tight text-white sm:text-2xl">Accounting</span>
+            </div>
+            <p className="text-lg font-semibold text-[#4169E1] sm:text-2xl" style={{ textShadow: "0 0 10px rgba(65, 105, 225, 0.35)" }}>
               Automation where it counts.
             </p>
             
@@ -27,10 +31,16 @@ export default function HomePage() {
             </p>
             
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/#plans" className="inline-flex items-center justify-center rounded-md bg-[#4169E1] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#3557c7] hover:shadow-[0_0_20px_rgba(65,105,225,0.45)]">
+              <a
+                href="#plans"
+                className="inline-flex items-center justify-center rounded-md bg-[#4169E1] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-[#3557c7] hover:shadow-[0_0_20px_rgba(65,105,225,0.45)]"
+              >
                 Buy now and save
-              </Link>
-              <Link href="/register" className="inline-flex items-center justify-center rounded-md border-2 border-[#4169E1] bg-transparent px-6 py-3 text-sm font-bold tracking-wide text-[#4169E1] transition hover:bg-[#4169E1]/10">
+              </a>
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center rounded-md border-2 border-[#4169E1] bg-transparent px-6 py-3 text-sm font-bold tracking-wide text-[#4169E1] transition hover:bg-[#4169E1]/10"
+              >
                 Try it free for 30 days
               </Link>
             </div>
