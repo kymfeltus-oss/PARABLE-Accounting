@@ -30,7 +30,7 @@ export default function IntroFlashClient() {
         <div className="w-full rounded-2xl border border-white/[0.08] bg-white p-8 shadow-[0_0_0_1px_rgba(34,211,238,0.15),0_25px_80px_-20px_rgba(0,0,0,0.6),0_0_120px_-30px_rgba(34,211,238,0.25)]">
           <Image
             src="/branding/parable-accounting-logo.png"
-            alt="PARABLE Accounting — AI-Driven Financial Integrity for the Modern Ministry"
+            alt="PARABLE Accounting — fund accounting and ledger operations"
             width={640}
             height={360}
             className="h-auto w-full max-w-md select-none"
@@ -56,7 +56,7 @@ export default function IntroFlashClient() {
           transition={{ delay: 0.5, duration: 0.45 }}
         >
           <Link
-            href="/"
+            href="/member-portal"
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-cyan-500 px-8 text-sm font-bold uppercase tracking-widest text-[#030304] shadow-[0_0_32px_rgba(34,211,238,0.35)] transition hover:bg-cyan-400"
           >
             Enter app
@@ -71,7 +71,7 @@ export default function IntroFlashClient() {
       </motion.div>
 
       <p className="absolute bottom-6 z-10 text-[10px] font-medium uppercase tracking-[0.35em] text-white/25">
-        Parable · Ministry ERP
+        Parable · ERP
       </p>
     </div>
   );

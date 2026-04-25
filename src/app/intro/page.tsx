@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import IntroFlashClient from "./IntroFlashClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "PARABLE Accounting",
-  description: "AI-Driven Financial Integrity for the Modern Ministry.",
-};
-
-export default function IntroPage() {
-  return <IntroFlashClient />;
+/** Brand flash lives on `/`; keep `/intro` for bookmarks. */
+export default function IntroRedirectPage() {
+  redirect("/");
 }
