@@ -111,6 +111,33 @@ body {
   box-shadow: 0 0 28px rgb(var(--brand-glow-rgb) / 0.25);
 }
 
+.hero-parable-alive {
+  transform-origin: center;
+  animation: heroParableFloat 4.2s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+@keyframes heroParableFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 18px rgba(65, 105, 225, 0.45))
+      drop-shadow(0 0 30px rgba(0, 242, 255, 0.25));
+  }
+  50% {
+    transform: translateY(-2px) scale(1.015);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5))
+      drop-shadow(0 0 24px rgba(65, 105, 225, 0.58))
+      drop-shadow(0 0 38px rgba(0, 242, 255, 0.33));
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.45))
+      drop-shadow(0 0 18px rgba(65, 105, 225, 0.45))
+      drop-shadow(0 0 30px rgba(0, 242, 255, 0.25));
+  }
+}
+
 /* Desktop ERP: keep scrollbars usable (unlike consumer PARABLE feed) */
 .ministry-scroll {
   scrollbar-width: thin;

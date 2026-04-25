@@ -56,19 +56,19 @@ export default function LandingHeader() {
     >
       {/* Brand row: Cyan background, black text/logo, navy promo accent */}
       <div className="bg-[var(--brand-cyber)] border-b border-black/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-2 md:px-8 md:py-3">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-1 px-4 py-0.5 sm:grid-cols-3 sm:items-center md:px-8 md:py-1">
+          <div className="hidden sm:block" aria-hidden />
           <Link
             href="/"
-            className="flex w-fit shrink-0 items-center gap-2.5 no-underline"
+            className="mx-auto flex w-fit shrink-0 items-center no-underline sm:justify-self-center"
           >
             <img
               src="/logo.svg"
               alt="Parable"
               className="h-8 w-auto sm:h-9 brightness-0" 
             />
-            <span className="text-sm font-bold tracking-tight text-[#4169E1] sm:text-base">Accounting</span>
           </Link>
-          <p className="min-w-0 pl-0 text-left text-xs font-semibold text-black/80 sm:border-l sm:border-black/20 sm:pl-3 sm:text-sm md:pl-4">
+          <p className="min-w-0 text-right text-xs font-semibold text-black/80 sm:justify-self-end sm:text-sm">
             Get <span className="font-extrabold text-[#4169E1]">50% OFF</span> Accounting for 3 months
             <span className="ml-0.5 text-black/40">*</span>
           </p>
@@ -77,12 +77,12 @@ export default function LandingHeader() {
 
       {/* Main nav bar — Midnight Navy */}
       <div>
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 md:gap-3 md:px-8 md:py-2.5">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-1 md:gap-3 md:px-8 md:py-1.5">
           <nav className="hidden flex-1 min-w-0 items-center gap-0.5 md:flex" aria-label="Primary">
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "products"}
                 aria-haspopup="menu"
                 onClick={() => toggle("products")}
@@ -110,7 +110,7 @@ export default function LandingHeader() {
 
             <Link
               href="/#plans"
-              className="whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+              className="whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
             >
               Plans &amp; Pricing
             </Link>
@@ -118,7 +118,7 @@ export default function LandingHeader() {
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "topFeatures"}
                 aria-haspopup="menu"
                 onClick={() => toggle("topFeatures")}
@@ -147,7 +147,7 @@ export default function LandingHeader() {
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "businessTypes"}
                 aria-haspopup="menu"
                 onClick={() => toggle("businessTypes")}
@@ -173,7 +173,7 @@ export default function LandingHeader() {
             <div className="relative">
               <button
                 type="button"
-                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-1.5 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
                 aria-expanded={openId === "resources"}
                 aria-haspopup="menu"
                 onClick={() => toggle("resources")}
@@ -203,7 +203,7 @@ export default function LandingHeader() {
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <button
               type="button"
-              className="flex items-center justify-center rounded p-2 text-white md:hidden"
+              className="flex min-h-10 min-w-10 items-center justify-center rounded p-1.5 text-white md:hidden"
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileOpen((o) => !o)}
@@ -213,19 +213,43 @@ export default function LandingHeader() {
 
             <Link
               href="/login"
-              className="inline-flex shrink-0 items-center justify-center rounded-none border-2 border-white bg-transparent px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-white/10 max-[479px]:hidden"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-none border-2 border-white bg-transparent px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-white/10 max-[479px]:hidden"
             >
               Sign in
             </Link>
 
             <Link
               href="/#plans"
-              className="inline-flex shrink-0 items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-[var(--brand-cyber)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black transition hover:brightness-105 sm:ml-2"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-[var(--brand-cyber)] px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black transition hover:brightness-105 sm:ml-2"
             >
               Buy now
             </Link>
           </div>
         </div>
+
+        {mobileOpen && (
+          <div className="border-t border-white/10 bg-[#4169E1] md:hidden">
+            <nav className="mx-auto flex max-w-7xl flex-col px-4 py-2" aria-label="Mobile Primary">
+              {[
+                { href: "/#plans", label: "Products & Services" },
+                { href: "/#plans", label: "Plans & Pricing" },
+                { href: "/#plans", label: "Top features" },
+                { href: "/#plans", label: "Business types" },
+                { href: "/#plans", label: "Resources" },
+                { href: "/contact", label: "Talk to Sales" },
+              ].map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={close}
+                  className="inline-flex min-h-11 items-center rounded px-2 py-2 text-sm font-medium text-white/95 hover:bg-white/10"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

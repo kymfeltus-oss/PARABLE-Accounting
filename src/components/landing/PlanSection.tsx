@@ -20,7 +20,7 @@ export default function PlanSection() {
     >
       <div className="mx-auto max-w-7xl px-4 py-14 md:px-8 md:py-20">
         <h2 className="text-center text-4xl font-medium tracking-tight md:text-6xl">
-          Connected intelligence. One solution.
+          Connected Intelligence. <span className="whitespace-nowrap">One Ministry Ecosystem.</span>
         </h2>
 
         <div className="mx-auto mt-8 flex w-full max-w-2xl flex-col gap-2.5 sm:mt-10 sm:flex-row sm:items-stretch sm:justify-center sm:gap-3">
@@ -34,7 +34,7 @@ export default function PlanSection() {
                 : "w-full min-h-[3rem] rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm sm:w-[min(100%,220px)]"
             }
           >
-            Small business
+            Small Ministries
           </button>
           <button
             type="button"
@@ -46,7 +46,7 @@ export default function PlanSection() {
                 : "w-full min-h-[3rem] rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm sm:w-[min(100%,220px)]"
             }
           >
-            Mid-size business
+            Mid-size Ministries
           </button>
         </div>
 
@@ -61,7 +61,7 @@ export default function PlanSection() {
             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] text-slate-600">
               2
             </span>
-            Add Payroll (optional)
+            Add PARABLE Giving
           </p>
           <p className="flex items-center justify-center gap-1.5 text-center text-slate-500">
             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] text-slate-600">
@@ -125,7 +125,7 @@ export default function PlanSection() {
           <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
             <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="bg-slate-950 px-4 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-white">
-                Best of QuickBooks
+                Best of PARABLE
               </div>
               <div className="p-5 sm:p-6">
                 <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">Advanced</h3>
@@ -153,7 +153,7 @@ export default function PlanSection() {
                   <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                       <Sparkles className="h-4 w-4 text-cyan-600" />
-                      Intuit Intelligence
+                      Accounting
                     </div>
                     <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
                   </div>
@@ -242,8 +242,8 @@ export default function PlanSection() {
                 Enterprise Ministry
               </h3>
               <p className="mt-2 text-base text-slate-600">
-                Simplify your organization at scale with an ERP-level solution designed for operational sophistication
-                across sites, funds, and finance teams.
+                Scale your ministry&apos;s impact with an AI-driven ERP solution designed for operational sophistication
+                across multi-site campuses, restricted funds, and finance teams.
               </p>
               <Link
                 href="/command-center"
@@ -260,37 +260,23 @@ export default function PlanSection() {
                 <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                   <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <Sparkles className="h-4 w-4 text-cyan-600" />
-                    Intuit Intelligence
+                    Accounting
                   </div>
                   <ChevronUp className="h-4 w-4 text-slate-400" aria-hidden />
                 </div>
 
                 <div className="px-4 py-4">
-                  <p className="flex items-start gap-2 text-sm font-medium text-slate-900">
-                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                    Personalizes business intelligence metrics
-                  </p>
-                </div>
-
-                <div className="border-t border-slate-200 px-4 py-4">
-                  <p className="mb-1 text-sm font-semibold text-slate-900">Top features:</p>
-                  <ul className="space-y-2.5 text-sm text-slate-700">
-                    <li>
-                      <span className="font-semibold text-slate-900">Multi-dimensional reporting</span> for high-level
-                      and granular control
-                    </li>
-                    <li>
-                      <span className="font-semibold text-slate-900">Integrated project and workflow management</span>{" "}
-                      to delegate at scale
-                    </li>
-                    <li>
-                      <span className="font-semibold text-slate-900">Advanced planning and analytics</span> to shape
-                      strategic decision-making
-                    </li>
-                    <li>
-                      <span className="font-semibold text-slate-900">Dedicated customer support manager</span> to
-                      optimize your suite
-                    </li>
+                  <ul className="space-y-2 text-sm text-slate-800">
+                    {[
+                      "Entity consolidation and intercompany eliminations",
+                      "Role-based approval chains and segregation of duties",
+                      "Policy-driven close calendar with attestations",
+                    ].map((t) => (
+                      <li key={t} className="flex gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                        {t}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -313,10 +299,6 @@ export default function PlanSection() {
           </div>
         )}
 
-        <p className="mx-auto mt-10 max-w-3xl text-center text-xs text-slate-500">
-          * Placeholder plan presentation for UI demonstration. Connect pricing and entitlements in Supabase/Stripe in a
-          later pass.
-        </p>
       </div>
     </section>
   );
