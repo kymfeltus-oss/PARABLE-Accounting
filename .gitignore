@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+# Next resolves ./app before ./src/app — a stray top-level `app/` shadows the whole App Router.
+/app
 
 # production
 /build
