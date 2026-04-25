@@ -51,8 +51,8 @@ export default function LandingHeader() {
 
   return (
     <header ref={wrapRef} className="bg-[#000040] text-white">
-      {/* Brand row: Now set to Black background */}
-      <div className="bg-black border-b border-slate-500/45 border-t-2 border-[var(--brand-cyber)]">
+      {/* Brand row: Cyan background, black text/logo, navy promo accent */}
+      <div className="bg-[var(--brand-cyber)] border-b border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-2 md:px-8 md:py-3">
           <Link
             href="/"
@@ -60,22 +60,22 @@ export default function LandingHeader() {
           >
             <img
               src="/logo.svg"
-              alt="Accounting"
-              className="h-8 w-auto sm:h-9"
+              alt="Parable"
+              className="h-8 w-auto sm:h-9 brightness-0" 
             />
-            <span className="text-sm font-semibold tracking-tight text-white sm:text-base">Accounting</span>
+            <span className="text-sm font-bold tracking-tight text-black sm:text-base">Accounting</span>
           </Link>
-          <p className="min-w-0 pl-0 text-left text-xs font-semibold text-white/95 sm:border-l sm:border-slate-600/50 sm:pl-3 sm:text-sm md:pl-4">
-            Get <span className="text-[var(--brand-cyber)]">50% OFF</span> Accounting for 3 months
-            <span className="ml-0.5 text-slate-500">*</span>
+          <p className="min-w-0 pl-0 text-left text-xs font-semibold text-black/80 sm:border-l sm:border-black/20 sm:pl-3 sm:text-sm md:pl-4">
+            Get <span className="font-extrabold text-[#000040]">50% OFF</span> Accounting for 3 months
+            <span className="ml-0.5 text-black/40">*</span>
           </p>
         </div>
       </div>
 
-      {/* Main nav bar — Remains Deep Navy Blue */}
+      {/* Main nav bar — Midnight Navy */}
       <div>
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 md:gap-3 md:px-8 md:py-2.5">
-          <nav className="hidden flex-1 items-center gap-0.5 lg:flex" aria-label="Primary">
+          <nav className="hidden flex-1 min-w-0 items-center gap-0.5 md:flex" aria-label="Primary">
             <div className="relative">
               <button
                 type="button"
@@ -197,17 +197,10 @@ export default function LandingHeader() {
             </div>
           </nav>
 
-          <a
-            href="mailto:contact@parable.com?subject=Accounting%20inquiry"
-            className="hidden shrink-0 items-center justify-center rounded-none border-2 border-[var(--brand-cyber)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)] transition hover:bg-cyan-400/10 xl:inline-flex"
-          >
-            Contact us
-          </a>
-
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <button
               type="button"
-              className="flex items-center justify-center rounded p-2 text-white lg:hidden"
+              className="flex items-center justify-center rounded p-2 text-white md:hidden"
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               onClick={() => setMobileOpen((o) => !o)}
@@ -231,73 +224,6 @@ export default function LandingHeader() {
           </div>
         </div>
       </div>
-
-      {mobileOpen && (
-        <div className="border-t border-slate-800 bg-slate-950 px-4 py-4 lg:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1 text-sm">
-            <div className="mb-3 flex min-[480px]:hidden flex-wrap gap-2">
-              <Link
-                href="/login"
-                className="inline-flex min-h-0 flex-1 items-center justify-center rounded-none border-2 border-white px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white"
-                onClick={close}
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/#plans"
-                className="inline-flex flex-1 items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-[var(--brand-cyber)] px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-black"
-                onClick={close}
-              >
-                Buy now
-              </Link>
-            </div>
-            <div className="mb-2 border-b border-slate-800 pb-3">
-              <a
-                href="mailto:contact@parable.com?subject=Accounting%20inquiry"
-                className="inline-block rounded-none border-2 border-[var(--brand-cyber)] px-2 py-1.5 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)]"
-                onClick={close}
-              >
-                Contact us
-              </a>
-            </div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Products &amp; services</p>
-            <Link href="/#plans" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Plans overview
-            </Link>
-            <Link href="/giving" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Giving &amp; member tools
-            </Link>
-            <Link href="/accounting" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Accounting workspace
-            </Link>
-            <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Plans &amp; pricing</p>
-            <Link href="/#plans" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              View plans
-            </Link>
-            <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Top features</p>
-            <Link href="/reporting" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Reporting
-            </Link>
-            <Link href="/compliance" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Compliance
-            </Link>
-            <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Business types</p>
-            <Link href="/#plans" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Small &amp; mid-size ministry
-            </Link>
-            <Link href="/member-portal" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Ministries &amp; churches
-            </Link>
-            <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Resources</p>
-            <Link href="/intro" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Product tour
-            </Link>
-            <Link href="/onboarding" className="rounded px-2 py-2 text-white/90 hover:bg-white/10" onClick={close}>
-              Onboarding
-            </Link>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
