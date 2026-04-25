@@ -5,6 +5,8 @@ import type { LiveLedgerFeedRow } from "@/types/accounting";
 
 type Props = {
   items: LiveLedgerFeedRow[];
+  /** Merged into the root panel (e.g. to drop default bottom margin in a grid). */
+  className?: string;
 };
 
 function formatMoney(n: number) {
@@ -27,7 +29,11 @@ function formatTime(iso: string) {
 /**
  * Scrolling real-time style ticker for `view_live_ledger_feed` (slate header, cyan live pulse).
  */
-export default function LiveLedgerFeed({ items }: Props) {
+function cx(...parts: (string | undefined)[]) {
+  return parts.filter(Boolean).join(" ");
+}
+
+export default function LiveLedgerFeed({ items, className }: Props) {
   const longLine = useMemo(() => {
     if (!items.length) return "";
     return items
@@ -42,7 +48,9 @@ export default function LiveLedgerFeed({ items }: Props) {
 
   if (!items.length) {
     return (
-      <div className="mb-6 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/90 shadow-inner">
+      <div
+        className={cx("overflow-hidden rounded-lg border border-slate-800 bg-slate-950/90 shadow-inner", className)}
+      >
         <div className="border-b border-slate-800 bg-slate-900 px-4 py-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Live ledger feed</span>
@@ -52,18 +60,19 @@ export default function LiveLedgerFeed({ items }: Props) {
             </span>
           </div>
         </div>
-        <p className="px-4 py-4 text-sm text-slate-500">No general ledger lines for this organization in the current window.</p>
+        <p className="px-4 py-4 text-sm text-slate-500">No general ledger lines in the current view.</p>
       </div>
     );
   }
 
   return (
-    <div className="mb-6 overflow-hidden rounded-lg border border-slate-800 bg-slate-950/90 shadow-lg shadow-black/40">
+    <div
+      className={cx("overflow-hidden rounded-lg border border-slate-800 bg-slate-950/90 shadow-lg shadow-black/40", className)}
+    >
       <div className="border-b border-slate-800 bg-slate-900 px-4 py-2.5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Live ledger feed</span>
-            <p className="text-[9px] text-slate-600">general_ledger with chart of accounts (account_code)</p>
           </div>
           <div className="flex items-center gap-2 text-[10px] text-cyan-500/90">
             <span className="relative flex h-2 w-2">

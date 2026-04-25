@@ -11,7 +11,7 @@ export default function QuickAddFund() {
 
   return (
     <form
-      className="mb-6 rounded-xl border border-slate-800 bg-slate-950/60 p-4 shadow-lg shadow-cyan-500/5 ring-1 ring-cyan-500/10"
+      className="rounded-xl border border-slate-800/90 bg-slate-950/60 p-4 shadow-lg shadow-cyan-500/5 ring-1 ring-cyan-500/15"
       onSubmit={async (e) => {
         e.preventDefault();
         setErr(null);
@@ -29,16 +29,13 @@ export default function QuickAddFund() {
       }}
     >
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-500">Quick add fund / account</h2>
-          <p className="text-xs text-slate-500">Post a new UCOA line to the Foundry chart (ledger scope).</p>
-        </div>
+        <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-500">Add fund</h2>
         <button
           type="submit"
           disabled={pending}
           className="rounded-lg bg-cyan-500 px-5 py-2 text-xs font-bold uppercase tracking-widest text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
         >
-          {pending ? "Posting…" : "Add to chart"}
+          {pending ? "Saving…" : "Add fund"}
         </button>
       </div>
       {err ? <p className="mb-3 text-sm text-red-400">{err}</p> : null}

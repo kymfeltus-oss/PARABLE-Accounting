@@ -10,8 +10,8 @@ import { getSupabaseServerAnon } from "@/lib/supabase/server-anon";
 import type { LiveLedgerFeedRow } from "@/types/accounting";
 
 export const metadata: Metadata = {
-  title: "Chart of accounts · Accounting",
-  description: "Foundry-scoped UCOA with live ledger and audit feed.",
+  title: "Institutional Ledger · Accounting",
+  description: "Foundry-scoped UCOA with live general ledger view.",
 };
 
 export const dynamic = "force-dynamic";
@@ -61,21 +61,31 @@ export default async function DashboardAccountsPage() {
 
   return (
     <MinistryAppShell>
-      <div className="p-4 md:p-6">
+      <div className="w-full min-w-0">
         <AccountingAudit />
 
-        <div className="mx-auto max-w-7xl space-y-6">
-          <header>
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-500/90">Foundry · accounting</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-100">Chart of accounts</h1>
-            <p className="mt-0.5 max-w-2xl text-sm text-slate-500">
-              Machine-assisted ERP surface: unified chart, live general ledger line feed, and automated exception surfacing.
-            </p>
+        <div className="mx-auto max-w-7xl space-y-5 px-4 py-4 md:space-y-6 md:px-6 md:py-6">
+          <header
+            className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.08] to-white/[0.03] px-5 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md backdrop-saturate-150 sm:px-6 sm:py-5"
+            style={{ WebkitBackdropFilter: "blur(12px) saturate(1.2)" }}
+          >
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-100 sm:text-3xl">Institutional Ledger</h1>
           </header>
 
-          <LiveLedgerFeed items={feedItems} />
-          <QuickAddFund />
-          <CoaManagerTable accounts={accounts} />
+          <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="min-w-0 space-y-5 lg:col-span-2 lg:space-y-5">
+              <QuickAddFund />
+              <CoaManagerTable accounts={accounts} />
+            </div>
+            <aside className="min-w-0 lg:col-span-1">
+              <div className="lg:sticky lg:top-4">
+                <LiveLedgerFeed
+                  items={feedItems}
+                  className="shadow-lg shadow-cyan-900/5 ring-1 ring-cyan-500/10 [box-shadow:0_4px_24px_rgba(0,0,0,0.3)]"
+                />
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     </MinistryAppShell>

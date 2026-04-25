@@ -31,10 +31,7 @@ export default function CoaManagerTable({ accounts }: Props) {
     <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/50 shadow-xl">
       <div className="border-b border-slate-800 bg-slate-900/90 px-4 py-3">
         <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-sm font-bold text-slate-200">Chart of accounts</h2>
-            <p className="text-xs text-slate-500">Foundry tenant · parable_ledger.chart_of_accounts</p>
-          </div>
+          <h2 className="text-sm font-bold text-slate-200">Chart of accounts</h2>
           <input
             type="search"
             value={q}
@@ -60,7 +57,7 @@ export default function CoaManagerTable({ accounts }: Props) {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-3 py-10 text-center text-slate-500">
-                  No records match. Adjust filters or add a line with Quick add.
+                  No accounts match this filter.
                 </td>
               </tr>
             ) : (
