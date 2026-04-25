@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import MinistryAppShell from "@/components/MinistryAppShell";
 import CoaAddAccountSheet from "@/components/dashboard/CoaAddAccountSheet";
 
@@ -25,9 +25,11 @@ type Props = {
   tenantLabel: string;
   accounts: CoaListRow[];
   error: string | null;
+  /** Server components (e.g. AccountingAudit) passed from the page */
+  children?: ReactNode;
 };
 
-export default function MasterCoaAccounts({ tenantLabel, accounts, error }: Props) {
+export default function MasterCoaAccounts({ tenantLabel, accounts, error, children }: Props) {
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -55,6 +57,7 @@ export default function MasterCoaAccounts({ tenantLabel, accounts, error }: Prop
     <MinistryAppShell>
       <div className="p-6 md:p-8">
         <div className="mx-auto max-w-6xl space-y-6">
+          {children}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">Parable ledger</p>

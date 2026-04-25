@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AccountingAudit from "@/components/AccountingAudit";
 import MasterCoaAccounts, { type CoaListRow } from "@/components/dashboard/MasterCoaAccounts";
 import { getSupabaseServerAnon } from "@/lib/supabase/server-anon";
 import { PARABLE_DEFAULT_TENANT_SLUG } from "@sovereign/supabaseClient.js";
@@ -48,6 +49,11 @@ export default async function DashboardAccountsPage() {
 
   const accounts = (data ?? []) as CoaListRow[];
   const label = (tenant as { display_name: string; slug: string }).display_name || (tenant as { slug: string }).slug;
+  const tid = (tenant as { id: string }).id;
 
-  return <MasterCoaAccounts tenantLabel={label} accounts={accounts} error={null} />;
+  return (
+    <MasterCoaAccounts tenantLabel={label} accounts={accounts} error={null}>
+      <AccountingAudit tenantId={tid} />
+    </MasterCoaAccounts>
+  );
 }
