@@ -1,7 +1,7 @@
 "use client";
 import IntroFlashClient from "../intro/IntroFlashClient";
 
-export default function MemberPortalPage() {
+export default function MemberGatewayPage() {
   return (
     <IntroFlashClient 
       appType="giving"

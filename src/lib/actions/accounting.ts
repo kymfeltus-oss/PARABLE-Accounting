@@ -34,8 +34,10 @@ function str(v: FormDataEntryValue | null): string {
 }
 
 /**
- * Inserts into `parable_ledger.chart_of_accounts` for the Foundry tenant
- * (`00000000-0000-0000-0000-000000000000`).
+ * Inserts a row into `parable_ledger.chart_of_accounts` with fixed Foundry
+ * `tenant_id` = `00000000-0000-0000-0000-000000000000` (see `FOUNDRY_TENANT_ID`).
+ * Requires a session-capable client (see `createServerSupabase`); revalidates
+ * the dashboard accounts route.
  */
 export async function addAccount(formData: FormData) {
   const supabase = await createServerSupabase();

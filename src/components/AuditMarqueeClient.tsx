@@ -23,7 +23,7 @@ export default function AuditMarqueeClient({ alerts }: Props) {
       <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-slate-950 to-transparent" />
       <div className="mx-auto max-w-7xl py-2">
         <p className="mb-1.5 text-center text-[9px] font-bold uppercase tracking-[0.3em] text-red-300/80">
-          Ledger audit — action required
+          Abnormal balance — action required
         </p>
         <div className="flex w-full overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]">
           <div className="accounting-audit-marquee flex min-w-0 flex-none gap-12">

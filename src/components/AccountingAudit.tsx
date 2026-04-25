@@ -6,7 +6,9 @@ import type { AccountingAlertRow } from "@/types/accounting";
 export type { AccountingAlertRow } from "@/types/accounting";
 
 function isAbnormal(alert: AccountingAlertRow): boolean {
-  const s = String(alert.health_status ?? "").toLowerCase().trim();
+  const s = String(alert.health_status ?? "")
+    .toLowerCase()
+    .trim();
   if (!s) return false;
   if (s === "ok" || s === "healthy" || s === "normal" || s === "nominal" || s === "balanced") {
     return false;
@@ -15,8 +17,9 @@ function isAbnormal(alert: AccountingAlertRow): boolean {
 }
 
 /**
- * Fetches `parable_ledger.view_accounting_alerts` and renders a destructive
- * (red) marquee when abnormal / non-healthy rows exist.
+ * Renders a strip when `parable_ledger.view_accounting_alerts` (PostgREST: `view_accounting_alerts`) reports
+ * abnormal (non-healthy) balance or integrity rows for the Foundry tenant. Returns null when the view is
+ * empty, errors, or only healthy entries apply.
  */
 export default async function AccountingAudit() {
   const supabase = getSupabaseServerAnon();
