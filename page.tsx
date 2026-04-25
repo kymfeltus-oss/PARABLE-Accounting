@@ -7,9 +7,9 @@ export default function HomePage() {
     <main className="min-h-screen scroll-smooth bg-white">
       <LandingHeader />
 
-      {/* Full-bleed blue slab — matched to header navy #002366 */}
-      <section className="relative w-full overflow-x-hidden bg-[#000040] text-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-12 sm:gap-10 sm:py-16 md:px-8 lg:min-h-[min(100dvh,56rem)] lg:grid-cols-2 lg:items-center lg:gap-12 lg:py-10 xl:py-14">
+      {/* Full-bleed blue slab — Bottom line moved up via reduced padding-bottom */}
+      <section className="relative w-full overflow-x-hidden bg-[#050a18] text-white">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 pt-12 pb-4 sm:gap-10 sm:pt-16 sm:pb-6 md:px-8 lg:min-h-[min(70dvh,40rem)] lg:grid-cols-2 lg:items-center lg:gap-12">
           <div>
             <p
               className="text-lg font-semibold tracking-wide sm:text-2xl"
@@ -34,7 +34,7 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] #002366 px-5 py-3 text-sm font-bold tracking-wide text-[var(--brand-cyber)] transition hover:bg-white/5"
+                className="inline-flex items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-black px-5 py-3 text-sm font-bold tracking-wide text-[var(--brand-cyber)] transition hover:bg-white/5"
               >
                 Try it free for 30 days
               </Link>

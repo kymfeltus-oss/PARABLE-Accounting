@@ -50,9 +50,9 @@ export default function LandingHeader() {
   const item = "block px-4 py-2 text-slate-200 transition hover:bg-slate-800 hover:text-white";
 
   return (
-    <header ref={wrapRef} className="bg-[#0a1628] text-white">
-      {/* Brand row: logo + Accounting + inline promo (was the full-width bar in Pic 1) */}
-      <div className="border-b border-slate-500/45 border-t-2 border-[var(--brand-cyber)]">
+    <header ref={wrapRef} className="bg-[#000040] text-white">
+      {/* Brand row: Now set to Black background */}
+      <div className="bg-black border-b border-slate-500/45 border-t-2 border-[var(--brand-cyber)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-1.5 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-2 md:px-8 md:py-3">
           <Link
             href="/"
@@ -72,163 +72,163 @@ export default function LandingHeader() {
         </div>
       </div>
 
-      {/* Main nav bar — full menu below the line */}
-      <div className="border-b border-slate-800/90">
+      {/* Main nav bar — Remains Deep Navy Blue */}
+      <div>
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 md:gap-3 md:px-8 md:py-2.5">
-        <nav className="hidden flex-1 items-center gap-0.5 lg:flex" aria-label="Primary">
-          <div className="relative">
+          <nav className="hidden flex-1 items-center gap-0.5 lg:flex" aria-label="Primary">
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                aria-expanded={openId === "products"}
+                aria-haspopup="menu"
+                onClick={() => toggle("products")}
+              >
+                Products &amp; Services
+                <NavChevron open={openId === "products"} />
+              </button>
+              {openId === "products" && (
+                <div className={panel} role="menu">
+                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
+                    Plans overview
+                  </Link>
+                  <Link href="/giving" className={item} role="menuitem" onClick={close}>
+                    Giving &amp; member tools
+                  </Link>
+                  <Link href="/accounting" className={item} role="menuitem" onClick={close}>
+                    Accounting workspace
+                  </Link>
+                  <Link href="/command-center" className={item} role="menuitem" onClick={close}>
+                    Command center
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/#plans"
+              className="whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+            >
+              Plans &amp; Pricing
+            </Link>
+
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                aria-expanded={openId === "topFeatures"}
+                aria-haspopup="menu"
+                onClick={() => toggle("topFeatures")}
+              >
+                Top features
+                <NavChevron open={openId === "topFeatures"} />
+              </button>
+              {openId === "topFeatures" && (
+                <div className={panel} role="menu">
+                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
+                    Connected intelligence
+                  </Link>
+                  <Link href="/reporting" className={item} role="menuitem" onClick={close}>
+                    Reporting &amp; dashboards
+                  </Link>
+                  <Link href="/compliance" className={item} role="menuitem" onClick={close}>
+                    Compliance &amp; audit trails
+                  </Link>
+                  <Link href="/import-export" className={item} role="menuitem" onClick={close}>
+                    Import / export
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                aria-expanded={openId === "businessTypes"}
+                aria-haspopup="menu"
+                onClick={() => toggle("businessTypes")}
+              >
+                Business types
+                <NavChevron open={openId === "businessTypes"} />
+              </button>
+              {openId === "businessTypes" && (
+                <div className={panel} role="menu">
+                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
+                    Small ministry
+                  </Link>
+                  <Link href="/#plans" className={item} role="menuitem" onClick={close}>
+                    Mid-size ministry
+                  </Link>
+                  <Link href="/member-portal" className={item} role="menuitem" onClick={close}>
+                    Ministries &amp; churches
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
+                aria-expanded={openId === "resources"}
+                aria-haspopup="menu"
+                onClick={() => toggle("resources")}
+              >
+                Resources
+                <NavChevron open={openId === "resources"} />
+              </button>
+              {openId === "resources" && (
+                <div className={panel} role="menu">
+                  <Link href="/intro" className={item} role="menuitem" onClick={close}>
+                    Product tour
+                  </Link>
+                  <Link href="/onboarding" className={item} role="menuitem" onClick={close}>
+                    Onboarding
+                  </Link>
+                  <Link href="/staff-onboarding" className={item} role="menuitem" onClick={close}>
+                    Staff onboarding
+                  </Link>
+                  <Link href="/register" className={item} role="menuitem" onClick={close}>
+                    Get started
+                  </Link>
+                </div>
+              )}
+            </div>
+          </nav>
+
+          <a
+            href="mailto:contact@parable.com?subject=Accounting%20inquiry"
+            className="hidden shrink-0 items-center justify-center rounded-none border-2 border-[var(--brand-cyber)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)] transition hover:bg-cyan-400/10 xl:inline-flex"
+          >
+            Contact us
+          </a>
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <button
               type="button"
-              className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
-              aria-expanded={openId === "products"}
-              aria-haspopup="menu"
-              onClick={() => toggle("products")}
+              className="flex items-center justify-center rounded p-2 text-white lg:hidden"
+              aria-expanded={mobileOpen}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileOpen((o) => !o)}
             >
-              Products &amp; Services
-              <NavChevron open={openId === "products"} />
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            {openId === "products" && (
-              <div className={panel} role="menu">
-                <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                  Plans overview
-                </Link>
-                <Link href="/giving" className={item} role="menuitem" onClick={close}>
-                  Giving &amp; member tools
-                </Link>
-                <Link href="/accounting" className={item} role="menuitem" onClick={close}>
-                  Accounting workspace
-                </Link>
-                <Link href="/command-center" className={item} role="menuitem" onClick={close}>
-                  Command center
-                </Link>
-              </div>
-            )}
-          </div>
 
-          <Link
-            href="/#plans"
-            className="whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
-          >
-            Plans &amp; Pricing
-          </Link>
-
-          <div className="relative">
-            <button
-              type="button"
-              className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
-              aria-expanded={openId === "topFeatures"}
-              aria-haspopup="menu"
-              onClick={() => toggle("topFeatures")}
+            <Link
+              href="/login"
+              className="inline-flex shrink-0 items-center justify-center rounded-none border-2 border-white bg-transparent px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-white/10 max-[479px]:hidden"
             >
-              Top features
-              <NavChevron open={openId === "topFeatures"} />
-            </button>
-            {openId === "topFeatures" && (
-              <div className={panel} role="menu">
-                <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                  Connected intelligence
-                </Link>
-                <Link href="/reporting" className={item} role="menuitem" onClick={close}>
-                  Reporting &amp; dashboards
-                </Link>
-                <Link href="/compliance" className={item} role="menuitem" onClick={close}>
-                  Compliance &amp; audit trails
-                </Link>
-                <Link href="/import-export" className={item} role="menuitem" onClick={close}>
-                  Import / export
-                </Link>
-              </div>
-            )}
-          </div>
+              Sign in
+            </Link>
 
-          <div className="relative">
-            <button
-              type="button"
-              className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
-              aria-expanded={openId === "businessTypes"}
-              aria-haspopup="menu"
-              onClick={() => toggle("businessTypes")}
+            <Link
+              href="/#plans"
+              className="inline-flex shrink-0 items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-[var(--brand-cyber)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black transition hover:brightness-105 sm:ml-2"
             >
-              Business types
-              <NavChevron open={openId === "businessTypes"} />
-            </button>
-            {openId === "businessTypes" && (
-              <div className={panel} role="menu">
-                <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                  Small ministry
-                </Link>
-                <Link href="/#plans" className={item} role="menuitem" onClick={close}>
-                  Mid-size ministry
-                </Link>
-                <Link href="/member-portal" className={item} role="menuitem" onClick={close}>
-                  Ministries &amp; churches
-                </Link>
-              </div>
-            )}
+              Buy now
+            </Link>
           </div>
-
-          <div className="relative">
-            <button
-              type="button"
-              className="flex items-center gap-1 whitespace-nowrap rounded px-2 py-2 text-[13px] font-medium text-white/95 transition hover:bg-white/10"
-              aria-expanded={openId === "resources"}
-              aria-haspopup="menu"
-              onClick={() => toggle("resources")}
-            >
-              Resources
-              <NavChevron open={openId === "resources"} />
-            </button>
-            {openId === "resources" && (
-              <div className={panel} role="menu">
-                <Link href="/intro" className={item} role="menuitem" onClick={close}>
-                  Product tour
-                </Link>
-                <Link href="/onboarding" className={item} role="menuitem" onClick={close}>
-                  Onboarding
-                </Link>
-                <Link href="/staff-onboarding" className={item} role="menuitem" onClick={close}>
-                  Staff onboarding
-                </Link>
-                <Link href="/register" className={item} role="menuitem" onClick={close}>
-                  Get started
-                </Link>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        <a
-          href="mailto:contact@parable.com?subject=Accounting%20inquiry"
-          className="hidden shrink-0 items-center justify-center rounded-none border-2 border-[var(--brand-cyber)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[var(--brand-cyber)] transition hover:bg-cyan-400/10 xl:inline-flex"
-        >
-          Contact us
-        </a>
-
-        <div className="ml-auto flex items-center gap-1 sm:gap-2">
-          <button
-            type="button"
-            className="flex items-center justify-center rounded p-2 text-white lg:hidden"
-            aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMobileOpen((o) => !o)}
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-
-          <Link
-            href="/login"
-            className="inline-flex shrink-0 items-center justify-center rounded-none border-2 border-white bg-transparent px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-white/10 max-[479px]:hidden"
-          >
-            Sign in
-          </Link>
-
-          <Link
-            href="/#plans"
-            className="inline-flex shrink-0 items-center justify-center rounded-md border-2 border-[var(--brand-cyber)] bg-[var(--brand-cyber)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black transition hover:brightness-105 sm:ml-2"
-          >
-            Buy now
-          </Link>
-        </div>
         </div>
       </div>
 
