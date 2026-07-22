@@ -1,0 +1,110 @@
+import type { AiCloseData } from "@/lib/data/ai-close-repository";
+import { TEST_ORGANIZATION_ID } from "@/lib/data/test/mock-supabase-client";
+
+export function createEmptyAiCloseData(
+  organizationId: string = TEST_ORGANIZATION_ID,
+): AiCloseData {
+  return {
+    organizationId,
+    sessions: [],
+    pendingTasks: [],
+    counts: {
+      totalSessions: 0,
+      draftSessions: 0,
+      inProgressSessions: 0,
+      completedSessions: 0,
+      totalTasks: 0,
+      pendingTasks: 0,
+      inProgressTasks: 0,
+      completedTasks: 0,
+      skippedTasks: 0,
+    },
+  };
+}
+
+export function createPopulatedAiCloseData(): AiCloseData {
+  return {
+    organizationId: TEST_ORGANIZATION_ID,
+    sessions: [
+      {
+        id: "session-1",
+        organization_id: TEST_ORGANIZATION_ID,
+        accounting_period_id: "period-1",
+        close_type: "month_end",
+        status: "in_progress",
+        started_at: "2026-07-01T12:00:00.000Z",
+        completed_at: null,
+        created_at: "2026-07-01T12:00:00.000Z",
+        updated_at: "2026-07-10T12:00:00.000Z",
+        periodName: "July 2026",
+        taskCount: 3,
+        pendingTaskCount: 1,
+        inProgressTaskCount: 1,
+        completedTaskCount: 1,
+        skippedTaskCount: 0,
+      },
+      {
+        id: "session-2",
+        organization_id: TEST_ORGANIZATION_ID,
+        accounting_period_id: "period-2",
+        close_type: "month_end",
+        status: "completed",
+        started_at: "2026-06-01T12:00:00.000Z",
+        completed_at: "2026-06-30T18:00:00.000Z",
+        created_at: "2026-06-01T12:00:00.000Z",
+        updated_at: "2026-06-30T18:00:00.000Z",
+        periodName: "June 2026",
+        taskCount: 1,
+        pendingTaskCount: 0,
+        inProgressTaskCount: 0,
+        completedTaskCount: 1,
+        skippedTaskCount: 0,
+      },
+    ],
+    pendingTasks: [
+      {
+        id: "task-1",
+        organization_id: TEST_ORGANIZATION_ID,
+        close_session_id: "session-1",
+        task_type: "journal_review",
+        title: "Review posted journals",
+        description: "Validate posted journal entries for July.",
+        status: "pending",
+        due_at: "2026-07-20T12:00:00.000Z",
+        completed_at: null,
+        sort_order: 1,
+        created_at: "2026-07-01T12:00:00.000Z",
+        updated_at: "2026-07-01T12:00:00.000Z",
+        periodName: "July 2026",
+        closeType: "month_end",
+      },
+      {
+        id: "task-2",
+        organization_id: TEST_ORGANIZATION_ID,
+        close_session_id: "session-1",
+        task_type: "reconciliation",
+        title: "Reconcile operating account",
+        description: null,
+        status: "in_progress",
+        due_at: "2026-07-18T12:00:00.000Z",
+        completed_at: null,
+        sort_order: 2,
+        created_at: "2026-07-01T12:00:00.000Z",
+        updated_at: "2026-07-12T12:00:00.000Z",
+        periodName: "July 2026",
+        closeType: "month_end",
+      },
+    ],
+    counts: {
+      totalSessions: 2,
+      draftSessions: 0,
+      inProgressSessions: 1,
+      completedSessions: 1,
+      totalTasks: 4,
+      pendingTasks: 1,
+      inProgressTasks: 1,
+      completedTasks: 2,
+      skippedTasks: 0,
+    },
+  };
+}

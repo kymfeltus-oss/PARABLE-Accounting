@@ -1,0 +1,103 @@
+import { Children, isValidElement } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/font/google", () => ({
+  Geist: () => ({
+    variable: "--font-geist-sans",
+    className: "mock-geist-sans",
+  }),
+  Geist_Mono: () => ({
+    variable: "--font-geist-mono",
+    className: "mock-geist-mono",
+  }),
+}));
+
+import RootLayout, { metadata } from "./layout";
+
+type RootElementProps = {
+  children?: ReactNode;
+  lang?: string;
+};
+
+type ElementWithChildrenProps = {
+  children?: ReactNode;
+};
+
+function expectReactElement<P extends object>(node: ReactNode): ReactElement<P> {
+  expect(isValidElement<P>(node)).toBe(true);
+
+  if (!isValidElement<P>(node)) {
+    throw new Error("Expected a valid React element.");
+  }
+
+  return node;
+}
+
+function getElementChildren(node: ReactNode) {
+  return Children.toArray(node).filter(
+    (child): child is ReactElement<ElementWithChildrenProps> =>
+      isValidElement<ElementWithChildrenProps>(child),
+  );
+}
+
+function getTextContent(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(getTextContent).join("");
+  }
+
+  if (isValidElement<ElementWithChildrenProps>(node)) {
+    return getTextContent(node.props.children);
+  }
+
+  return "";
+}
+
+describe("RootLayout", () => {
+  it("exports the Phase 1A application metadata", () => {
+    expect(metadata.title).toEqual({
+      default: "Parable Accounting",
+      template: "%s | Parable Accounting",
+    });
+    expect(metadata.description).toBe(
+      "AI-driven ministry accounting and financial stewardship workspace.",
+    );
+  });
+
+  it("returns html lang en with a body containing child content", () => {
+    const result = RootLayout({
+      children: <p>Root child content</p>,
+    });
+    const root = expectReactElement<RootElementProps>(result);
+
+    expect(root.type).toBe("html");
+    expect(root.props.lang).toBe("en");
+
+    const body = getElementChildren(root.props.children).find(
+      (child) => child.type === "body",
+    );
+
+    expect(body).toBeDefined();
+
+    if (!body) {
+      throw new Error("Expected RootLayout to render a body element.");
+    }
+
+    expect(getTextContent(body.props.children)).toContain("Root child content");
+  });
+
+  it("does not inject login, signup, authentication UI, or fake financial data", () => {
+    const result = RootLayout({ children: null });
+    const root = expectReactElement<RootElementProps>(result);
+    const layoutOwnedText = getTextContent(root.props.children);
+
+    expect(layoutOwnedText).not.toMatch(
+      /log in|login|sign up|signup|authentication/i,
+    );
+    expect(layoutOwnedText).not.toMatch(/\$\s?\d|\b\d+\.\d{2}\b/);
+  });
+});

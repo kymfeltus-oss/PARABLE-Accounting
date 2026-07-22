@@ -1,0 +1,26 @@
+services:
+  supabase-db:
+    image: ghcr.io/supabase/postgres:15.6.1.143
+    container_name: parable-supabase-db
+    ports:
+      - "54325:5432"
+    environment:
+      POSTGRES_PASSWORD: local_postgres_password
+      POSTGRES_DB: postgres
+    volumes:
+      - parable_db_data:/var/lib/postgresql/data
+
+  supabase-studio:
+    image: ghcr.io/supabase/studio:20241202-71e5240
+    container_name: parable-supabase-studio
+    ports:
+      - "3000:3000"
+    environment:
+      STUDIO_DEFAULT_ORGANIZATION: "Parable Accounting"
+      STUDIO_DEFAULT_PROJECT: "Local Dev"
+      SUPABASE_URL: http://localhost:54325
+      PUBLIC_URL: http://localhost:3000
+      DEFAULT_USER_EMAIL: admin@example.com
+      DEFAULT_USER_PASSWORD: password123
+volumes:
+  parable_db_data:
