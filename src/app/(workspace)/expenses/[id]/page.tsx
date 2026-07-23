@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { ComponentProps } from "react";
 
 import { ExpenseDetailPageContent } from "@/components/expenses/expense-detail-page-content";
 import { getAccountingData } from "@/lib/data/accounting-repository";
@@ -7,6 +8,10 @@ import {
   mapExpenseFundOptions,
 } from "@/lib/data/expense-allocation-options";
 import { getExpenseCreditAccountOptions } from "@/lib/data/expense-credit-account-options";
+import {
+  getExpenseJournalLinkage,
+  type ExpenseJournalLinkage,
+} from "@/lib/data/expense-journal-linkage";
 import {
   getExpenseById,
   getExpenseLines,
@@ -25,6 +30,22 @@ type ExpenseDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
+export type ExpenseDetailPagePreparedData = {
+  journalLinkage: ExpenseJournalLinkage | null;
+};
+
+type ExpenseDetailPageViewProps = ExpenseDetailPagePreparedData &
+  ComponentProps<typeof ExpenseDetailPageContent>;
+
+export function ExpenseDetailPageView({
+  journalLinkage,
+  ...contentProps
+}: ExpenseDetailPageViewProps) {
+  void journalLinkage;
+
+  return <ExpenseDetailPageContent {...contentProps} />;
+}
+
 export default async function ExpenseDetailPage({
   params,
 }: ExpenseDetailPageProps) {
@@ -41,7 +62,7 @@ export default async function ExpenseDetailPage({
     notFound();
   }
 
-  const [lines, accountingData, fundsData, creditAccountOptions] =
+  const [lines, accountingData, fundsData, creditAccountOptions, journalLinkage] =
     await Promise.all([
       getExpenseLines(organizationId, id),
       getAccountingData(organizationId),
@@ -52,14 +73,18 @@ export default async function ExpenseDetailPage({
             expense.payment_source,
           )
         : Promise.resolve([]),
+      expense.status === "recorded"
+        ? getExpenseJournalLinkage(organizationId, id)
+        : Promise.resolve(null),
     ]);
 
   return (
-    <ExpenseDetailPageContent
+    <ExpenseDetailPageView
       accountOptions={mapExpenseAccountOptions(accountingData.accounts)}
       creditAccountOptions={creditAccountOptions}
       expense={expense}
       fundOptions={mapExpenseFundOptions(fundsData.funds)}
+      journalLinkage={journalLinkage}
       lines={lines}
     />
   );

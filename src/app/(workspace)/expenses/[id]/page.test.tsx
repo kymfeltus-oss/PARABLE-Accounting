@@ -14,6 +14,7 @@ const {
   getAccountingDataMock,
   getFundsDataMock,
   getExpenseCreditAccountOptionsMock,
+  getExpenseJournalLinkageMock,
   notFoundMock,
 } = vi.hoisted(() => ({
   getCurrentOrganizationIdMock: vi.fn(),
@@ -22,6 +23,7 @@ const {
   getAccountingDataMock: vi.fn(),
   getFundsDataMock: vi.fn(),
   getExpenseCreditAccountOptionsMock: vi.fn(),
+  getExpenseJournalLinkageMock: vi.fn(),
   notFoundMock: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -52,7 +54,11 @@ vi.mock("@/lib/data/expense-credit-account-options", () => ({
   getExpenseCreditAccountOptions: getExpenseCreditAccountOptionsMock,
 }));
 
-import ExpenseDetailPage from "./page";
+vi.mock("@/lib/data/expense-journal-linkage", () => ({
+  getExpenseJournalLinkage: getExpenseJournalLinkageMock,
+}));
+
+import ExpenseDetailPage, { ExpenseDetailPageView } from "./page";
 import { ExpenseDetailPageContent } from "@/components/expenses/expense-detail-page-content";
 
 const VALID_EXPENSE_ID = "66666666-6666-4666-8666-666666666666";
@@ -151,6 +157,19 @@ function createCreditAccountOptions() {
   ];
 }
 
+function createJournalLinkage() {
+  return {
+    journalEntryId: "77777777-7777-4777-8777-777777777777",
+    entryNumber: "EXP-66666666666646668666666666666666",
+    entryDate: "2026-07-05",
+    status: "posted" as const,
+    totalDebit: 125.75,
+    totalCredit: 125.75,
+    periodName: "July 2026",
+    sourceReference: "EXP-1001",
+  };
+}
+
 describe("Expense detail page wiring", () => {
   beforeEach(() => {
     getCurrentOrganizationIdMock.mockReset();
@@ -159,8 +178,10 @@ describe("Expense detail page wiring", () => {
     getAccountingDataMock.mockReset();
     getFundsDataMock.mockReset();
     getExpenseCreditAccountOptionsMock.mockReset();
+    getExpenseJournalLinkageMock.mockReset();
     notFoundMock.mockClear();
     getExpenseCreditAccountOptionsMock.mockResolvedValue(createCreditAccountOptions());
+    getExpenseJournalLinkageMock.mockResolvedValue(createJournalLinkage());
   });
   it("renders the detail page for a valid expense", async () => {
     const expense = createExpenseRecord();
@@ -183,13 +204,15 @@ describe("Expense detail page wiring", () => {
       TEST_ORGANIZATION_ID,
       VALID_EXPENSE_ID,
     );
-    expect(page.type).toBe(ExpenseDetailPageContent);
+    expect(page.type).toBe(ExpenseDetailPageView);
     expect(page.props.expense).toEqual(expense);
     expect(getExpenseCreditAccountOptionsMock).toHaveBeenCalledWith(
       TEST_ORGANIZATION_ID,
       "card",
     );
     expect(page.props.creditAccountOptions).toEqual(createCreditAccountOptions());
+    expect(getExpenseJournalLinkageMock).not.toHaveBeenCalled();
+    expect(page.props.journalLinkage).toBeNull();
   });
 
   it("loads eligible credit account options using the current organization id", async () => {
@@ -227,6 +250,27 @@ describe("Expense detail page wiring", () => {
 
     expect(getExpenseCreditAccountOptionsMock).not.toHaveBeenCalled();
     expect(page.props.creditAccountOptions).toEqual([]);
+    expect(getExpenseJournalLinkageMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+      VALID_EXPENSE_ID,
+    );
+    expect(page.props.journalLinkage).toEqual(createJournalLinkage());
+  });
+
+  it("does not query journal linkage for draft expenses", async () => {
+    const expense = createExpenseRecord();
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    getExpenseByIdMock.mockResolvedValue(expense);
+    getExpenseLinesMock.mockResolvedValue([]);
+    getAccountingDataMock.mockResolvedValue(createAccountingData());
+    getFundsDataMock.mockResolvedValue(createFundsData());
+
+    const page = await ExpenseDetailPage({
+      params: Promise.resolve({ id: VALID_EXPENSE_ID }),
+    });
+
+    expect(getExpenseJournalLinkageMock).not.toHaveBeenCalled();
+    expect(page.props.journalLinkage).toBeNull();
   });
 
   it("passes empty credit account options when payment source is unsupported", async () => {
