@@ -1,10 +1,22 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ExpenseJournalLinkage } from "@/lib/data/expense-journal-linkage";
 import type { ExpenseRecord } from "@/lib/data/expenses-repository";
 import { TEST_ORGANIZATION_ID } from "@/lib/data/test/mock-supabase-client";
 
 import { ExpenseDetailPageContent } from "./expense-detail-page-content";
+
+const journalLinkage: ExpenseJournalLinkage = {
+  journalEntryId: "77777777-7777-4777-8777-777777777777",
+  entryNumber: "EXP-66666666666646668666666666666666",
+  entryDate: "2026-07-05",
+  status: "posted",
+  totalDebit: 125.75,
+  totalCredit: 125.75,
+  periodName: "July 2026",
+  sourceReference: "EXP-1001",
+};
 
 const accountOptions = [
   {
@@ -108,7 +120,7 @@ function renderDetailPage(
   options: Partial<
     Pick<
       Parameters<typeof ExpenseDetailPageContent>[0],
-      "creditAccountOptions"
+      "creditAccountOptions" | "journalLinkage"
     >
   > = {},
 ) {
@@ -118,9 +130,16 @@ function renderDetailPage(
       creditAccountOptions={options.creditAccountOptions ?? creditAccountOptions}
       expense={expense}
       fundOptions={fundOptions}
+      journalLinkage={options.journalLinkage ?? null}
       lines={lines}
     />,
   );
+}
+
+function getJournalPanel() {
+  return screen
+    .getByRole("heading", { name: "Journal Entry" })
+    .closest("section") as HTMLElement;
 }
 
 afterEach(() => {
@@ -219,13 +238,225 @@ describe("ExpenseDetailPageContent", () => {
         description: "Office supplies purchase",
         status: "recorded",
       }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(screen.getByText("Expense recorded")).toBeTruthy();
+    expect(screen.getByText("This expense is now read-only.")).toBeTruthy();
+  });
+
+  it("does not render ExpenseRecordingStatus for draft expenses", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-2",
+        description: "Utility reimbursement draft",
+        status: "draft",
+      }),
+    );
+
+    expect(screen.queryByText("Expense recorded")).toBeNull();
+  });
+
+  it("does not render the journal panel for draft expenses", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-2",
+        description: "Utility reimbursement draft",
+        status: "draft",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(screen.queryByText("Journal Entry")).toBeNull();
+  });
+
+  it("renders ExpenseRecordingStatus for recorded expenses", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
     );
 
     expect(
-      screen.getByText(
-        /This expense has been recorded and cannot be edited through the draft workflow/i,
-      ),
+      screen.getByRole("status", { name: "Expense recorded" }),
     ).toBeTruthy();
+  });
+
+  it("renders the journal panel when recorded linkage exists", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(screen.getByText("Journal Entry")).toBeTruthy();
+    expect(
+      within(getJournalPanel()).getByTestId("journal-entry-number"),
+    ).toHaveTextContent("EXP-66666666666646668666666666666666");
+  });
+
+  it("passes the journal entry number to the status component", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(screen.getAllByText("EXP-66666666666646668666666666666666").length)
+      .toBeGreaterThanOrEqual(1);
+  });
+
+  it("passes the formatted journal entry date to the panel", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(within(getJournalPanel()).getByText("Jul 4, 2026")).toBeTruthy();
+  });
+
+  it("passes the journal status to the panel", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(within(getJournalPanel()).getAllByText("posted")).toHaveLength(2);
+  });
+
+  it("passes debit and credit totals to the panel", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+        total_amount: 999,
+      }),
+      [],
+      {
+        journalLinkage: {
+          ...journalLinkage,
+          totalDebit: 250.5,
+          totalCredit: 250.5,
+        },
+      },
+    );
+
+    const panel = within(getJournalPanel());
+    expect(panel.getByText("Total debit").nextElementSibling).toHaveTextContent(
+      "$250.50",
+    );
+    expect(panel.getByText("Total credit").nextElementSibling).toHaveTextContent(
+      "$250.50",
+    );
+  });
+
+  it("passes the accounting period name to the panel", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(screen.getByText("July 2026")).toBeTruthy();
+  });
+
+  it("passes the source reference to the panel", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(screen.getByText("Source reference")).toBeTruthy();
+    expect(screen.getAllByText("EXP-1001").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not render a fake journal link", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [],
+      { journalLinkage },
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "View journal entry" }),
+    ).toBeNull();
+  });
+
+  it("renders status without the journal panel when linkage is missing", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+    );
+
+    expect(screen.getByText("Expense recorded")).toBeTruthy();
+    expect(screen.queryByText("Journal Entry")).toBeNull();
+  });
+
+  it("keeps draft recording interface present for complete draft allocation", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        total_amount: 125.75,
+        status: "draft",
+      }),
+      [
+        {
+          id: "line-1",
+          expenseId: "expense-1",
+          accountId: "acct-expense-active",
+          fundId: "fund-active-coded",
+          lineNumber: 1,
+          description: "Utilities",
+          amount: 125.75,
+        },
+      ],
+    );
+
+    expect(screen.getByLabelText("Record expense section")).toBeTruthy();
+    expect(screen.getByText("2010 — Ministry Credit Card")).toBeTruthy();
+    expect(screen.getByText("Allocation complete")).toBeTruthy();
   });
 
   it("displays allocation totals correctly", () => {
@@ -302,32 +533,6 @@ describe("ExpenseDetailPageContent", () => {
     expect(screen.getByText("6100 · Utilities")).toBeTruthy();
     expect(screen.getByText("GEN · General Fund")).toBeTruthy();
     expect(screen.getByText("Utilities")).toBeTruthy();
-  });
-
-  it("renders the recording section for complete draft allocation", () => {
-    renderDetailPage(
-      createExpense({
-        id: "expense-1",
-        description: "Office supplies purchase",
-        total_amount: 125.75,
-        status: "draft",
-      }),
-      [
-        {
-          id: "line-1",
-          expenseId: "expense-1",
-          accountId: "acct-expense-active",
-          fundId: "fund-active-coded",
-          lineNumber: 1,
-          description: "Utilities",
-          amount: 125.75,
-        },
-      ],
-    );
-
-    expect(screen.getByLabelText("Record expense section")).toBeTruthy();
-    expect(screen.getByText("2010 — Ministry Credit Card")).toBeTruthy();
-    expect(screen.getByText("Allocation complete")).toBeTruthy();
   });
 
   it("does not render the recording section for incomplete draft allocation", () => {

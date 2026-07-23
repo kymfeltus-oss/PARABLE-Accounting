@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { ExpenseAllocationEditor } from "@/components/expenses/expense-allocation-editor";
+import { ExpenseRecordingStatus } from "@/components/expenses/expense-recording-status";
+import { RecordedExpenseJournalPanel } from "@/components/expenses/recorded-expense-journal-panel";
 import { RecordExpenseSection } from "@/components/expenses/record-expense-section";
 import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
 import type {
@@ -11,6 +13,7 @@ import type {
   ExpenseFundOption,
 } from "@/lib/data/expense-allocation-options";
 import type { ExpenseCreditAccountOption } from "@/lib/data/expense-credit-account-options";
+import type { ExpenseJournalLinkage } from "@/lib/data/expense-journal-linkage";
 import type { ExpenseDraftLineDetail, ExpenseRecord } from "@/lib/data/expenses-repository";
 
 export type ExpenseDetailPageContentProps = {
@@ -19,6 +22,7 @@ export type ExpenseDetailPageContentProps = {
   accountOptions: ExpenseAccountOption[];
   fundOptions: ExpenseFundOption[];
   creditAccountOptions: ExpenseCreditAccountOption[];
+  journalLinkage?: ExpenseJournalLinkage | null;
 };
 
 function formatCurrency(amount: number): string {
@@ -197,6 +201,7 @@ export function ExpenseDetailPageContent({
   accountOptions,
   fundOptions,
   creditAccountOptions,
+  journalLinkage = null,
 }: ExpenseDetailPageContentProps) {
   const isDraft = expense.status === "draft";
   const isRecorded = expense.status === "recorded";
@@ -286,13 +291,23 @@ export function ExpenseDetailPageContent({
       </section>
 
       {isRecorded ? (
-        <div
-          className="rounded-md border border-border bg-muted/20 p-4 text-sm text-muted-foreground"
-          role="status"
-        >
-          This expense has been recorded and cannot be edited through the draft
-          workflow.
-        </div>
+        <ExpenseRecordingStatus
+          journalEntryNumber={journalLinkage?.entryNumber ?? null}
+        />
+      ) : null}
+
+      {isRecorded && journalLinkage ? (
+        <RecordedExpenseJournalPanel
+          entryDate={formatDate(journalLinkage.entryDate)}
+          entryNumber={journalLinkage.entryNumber}
+          href={null}
+          journalEntryId={journalLinkage.journalEntryId}
+          periodName={journalLinkage.periodName}
+          sourceReference={journalLinkage.sourceReference}
+          status={journalLinkage.status}
+          totalCredit={journalLinkage.totalCredit}
+          totalDebit={journalLinkage.totalDebit}
+        />
       ) : null}
 
       <section

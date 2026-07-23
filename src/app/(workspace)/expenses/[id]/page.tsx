@@ -41,9 +41,12 @@ export function ExpenseDetailPageView({
   journalLinkage,
   ...contentProps
 }: ExpenseDetailPageViewProps) {
-  void journalLinkage;
-
-  return <ExpenseDetailPageContent {...contentProps} />;
+  return (
+    <ExpenseDetailPageContent
+      {...contentProps}
+      journalLinkage={journalLinkage}
+    />
+  );
 }
 
 export default async function ExpenseDetailPage({
