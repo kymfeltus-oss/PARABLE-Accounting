@@ -6,6 +6,15 @@ import {
   Landmark,
 } from "lucide-react";
 
+import {
+  CreateExpenseDraftForm,
+  type ExpenseVendorOption,
+} from "@/components/expenses/create-expense-draft-form";
+import { ExpenseAllocationEditor } from "@/components/expenses/expense-allocation-editor";
+import type {
+  ExpenseAccountOption,
+  ExpenseFundOption,
+} from "@/lib/data/expense-allocation-options";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -44,6 +53,9 @@ const navigationLinks = [
 
 type ExpensesPageContentProps = {
   data: ExpensesData;
+  vendorOptions: ExpenseVendorOption[];
+  accountOptions: ExpenseAccountOption[];
+  fundOptions: ExpenseFundOption[];
 };
 
 function formatCurrency(amount: number): string {
@@ -101,7 +113,41 @@ function hasExpenseActivity(data: ExpensesData): boolean {
   return data.expenses.some((expense) => expense.status !== "void");
 }
 
-export function ExpensesPageContent({ data }: ExpensesPageContentProps) {
+function toAllocationEditorExpense(expense: ExpenseRecord) {
+  return {
+    id: expense.id,
+    description: expense.description,
+    reference: expense.reference,
+    totalAmount: Number(expense.total_amount),
+    status: expense.status,
+    lineCount: expense.lineCount,
+  };
+}
+
+function renderDraftAllocationControls(
+  expense: ExpenseRecord,
+  accountOptions: ExpenseAccountOption[],
+  fundOptions: ExpenseFundOption[],
+) {
+  if (expense.status !== "draft") {
+    return null;
+  }
+
+  return (
+    <ExpenseAllocationEditor
+      accountOptions={accountOptions}
+      expense={toAllocationEditorExpense(expense)}
+      fundOptions={fundOptions}
+    />
+  );
+}
+
+export function ExpensesPageContent({
+  data,
+  vendorOptions,
+  accountOptions,
+  fundOptions,
+}: ExpensesPageContentProps) {
   const expensesNav = getNavItemByPathname("/expenses");
 
   if (!expensesNav) {
@@ -119,15 +165,20 @@ export function ExpensesPageContent({ data }: ExpensesPageContentProps) {
   return (
     <section aria-labelledby="expenses-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="expenses-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {expensesNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {expensesNav.description}
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1
+              id="expenses-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {expensesNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {expensesNav.description}
+            </p>
+          </div>
+          <CreateExpenseDraftForm vendorOptions={vendorOptions} />
+        </div>
       </header>
 
       {!hasExpenseActivity(data) ? (
@@ -188,6 +239,15 @@ export function ExpensesPageContent({ data }: ExpensesPageContentProps) {
                       {formatPaymentSource(expense.payment_source)} ·{" "}
                       {formatAllocationDetail(expense)}
                     </p>
+                    {expense.status === "draft" ? (
+                      <div className="mt-3">
+                        {renderDraftAllocationControls(
+                          expense,
+                          accountOptions,
+                          fundOptions,
+                        )}
+                      </div>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -229,6 +289,18 @@ export function ExpensesPageContent({ data }: ExpensesPageContentProps) {
                       {formatDate(expense.expense_date)} ·{" "}
                       {formatCurrency(Number(expense.total_amount))}
                     </p>
+                    {expense.lineCount === 0 ? (
+                      <p className="mt-2 text-sm font-medium text-foreground">
+                        Needs allocation
+                      </p>
+                    ) : null}
+                    <div className="mt-3">
+                      {renderDraftAllocationControls(
+                        expense,
+                        accountOptions,
+                        fundOptions,
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

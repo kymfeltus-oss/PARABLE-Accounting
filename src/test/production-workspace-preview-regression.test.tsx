@@ -104,7 +104,12 @@ describe("production workspace preview regression", () => {
 
   it("Expenses does not render Development Preview", () => {
     const { container } = render(
-      <ExpensesPageContent data={createEmptyExpensesData()} />,
+      <ExpensesPageContent
+        data={createEmptyExpensesData()}
+        vendorOptions={[]}
+        accountOptions={[]}
+        fundOptions={[]}
+      />,
     );
 
     expect(container.textContent).not.toContain("Development Preview");

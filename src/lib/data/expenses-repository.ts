@@ -1,8 +1,9 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+import { DataAccessError } from "./data-access-error";
 import { requireOrganizationId } from "./organization-id";
-import { getMonthDateRange, sumAmounts, unwrapRows } from "./query-helpers";
-import type { ExpenseRow, VendorRow } from "./types/rows";
+import { getMonthDateRange, sumAmounts, toDataAccessError, unwrapRows } from "./query-helpers";
+import type { ExpenseLineRow, ExpenseRow, VendorRow } from "./types/rows";
 
 export type ExpenseRecord = ExpenseRow & {
   vendorName: string | null;
@@ -21,6 +22,69 @@ export type ExpensesData = {
     amountThisMonth: number;
   };
 };
+
+export type ExpensePaymentSource =
+  | "bank"
+  | "card"
+  | "cash"
+  | "reimbursement"
+  | "other";
+
+export type CreateExpenseDraftInput = {
+  expenseDate: string;
+  description: string;
+  totalAmount: number;
+  vendorId?: string | null;
+  reference?: string | null;
+  paymentSource: ExpensePaymentSource;
+};
+
+export type ReplaceExpenseDraftLineInput = {
+  accountId: string;
+  fundId?: string | null;
+  amount: number;
+  description?: string | null;
+};
+
+export type ReplaceExpenseDraftLinesInput = {
+  expenseId: string;
+  lines: ReplaceExpenseDraftLineInput[];
+};
+
+export type ExpenseDraftLineDetail = {
+  id: string;
+  expenseId: string;
+  accountId: string;
+  fundId: string | null;
+  lineNumber: number;
+  description: string | null;
+  amount: number;
+};
+
+function requireExpenseId(expenseId: string, operation: string): string {
+  const trimmed = expenseId.trim();
+
+  if (!trimmed) {
+    throw new DataAccessError({
+      operation,
+      message: "expenseId is required and must be a non-empty string",
+    });
+  }
+
+  return trimmed;
+}
+
+function toExpenseDraftLineDetail(line: ExpenseLineRow): ExpenseDraftLineDetail {
+  return {
+    id: line.id,
+    expenseId: line.expense_id,
+    accountId: line.account_id,
+    fundId: line.fund_id,
+    lineNumber: line.line_number,
+    description: line.description,
+    amount: Number(line.amount),
+  };
+}
 
 function isActiveExpense(expense: ExpenseRow): boolean {
   return expense.status !== "void";
@@ -130,4 +194,135 @@ export async function getExpensesData(
       ),
     },
   };
+}
+
+export async function createExpenseDraft(
+  organizationId: string,
+  input: CreateExpenseDraftInput,
+): Promise<ExpenseRow> {
+  const operation = "createExpenseDraft";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("create_expense_draft", {
+    target_organization_id: scopedOrganizationId,
+    input_expense_date: input.expenseDate,
+    input_description: input.description,
+    input_total_amount: input.totalAmount,
+    input_vendor_id: input.vendorId ?? null,
+    input_reference: input.reference ?? null,
+    input_payment_source: input.paymentSource,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[createExpenseDraft RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+        organizationId: scopedOrganizationId,
+        expenseDate: input.expenseDate,
+        hasVendorId: input.vendorId != null,
+        paymentSource: input.paymentSource,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Expense draft creation returned no row",
+    });
+  }
+
+  return result.data as ExpenseRow;
+}
+
+export async function replaceExpenseDraftLines(
+  organizationId: string,
+  input: ReplaceExpenseDraftLinesInput,
+): Promise<ExpenseRow> {
+  const operation = "replaceExpenseDraftLines";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("replace_expense_draft_lines", {
+    target_organization_id: scopedOrganizationId,
+    target_expense_id: input.expenseId,
+    input_lines: input.lines.map((line) => ({
+      account_id: line.accountId,
+      fund_id: line.fundId ?? null,
+      amount: line.amount,
+      description:
+        line.description === undefined ? null : line.description,
+    })),
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[replaceExpenseDraftLines RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+        organizationId: scopedOrganizationId,
+        expenseId: input.expenseId,
+        lineCount: input.lines.length,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Expense draft line replacement returned no row",
+    });
+  }
+
+  return result.data as ExpenseRow;
+}
+
+export async function getExpenseDraftLines(
+  organizationId: string,
+  expenseId: string,
+): Promise<ExpenseDraftLineDetail[]> {
+  const operation = "getExpenseDraftLines";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedExpenseId = requireExpenseId(expenseId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const expenseResult = await supabase
+    .from("expenses")
+    .select("id")
+    .eq("id", scopedExpenseId)
+    .eq("organization_id", scopedOrganizationId);
+
+  const matchingExpenses = unwrapRows<{ id: string }>(
+    `${operation}.expense`,
+    expenseResult,
+  );
+
+  if (matchingExpenses.length === 0) {
+    throw new DataAccessError({
+      operation,
+      message: "Expense not found for organization",
+    });
+  }
+
+  const linesResult = await supabase
+    .from("expense_lines")
+    .select("*")
+    .eq("expense_id", scopedExpenseId)
+    .order("line_number", { ascending: true });
+
+  const lines = unwrapRows<ExpenseLineRow>(`${operation}.lines`, linesResult);
+
+  return lines.map(toExpenseDraftLineDetail);
 }

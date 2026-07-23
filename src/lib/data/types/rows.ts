@@ -213,6 +213,18 @@ export type ExpenseRow = {
   updated_at: string;
 };
 
+export type ExpenseLineRow = {
+  id: string;
+  expense_id: string;
+  account_id: string;
+  fund_id: string | null;
+  line_number: number;
+  description: string | null;
+  amount: number | string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AmountRow = {
   amount: number | string;
 };
