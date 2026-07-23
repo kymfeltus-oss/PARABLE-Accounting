@@ -3,9 +3,13 @@ import type { ReactElement, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/font/google", () => ({
-  Geist: () => ({
-    variable: "--font-geist-sans",
-    className: "mock-geist-sans",
+  Inter: () => ({
+    variable: "--font-inter",
+    className: "mock-inter",
+  }),
+  Space_Grotesk: () => ({
+    variable: "--font-space-grotesk",
+    className: "mock-space-grotesk",
   }),
   Geist_Mono: () => ({
     variable: "--font-geist-mono",
@@ -64,7 +68,7 @@ describe("RootLayout", () => {
       template: "%s | Parable Accounting",
     });
     expect(metadata.description).toBe(
-      "AI-driven ministry accounting and financial stewardship workspace.",
+      "Ministry Finance OS — AI-driven accounting and financial stewardship for churches and ministries.",
     );
   });
 

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { navItems } from "@/config/navigation";
+import { sidebarItems } from "./app-sidebar";
 
 import { AppShell } from "./app-shell";
 
@@ -219,7 +220,7 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    for (const item of navItems) {
+    for (const item of sidebarItems) {
       expect(
         within(screen.getByRole("complementary")).getByRole("link", {
           name: item.label,

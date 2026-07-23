@@ -13,7 +13,7 @@ export function NavSection({ group, onNavigate, compact }: NavSectionProps) {
     <section aria-labelledby={`nav-group-${group.id}`} className="mb-2">
       <h2
         id={`nav-group-${group.id}`}
-        className="px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
+        className="px-3 py-1.5 brand-label text-muted-foreground"
       >
         {group.label}
       </h2>

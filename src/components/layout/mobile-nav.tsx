@@ -1,6 +1,8 @@
 "use client";
 
 import { navGroups } from "@/config/navigation";
+import { BrandLogoMark } from "@/components/brand/brand-logo-mark";
+import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -28,7 +30,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="flex h-full w-[min(100%,20rem)] flex-col gap-0 p-0"
+        className="flex h-full w-[min(100%,20rem)] flex-col gap-0 border-sidebar-border bg-sidebar p-0"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Parable Accounting navigation</SheetTitle>
@@ -37,18 +39,23 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-col gap-3 border-b border-border px-4 py-5">
-          <div className="space-y-1">
-            <p className="text-sm font-semibold tracking-[0.2em] text-foreground">
-              PARABLE
-            </p>
-            <p className="text-lg font-semibold text-foreground">Accounting</p>
+        <div className="flex flex-col gap-4 border-b border-sidebar-border px-5 py-6">
+          <div className="flex min-h-14 items-center gap-3.5">
+            <span className="grid h-14 w-12 shrink-0 place-items-center overflow-visible">
+              <BrandLogoMark />
+            </span>
+            <BrandWordmark compact />
           </div>
-          <Badge variant="secondary">Development Workspace</Badge>
+          <Badge
+            variant="secondary"
+            className="brand-workspace-badge w-fit text-[0.65rem] tracking-[0.08em] uppercase"
+          >
+            Development Workspace
+          </Badge>
         </div>
 
         <ScrollArea className="flex-1">
-          <nav aria-label="Primary navigation" className="px-2 py-4">
+          <nav aria-label="Primary navigation" className="px-2.5 py-4">
             {navGroups.map((group) => (
               <div key={group.id}>
                 {group.id === "system" ? <Separator className="my-4" /> : null}
@@ -58,8 +65,10 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
           </nav>
         </ScrollArea>
 
-        <div className="border-t border-border px-4 py-3">
-          <p className="text-xs text-muted-foreground">Phase 1A</p>
+        <div className="border-t border-sidebar-border px-4 py-4">
+          <div className="brand-surface rounded-md px-3 py-2.5">
+            <p className="brand-label text-muted-foreground">Phase 1A</p>
+          </div>
         </div>
       </SheetContent>
     </Sheet>

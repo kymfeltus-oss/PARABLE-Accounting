@@ -28,7 +28,7 @@ export function NavLink({ item, onNavigate, compact = false }: NavLinkProps) {
         "hover:border-sidebar-border hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
         "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
         isActive
-          ? "border-blue-500/20 bg-blue-500/12 text-blue-400 shadow-[inset_2px_0_0_#147dff,0_0_24px_rgba(20,125,255,0.05)]"
+          ? "border-primary/25 bg-primary/12 text-[color:var(--brand-cyan)] shadow-[inset_2px_0_0_var(--brand-electric),0_0_24px_rgba(22,119,255,0.07)]"
           : "text-muted-foreground",
         compact && "gap-2 px-2 py-2",
       )}

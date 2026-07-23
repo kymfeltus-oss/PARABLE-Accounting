@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { createExpenseDraftAction } from "@/app/(workspace)/expenses/actions";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -35,6 +36,8 @@ export type ExpenseVendorOption = {
 
 type CreateExpenseDraftFormProps = {
   vendorOptions: ExpenseVendorOption[];
+  triggerLabel?: string;
+  triggerClassName?: string;
 };
 
 function parseTotalAmount(value: string): number | null {
@@ -59,6 +62,8 @@ function normalizeReference(value: string): string | null {
 
 export function CreateExpenseDraftForm({
   vendorOptions,
+  triggerLabel = "New Expense",
+  triggerClassName,
 }: CreateExpenseDraftFormProps) {
   const [open, setOpen] = useState(false);
   const [expenseDate, setExpenseDate] = useState("");
@@ -147,7 +152,12 @@ export function CreateExpenseDraftForm({
 
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>
-          <Button type="button">New Expense</Button>
+          <Button type="button" className={triggerClassName}>
+            {triggerLabel === "Record Transaction" ? (
+              <Plus aria-hidden className="size-4" />
+            ) : null}
+            {triggerLabel}
+          </Button>
         </SheetTrigger>
         <SheetContent aria-describedby="create-expense-draft-description">
           <SheetHeader>

@@ -18,7 +18,7 @@ export function AppHeader({ onOpenMobileNav }: AppHeaderProps) {
   const pageTitle = currentItem?.title ?? "Parable Accounting";
 
   return (
-    <header className="app-header sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl md:px-7">
+    <header className={`app-header sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl md:px-7 ${pathname === "/dashboard" ? "md:hidden" : ""}`}>
       <Button
         type="button"
         variant="ghost"
@@ -36,7 +36,7 @@ export function AppHeader({ onOpenMobileNav }: AppHeaderProps) {
 
       <Badge
         variant="secondary"
-        className="hidden border border-border bg-secondary/60 text-xs font-medium text-secondary-foreground sm:inline-flex"
+        className="brand-workspace-badge hidden text-xs font-medium sm:inline-flex"
       >
         Development Workspace
       </Badge>
