@@ -4,11 +4,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { ExpenseAllocationEditor } from "@/components/expenses/expense-allocation-editor";
+import { RecordExpenseSection } from "@/components/expenses/record-expense-section";
 import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
 import type {
   ExpenseAccountOption,
   ExpenseFundOption,
 } from "@/lib/data/expense-allocation-options";
+import type { ExpenseCreditAccountOption } from "@/lib/data/expense-credit-account-options";
 import type { ExpenseDraftLineDetail, ExpenseRecord } from "@/lib/data/expenses-repository";
 
 export type ExpenseDetailPageContentProps = {
@@ -16,6 +18,7 @@ export type ExpenseDetailPageContentProps = {
   lines: ExpenseDraftLineDetail[];
   accountOptions: ExpenseAccountOption[];
   fundOptions: ExpenseFundOption[];
+  creditAccountOptions: ExpenseCreditAccountOption[];
 };
 
 function formatCurrency(amount: number): string {
@@ -44,6 +47,17 @@ function formatPaymentSource(source: string): string {
 
 function sumLineAmounts(lines: ExpenseDraftLineDetail[]): number {
   return lines.reduce((total, line) => total + line.amount, 0);
+}
+
+function isAllocationComplete(
+  expense: ExpenseRecord,
+  lines: ExpenseDraftLineDetail[],
+): boolean {
+  if (expense.status !== "draft" || lines.length === 0) {
+    return false;
+  }
+
+  return sumLineAmounts(lines) === Number(expense.total_amount);
 }
 
 function resolveAccountLabel(
@@ -182,9 +196,11 @@ export function ExpenseDetailPageContent({
   lines,
   accountOptions,
   fundOptions,
+  creditAccountOptions,
 }: ExpenseDetailPageContentProps) {
   const isDraft = expense.status === "draft";
   const isRecorded = expense.status === "recorded";
+  const allocationComplete = isAllocationComplete(expense, lines);
 
   return (
     <section aria-labelledby="expense-detail-title" className="space-y-6">
@@ -322,6 +338,17 @@ export function ExpenseDetailPageContent({
           </div>
         </div>
       </section>
+
+      {isDraft && allocationComplete ? (
+        <RecordExpenseSection
+          allocationComplete={allocationComplete}
+          creditAccountOptions={creditAccountOptions}
+          expenseAmount={Number(expense.total_amount)}
+          expenseDescription={expense.description}
+          expenseId={expense.id}
+          paymentSource={formatPaymentSource(expense.payment_source)}
+        />
+      ) : null}
     </section>
   );
 }

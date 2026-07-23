@@ -24,9 +24,44 @@ const fundOptions = [
   },
 ];
 
+const creditAccountOptions = [
+  {
+    id: "acct-liability-card",
+    code: "2010",
+    name: "Ministry Credit Card",
+    accountType: "liability" as const,
+    displayLabel: "2010 — Ministry Credit Card",
+  },
+];
+
+vi.mock("@/components/expenses/record-expense-section", () => ({
+  RecordExpenseSection: ({
+    allocationComplete,
+    creditAccountOptions: options,
+    expenseDescription,
+  }: {
+    allocationComplete: boolean;
+    creditAccountOptions: typeof creditAccountOptions;
+    expenseDescription: string;
+  }) => (
+    <section aria-label="Record expense section">
+      <p>{expenseDescription}</p>
+      <p data-allocation-complete={allocationComplete ? "true" : "false"}>
+        {allocationComplete ? "Allocation complete" : "Allocation incomplete"}
+      </p>
+      <ul>
+        {options.map((option) => (
+          <li key={option.id}>{option.displayLabel}</li>
+        ))}
+      </ul>
+    </section>
+  ),
+}));
+
 vi.mock("@/app/(workspace)/expenses/actions", () => ({
   getExpenseDraftLinesAction: vi.fn(),
   replaceExpenseDraftLinesAction: vi.fn(),
+  recordExpenseAction: vi.fn(),
 }));
 
 vi.mock("next/link", () => ({
@@ -70,10 +105,17 @@ function createExpense(
 function renderDetailPage(
   expense: ExpenseRecord,
   lines: Parameters<typeof ExpenseDetailPageContent>[0]["lines"] = [],
+  options: Partial<
+    Pick<
+      Parameters<typeof ExpenseDetailPageContent>[0],
+      "creditAccountOptions"
+    >
+  > = {},
 ) {
   return render(
     <ExpenseDetailPageContent
       accountOptions={accountOptions}
+      creditAccountOptions={options.creditAccountOptions ?? creditAccountOptions}
       expense={expense}
       fundOptions={fundOptions}
       lines={lines}
@@ -260,5 +302,94 @@ describe("ExpenseDetailPageContent", () => {
     expect(screen.getByText("6100 · Utilities")).toBeTruthy();
     expect(screen.getByText("GEN · General Fund")).toBeTruthy();
     expect(screen.getByText("Utilities")).toBeTruthy();
+  });
+
+  it("renders the recording section for complete draft allocation", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        total_amount: 125.75,
+        status: "draft",
+      }),
+      [
+        {
+          id: "line-1",
+          expenseId: "expense-1",
+          accountId: "acct-expense-active",
+          fundId: "fund-active-coded",
+          lineNumber: 1,
+          description: "Utilities",
+          amount: 125.75,
+        },
+      ],
+    );
+
+    expect(screen.getByLabelText("Record expense section")).toBeTruthy();
+    expect(screen.getByText("2010 — Ministry Credit Card")).toBeTruthy();
+    expect(screen.getByText("Allocation complete")).toBeTruthy();
+  });
+
+  it("does not render the recording section for incomplete draft allocation", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-2",
+        description: "Utility reimbursement draft",
+        total_amount: 240,
+        status: "draft",
+      }),
+      [],
+    );
+
+    expect(screen.queryByLabelText("Record expense section")).toBeNull();
+  });
+
+  it("does not render the recording section for recorded expenses", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        status: "recorded",
+      }),
+      [
+        {
+          id: "line-1",
+          expenseId: "expense-1",
+          accountId: "acct-expense-active",
+          fundId: "fund-active-coded",
+          lineNumber: 1,
+          description: "Utilities",
+          amount: 125.75,
+        },
+      ],
+    );
+
+    expect(screen.queryByLabelText("Record expense section")).toBeNull();
+  });
+
+  it("renders the empty eligible-account state through the recording section", () => {
+    renderDetailPage(
+      createExpense({
+        id: "expense-1",
+        description: "Office supplies purchase",
+        total_amount: 125.75,
+        status: "draft",
+      }),
+      [
+        {
+          id: "line-1",
+          expenseId: "expense-1",
+          accountId: "acct-expense-active",
+          fundId: "fund-active-coded",
+          lineNumber: 1,
+          description: "Utilities",
+          amount: 125.75,
+        },
+      ],
+      { creditAccountOptions: [] },
+    );
+
+    expect(screen.getByLabelText("Record expense section")).toBeTruthy();
+    expect(screen.queryByText("2010 — Ministry Credit Card")).toBeNull();
   });
 });

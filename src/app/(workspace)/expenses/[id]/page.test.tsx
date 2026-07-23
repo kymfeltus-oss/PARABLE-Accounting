@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AccountingData } from "@/lib/data/accounting-repository";
@@ -10,6 +13,7 @@ const {
   getExpenseLinesMock,
   getAccountingDataMock,
   getFundsDataMock,
+  getExpenseCreditAccountOptionsMock,
   notFoundMock,
 } = vi.hoisted(() => ({
   getCurrentOrganizationIdMock: vi.fn(),
@@ -17,6 +21,7 @@ const {
   getExpenseLinesMock: vi.fn(),
   getAccountingDataMock: vi.fn(),
   getFundsDataMock: vi.fn(),
+  getExpenseCreditAccountOptionsMock: vi.fn(),
   notFoundMock: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -41,6 +46,10 @@ vi.mock("@/lib/data/accounting-repository", () => ({
 
 vi.mock("@/lib/data/funds-repository", () => ({
   getFundsData: getFundsDataMock,
+}));
+
+vi.mock("@/lib/data/expense-credit-account-options", () => ({
+  getExpenseCreditAccountOptions: getExpenseCreditAccountOptionsMock,
 }));
 
 import ExpenseDetailPage from "./page";
@@ -130,6 +139,18 @@ function createFundsData(): FundsData {
   };
 }
 
+function createCreditAccountOptions() {
+  return [
+    {
+      id: "acct-liability-card",
+      code: "2010",
+      name: "Ministry Credit Card",
+      accountType: "liability" as const,
+      displayLabel: "2010 — Ministry Credit Card",
+    },
+  ];
+}
+
 describe("Expense detail page wiring", () => {
   beforeEach(() => {
     getCurrentOrganizationIdMock.mockReset();
@@ -137,7 +158,9 @@ describe("Expense detail page wiring", () => {
     getExpenseLinesMock.mockReset();
     getAccountingDataMock.mockReset();
     getFundsDataMock.mockReset();
+    getExpenseCreditAccountOptionsMock.mockReset();
     notFoundMock.mockClear();
+    getExpenseCreditAccountOptionsMock.mockResolvedValue(createCreditAccountOptions());
   });
   it("renders the detail page for a valid expense", async () => {
     const expense = createExpenseRecord();
@@ -162,6 +185,81 @@ describe("Expense detail page wiring", () => {
     );
     expect(page.type).toBe(ExpenseDetailPageContent);
     expect(page.props.expense).toEqual(expense);
+    expect(getExpenseCreditAccountOptionsMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+      "card",
+    );
+    expect(page.props.creditAccountOptions).toEqual(createCreditAccountOptions());
+  });
+
+  it("loads eligible credit account options using the current organization id", async () => {
+    const expense = createExpenseRecord();
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    getExpenseByIdMock.mockResolvedValue(expense);
+    getExpenseLinesMock.mockResolvedValue([]);
+    getAccountingDataMock.mockResolvedValue(createAccountingData());
+    getFundsDataMock.mockResolvedValue(createFundsData());
+
+    await ExpenseDetailPage({
+      params: Promise.resolve({ id: VALID_EXPENSE_ID }),
+    });
+
+    expect(getExpenseCreditAccountOptionsMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+      expense.payment_source,
+    );
+  });
+
+  it("does not query credit account options for recorded expenses", async () => {
+    const expense = {
+      ...createExpenseRecord(),
+      status: "recorded",
+    };
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    getExpenseByIdMock.mockResolvedValue(expense);
+    getExpenseLinesMock.mockResolvedValue([]);
+    getAccountingDataMock.mockResolvedValue(createAccountingData());
+    getFundsDataMock.mockResolvedValue(createFundsData());
+
+    const page = await ExpenseDetailPage({
+      params: Promise.resolve({ id: VALID_EXPENSE_ID }),
+    });
+
+    expect(getExpenseCreditAccountOptionsMock).not.toHaveBeenCalled();
+    expect(page.props.creditAccountOptions).toEqual([]);
+  });
+
+  it("passes empty credit account options when payment source is unsupported", async () => {
+    const expense = {
+      ...createExpenseRecord(),
+      payment_source: "other",
+    };
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    getExpenseByIdMock.mockResolvedValue(expense);
+    getExpenseLinesMock.mockResolvedValue([]);
+    getAccountingDataMock.mockResolvedValue(createAccountingData());
+    getFundsDataMock.mockResolvedValue(createFundsData());
+    getExpenseCreditAccountOptionsMock.mockResolvedValue([]);
+
+    const page = await ExpenseDetailPage({
+      params: Promise.resolve({ id: VALID_EXPENSE_ID }),
+    });
+
+    expect(getExpenseCreditAccountOptionsMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+      "other",
+    );
+    expect(page.props.creditAccountOptions).toEqual([]);
+  });
+
+  it("does not accept organization id from client input", () => {
+    const contents = readFileSync(
+      path.join(process.cwd(), "src/app/(workspace)/expenses/[id]/page.tsx"),
+      "utf8",
+    );
+
+    expect(contents).toContain("getCurrentOrganizationId()");
+    expect(contents).not.toMatch(/organizationId:\s*string/);
   });
 
   it("calls notFound for a missing expense", async () => {

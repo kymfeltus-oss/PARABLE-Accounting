@@ -6,6 +6,7 @@ import {
   mapExpenseAccountOptions,
   mapExpenseFundOptions,
 } from "@/lib/data/expense-allocation-options";
+import { getExpenseCreditAccountOptions } from "@/lib/data/expense-credit-account-options";
 import {
   getExpenseById,
   getExpenseLines,
@@ -40,15 +41,23 @@ export default async function ExpenseDetailPage({
     notFound();
   }
 
-  const [lines, accountingData, fundsData] = await Promise.all([
-    getExpenseLines(organizationId, id),
-    getAccountingData(organizationId),
-    getFundsData(organizationId),
-  ]);
+  const [lines, accountingData, fundsData, creditAccountOptions] =
+    await Promise.all([
+      getExpenseLines(organizationId, id),
+      getAccountingData(organizationId),
+      getFundsData(organizationId),
+      expense.status === "draft"
+        ? getExpenseCreditAccountOptions(
+            organizationId,
+            expense.payment_source,
+          )
+        : Promise.resolve([]),
+    ]);
 
   return (
     <ExpenseDetailPageContent
       accountOptions={mapExpenseAccountOptions(accountingData.accounts)}
+      creditAccountOptions={creditAccountOptions}
       expense={expense}
       fundOptions={mapExpenseFundOptions(fundsData.funds)}
       lines={lines}
