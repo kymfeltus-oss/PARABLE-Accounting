@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAccessError } from "./data-access-error";
-import { createExpenseDraft, getExpenseDraftLines, getExpensesData, replaceExpenseDraftLines } from "./expenses-repository";
+import { createExpenseDraft, getExpenseById, getExpenseDraftLines, getExpenseLines, getExpensesData, replaceExpenseDraftLines } from "./expenses-repository";
 import {
   createBackendError,
   createMockSupabaseClient,
@@ -1049,5 +1049,191 @@ describe("getExpenseDraftLines", () => {
     expect(fromMock.mock.calls.map((call) => call[0])).not.toContain(
       "journal_entry_lines",
     );
+  });
+});
+
+describe("getExpenseById", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("requires organizationId", async () => {
+    await expect(getExpenseById("", TEST_EXPENSE_ID)).rejects.toBeInstanceOf(
+      DataAccessError,
+    );
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("requires expenseId", async () => {
+    await expect(getExpenseById(TEST_ORGANIZATION_ID, "   ")).rejects.toBeInstanceOf(
+      DataAccessError,
+    );
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("filters by organization_id and expense id", async () => {
+    const expenseRow = createCreatedExpenseRow({ id: TEST_EXPENSE_ID });
+    const { client, queryLog } = createMockSupabaseClient({
+      expenses: [{ data: [expenseRow], error: null }],
+      vendors: [{ data: [{ name: "Northside Supplies" }], error: null }],
+      expense_lines: [{ data: [{ expense_id: TEST_EXPENSE_ID }], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await getExpenseById(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID);
+
+    const expenseQuery = queryLog.find((query) => query.table === "expenses");
+    expect(expenseQuery).toBeDefined();
+    expect(hasOrganizationFilter(expenseQuery!, TEST_ORGANIZATION_ID)).toBe(true);
+    expect(expenseQuery?.filters).toContainEqual({
+      method: "eq",
+      args: ["id", TEST_EXPENSE_ID],
+    });
+  });
+
+  it("returns a mapped expense when found", async () => {
+    const expenseRow = createCreatedExpenseRow({ id: TEST_EXPENSE_ID });
+    const { client } = createMockSupabaseClient({
+      expenses: [{ data: [expenseRow], error: null }],
+      vendors: [{ data: [{ name: "Northside Supplies" }], error: null }],
+      expense_lines: [
+        { data: [{ expense_id: TEST_EXPENSE_ID }, { expense_id: TEST_EXPENSE_ID }], error: null },
+      ],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getExpenseById(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID);
+
+    expect(result).toEqual({
+      ...expenseRow,
+      vendorName: "Northside Supplies",
+      lineCount: 2,
+    });
+  });
+
+  it("returns null when no matching row exists", async () => {
+    const { client } = createMockSupabaseClient({
+      expenses: [{ data: [], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getExpenseById(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID);
+
+    expect(result).toBeNull();
+  });
+
+  it("handles repository errors using existing conventions", async () => {
+    const { client } = createMockSupabaseClient({
+      expenses: [
+        { data: null, error: createBackendError("expense query failed") },
+      ],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      getExpenseById(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID),
+    ).rejects.toBeInstanceOf(DataAccessError);
+  });
+
+  it("never performs an id-only lookup", async () => {
+    const expenseRow = createCreatedExpenseRow({ id: TEST_EXPENSE_ID });
+    const { client, queryLog } = createMockSupabaseClient({
+      expenses: [{ data: [expenseRow], error: null }],
+      vendors: [{ data: [], error: null }],
+      expense_lines: [{ data: [], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await getExpenseById(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID);
+
+    const expenseQuery = queryLog.find((query) => query.table === "expenses");
+    expect(expenseQuery?.filters.some(
+      (filter) =>
+        filter.method === "eq" &&
+        filter.args[0] === "organization_id" &&
+        filter.args[1] === TEST_ORGANIZATION_ID,
+    )).toBe(true);
+    expect(expenseQuery?.filters.some(
+      (filter) =>
+        filter.method === "eq" &&
+        filter.args[0] === "id" &&
+        filter.args[1] === TEST_EXPENSE_ID,
+    )).toBe(true);
+  });
+});
+
+describe("getExpenseLines", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("filters the parent expense by organization_id and expense id", async () => {
+    const { client, queryLog } = createGetExpenseDraftLinesMockClient({
+      expenses: [{ data: [{ id: TEST_EXPENSE_ID }], error: null }],
+      expense_lines: [{ data: [], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await getExpenseLines(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID);
+
+    const expenseQuery = queryLog.find((query) => query.table === "expenses");
+    expect(expenseQuery).toBeDefined();
+    expect(hasOrganizationFilter(expenseQuery!, TEST_ORGANIZATION_ID)).toBe(true);
+    expect(expenseQuery?.filters).toContainEqual({
+      method: "eq",
+      args: ["id", TEST_EXPENSE_ID],
+    });
+  });
+
+  it("returns mapped allocation lines ordered by line number", async () => {
+    const { client } = createGetExpenseDraftLinesMockClient({
+      expenses: [{ data: [{ id: TEST_EXPENSE_ID }], error: null }],
+      expense_lines: [
+        {
+          data: [
+            {
+              id: "line-1",
+              expense_id: TEST_EXPENSE_ID,
+              account_id: "acct-1",
+              fund_id: "fund-1",
+              line_number: 1,
+              description: "Utilities",
+              amount: 50,
+              created_at: "2026-07-20T12:00:00.000Z",
+              updated_at: "2026-07-20T12:00:00.000Z",
+            },
+          ],
+          error: null,
+        },
+      ],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getExpenseLines(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID);
+
+    expect(result).toEqual([
+      {
+        id: "line-1",
+        expenseId: TEST_EXPENSE_ID,
+        accountId: "acct-1",
+        fundId: "fund-1",
+        lineNumber: 1,
+        description: "Utilities",
+        amount: 50,
+      },
+    ]);
+  });
+
+  it("throws DataAccessError when the parent expense is missing", async () => {
+    const { client } = createGetExpenseDraftLinesMockClient({
+      expenses: [{ data: [], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      getExpenseLines(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID),
+    ).rejects.toBeInstanceOf(DataAccessError);
   });
 });

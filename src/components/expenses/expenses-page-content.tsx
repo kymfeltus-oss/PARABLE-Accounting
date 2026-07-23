@@ -194,15 +194,18 @@ function ExpenseListItem({
           </dl>
         </div>
       </div>
-      {expense.status === "draft" ? (
-        <div className="mt-3">
-          {renderDraftAllocationControls(
-            expense,
-            accountOptions,
-            fundOptions,
-          )}
-        </div>
-      ) : null}
+      <div className="mt-3 flex flex-wrap items-start gap-2">
+        <Button asChild size="sm" type="button" variant="outline">
+          <Link href={`/expenses/${expense.id}`}>View</Link>
+        </Button>
+        {expense.status === "draft"
+          ? renderDraftAllocationControls(
+              expense,
+              accountOptions,
+              fundOptions,
+            )
+          : null}
+      </div>
     </li>
   );
 }

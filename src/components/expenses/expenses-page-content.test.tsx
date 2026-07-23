@@ -429,4 +429,30 @@ describe("ExpensesPageContent", () => {
     expect(screen.getByRole("button", { name: "New Expense" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Allocate" })).toBeTruthy();
   });
+
+  it("exposes a View action for each expense", () => {
+    renderExpensesPage(createPopulatedExpensesData());
+
+    expect(screen.getAllByRole("link", { name: "View" })).toHaveLength(2);
+  });
+
+  it("links each View action to the expense detail route", () => {
+    renderExpensesPage(createPopulatedExpensesData());
+
+    const viewLinks = screen.getAllByRole("link", { name: "View" });
+
+    expect(viewLinks[0]?.getAttribute("href")).toBe("/expenses/expense-2");
+    expect(viewLinks[1]?.getAttribute("href")).toBe("/expenses/expense-1");
+  });
+
+  it("keeps the allocation trigger separate from the View action", () => {
+    renderExpensesPage(createPopulatedExpensesData());
+
+    const viewLink = screen.getAllByRole("link", { name: "View" })[1];
+    const allocateButton = screen.getByRole("button", { name: "Allocate" });
+
+    expect(viewLink?.tagName).toBe("A");
+    expect(allocateButton.tagName).toBe("BUTTON");
+    expect(viewLink?.closest("a")?.querySelector("button")).toBeNull();
+  });
 });

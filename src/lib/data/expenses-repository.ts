@@ -289,13 +289,11 @@ export async function replaceExpenseDraftLines(
   return result.data as ExpenseRow;
 }
 
-export async function getExpenseDraftLines(
-  organizationId: string,
-  expenseId: string,
+async function fetchExpenseLinesForOrganizationExpense(
+  scopedOrganizationId: string,
+  scopedExpenseId: string,
+  operation: string,
 ): Promise<ExpenseDraftLineDetail[]> {
-  const operation = "getExpenseDraftLines";
-  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
-  const scopedExpenseId = requireExpenseId(expenseId, operation);
   const supabase = await createServerSupabaseClient();
 
   const expenseResult = await supabase
@@ -325,4 +323,89 @@ export async function getExpenseDraftLines(
   const lines = unwrapRows<ExpenseLineRow>(`${operation}.lines`, linesResult);
 
   return lines.map(toExpenseDraftLineDetail);
+}
+
+export async function getExpenseById(
+  organizationId: string,
+  expenseId: string,
+): Promise<ExpenseRecord | null> {
+  const operation = "getExpenseById";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedExpenseId = requireExpenseId(expenseId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const expenseResult = await supabase
+    .from("expenses")
+    .select("*")
+    .eq("id", scopedExpenseId)
+    .eq("organization_id", scopedOrganizationId);
+
+  const expenses = unwrapRows<ExpenseRow>(`${operation}.expense`, expenseResult);
+
+  if (expenses.length === 0) {
+    return null;
+  }
+
+  const expense = expenses[0];
+  let vendorName: string | null = null;
+
+  if (expense.vendor_id) {
+    const vendorResult = await supabase
+      .from("vendors")
+      .select("name")
+      .eq("id", expense.vendor_id)
+      .eq("organization_id", scopedOrganizationId);
+
+    const vendors = unwrapRows<{ name: string }>(
+      `${operation}.vendor`,
+      vendorResult,
+    );
+    vendorName = vendors[0]?.name ?? null;
+  }
+
+  const linesResult = await supabase
+    .from("expense_lines")
+    .select("expense_id")
+    .eq("expense_id", scopedExpenseId);
+
+  const lines = unwrapRows<{ expense_id: string }>(
+    `${operation}.expenseLines`,
+    linesResult,
+  );
+
+  return {
+    ...expense,
+    vendorName,
+    lineCount: lines.length,
+  };
+}
+
+export async function getExpenseLines(
+  organizationId: string,
+  expenseId: string,
+): Promise<ExpenseDraftLineDetail[]> {
+  const operation = "getExpenseLines";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedExpenseId = requireExpenseId(expenseId, operation);
+
+  return fetchExpenseLinesForOrganizationExpense(
+    scopedOrganizationId,
+    scopedExpenseId,
+    operation,
+  );
+}
+
+export async function getExpenseDraftLines(
+  organizationId: string,
+  expenseId: string,
+): Promise<ExpenseDraftLineDetail[]> {
+  const operation = "getExpenseDraftLines";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedExpenseId = requireExpenseId(expenseId, operation);
+
+  return fetchExpenseLinesForOrganizationExpense(
+    scopedOrganizationId,
+    scopedExpenseId,
+    operation,
+  );
 }
