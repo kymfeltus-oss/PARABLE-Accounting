@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAccessError } from "./data-access-error";
-import { createExpenseDraft, getExpenseById, getExpenseDraftLines, getExpenseLines, getExpensesData, replaceExpenseDraftLines } from "./expenses-repository";
+import { createExpenseDraft, getExpenseById, getExpenseDraftLines, getExpenseLines, getExpensesData, recordExpense, replaceExpenseDraftLines } from "./expenses-repository";
 import {
   createBackendError,
   createMockSupabaseClient,
@@ -1234,6 +1234,207 @@ describe("getExpenseLines", () => {
 
     await expect(
       getExpenseLines(TEST_ORGANIZATION_ID, TEST_EXPENSE_ID),
+    ).rejects.toBeInstanceOf(DataAccessError);
+  });
+});
+
+const TEST_CREDIT_ACCOUNT_ID = "99999999-9999-4999-8999-999999999999";
+const TEST_JOURNAL_ENTRY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+function createRecordedExpenseRow() {
+  return {
+    ...createCreatedExpenseRow({ id: TEST_EXPENSE_ID }),
+    status: "recorded",
+    journal_entry_id: TEST_JOURNAL_ENTRY_ID,
+  };
+}
+
+function createRecordExpenseRpcMockClient(rpcResponse: {
+  data: unknown;
+  error: ReturnType<typeof createBackendError> | null;
+}) {
+  const { client: tableClient } = createEmptyExpensesMockClient();
+  const rpcMock = vi.fn().mockResolvedValue(rpcResponse);
+  const fromMock = vi.spyOn(tableClient, "from");
+
+  return {
+    client: {
+      ...tableClient,
+      rpc: rpcMock,
+    },
+    rpcMock,
+    fromMock,
+  };
+}
+
+describe("recordExpense", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("requires organizationId", async () => {
+    await expect(
+      recordExpense("", TEST_EXPENSE_ID, TEST_CREDIT_ACCOUNT_ID),
+    ).rejects.toBeInstanceOf(DataAccessError);
+    expect(createAdminSupabaseClientMock).not.toHaveBeenCalled();
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("uses createServerSupabaseClient and does not use createAdminSupabaseClient", async () => {
+    const { client } = createRecordExpenseRpcMockClient({
+      data: createRecordedExpenseRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordExpense(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(createServerSupabaseClientMock).toHaveBeenCalledTimes(1);
+    expect(createAdminSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("calls the record_expense RPC with exact argument names", async () => {
+    const { client, rpcMock } = createRecordExpenseRpcMockClient({
+      data: createRecordedExpenseRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordExpense(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(rpcMock).toHaveBeenCalledTimes(1);
+    expect(rpcMock).toHaveBeenCalledWith("record_expense", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+      target_expense_id: TEST_EXPENSE_ID,
+      input_credit_account_id: TEST_CREDIT_ACCOUNT_ID,
+    });
+  });
+
+  it("passes organization id, expense id, and credit account id correctly", async () => {
+    const { client, rpcMock } = createRecordExpenseRpcMockClient({
+      data: createRecordedExpenseRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordExpense(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    const rpcArgs = rpcMock.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(rpcArgs.target_organization_id).toBe(TEST_ORGANIZATION_ID);
+    expect(rpcArgs.target_expense_id).toBe(TEST_EXPENSE_ID);
+    expect(rpcArgs.input_credit_account_id).toBe(TEST_CREDIT_ACCOUNT_ID);
+  });
+
+  it("returns the recorded expense row from the RPC", async () => {
+    const recordedRow = createRecordedExpenseRow();
+    const { client } = createRecordExpenseRpcMockClient({
+      data: recordedRow,
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await recordExpense(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(result).toEqual(recordedRow);
+  });
+
+  it("throws DataAccessError when the RPC fails", async () => {
+    const { client } = createRecordExpenseRpcMockClient({
+      data: null,
+      error: createBackendError("Expense is not in draft status"),
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      recordExpense(
+        TEST_ORGANIZATION_ID,
+        TEST_EXPENSE_ID,
+        TEST_CREDIT_ACCOUNT_ID,
+      ),
+    ).rejects.toBeInstanceOf(DataAccessError);
+  });
+
+  it("preserves the RPC error message in DataAccessError", async () => {
+    const { client } = createRecordExpenseRpcMockClient({
+      data: null,
+      error: createBackendError("Accounting period is closed"),
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      recordExpense(
+        TEST_ORGANIZATION_ID,
+        TEST_EXPENSE_ID,
+        TEST_CREDIT_ACCOUNT_ID,
+      ),
+    ).rejects.toMatchObject({
+      message: "Accounting period is closed",
+    });
+  });
+
+  it("does not perform a direct table query or id-only lookup", async () => {
+    const { client, fromMock } = createRecordExpenseRpcMockClient({
+      data: createRecordedExpenseRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordExpense(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("does not duplicate pre-validation queries before the RPC", async () => {
+    const { client, rpcMock, fromMock } = createRecordExpenseRpcMockClient({
+      data: createRecordedExpenseRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordExpense(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(rpcMock).toHaveBeenCalledTimes(1);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("throws DataAccessError when the RPC returns no row", async () => {
+    const { client } = createRecordExpenseRpcMockClient({
+      data: null,
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      recordExpense(
+        TEST_ORGANIZATION_ID,
+        TEST_EXPENSE_ID,
+        TEST_CREDIT_ACCOUNT_ID,
+      ),
     ).rejects.toBeInstanceOf(DataAccessError);
   });
 });

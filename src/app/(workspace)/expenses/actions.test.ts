@@ -17,6 +17,8 @@ const TEST_VENDOR_ID = "44444444-4444-4444-8444-444444444444";
 const TEST_ACCOUNT_ID_1 = "77777777-7777-4777-8777-777777777771";
 const TEST_ACCOUNT_ID_2 = "77777777-7777-4777-8777-777777777772";
 const TEST_FUND_ID = "88888888-8888-4888-8888-888888888888";
+const TEST_CREDIT_ACCOUNT_ID = "99999999-9999-4999-8999-999999999999";
+const TEST_JOURNAL_ENTRY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 const createdExpense = {
   id: TEST_EXPENSE_ID,
@@ -38,6 +40,7 @@ const {
   createExpenseDraftMock,
   replaceExpenseDraftLinesMock,
   getExpenseDraftLinesMock,
+  recordExpenseMock,
   revalidatePathMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
@@ -45,6 +48,7 @@ const {
   createExpenseDraftMock: vi.fn(),
   replaceExpenseDraftLinesMock: vi.fn(),
   getExpenseDraftLinesMock: vi.fn(),
+  recordExpenseMock: vi.fn(),
   revalidatePathMock: vi.fn(),
 }));
 
@@ -60,6 +64,7 @@ vi.mock("@/lib/data/expenses-repository", () => ({
   createExpenseDraft: createExpenseDraftMock,
   replaceExpenseDraftLines: replaceExpenseDraftLinesMock,
   getExpenseDraftLines: getExpenseDraftLinesMock,
+  recordExpense: recordExpenseMock,
 }));
 
 vi.mock("next/cache", () => ({
@@ -69,6 +74,7 @@ vi.mock("next/cache", () => ({
 import {
   createExpenseDraftAction,
   getExpenseDraftLinesAction,
+  recordExpenseAction,
   replaceExpenseDraftLinesAction,
 } from "./actions";
 
@@ -956,5 +962,239 @@ describe("getExpenseDraftLinesAction", () => {
 
     expect(replaceExpenseDraftLinesMock).not.toHaveBeenCalled();
     expect(createExpenseDraftMock).not.toHaveBeenCalled();
+  });
+});
+
+const recordedExpense = {
+  ...createdExpense,
+  status: "recorded",
+  journal_entry_id: TEST_JOURNAL_ENTRY_ID,
+};
+
+const validRecordInput = {
+  expenseId: TEST_EXPENSE_ID,
+  creditAccountId: TEST_CREDIT_ACCOUNT_ID,
+};
+
+const GENERIC_RECORD_EXPENSE_ERROR =
+  "The expense could not be recorded. Please try again.";
+
+describe("recordExpenseAction", () => {
+  beforeEach(() => {
+    getAuthenticatedUserMock.mockReset();
+    getCurrentOrganizationIdMock.mockReset();
+    recordExpenseMock.mockReset();
+    revalidatePathMock.mockReset();
+    getAuthenticatedUserMock.mockResolvedValue({ id: "user-1" });
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    recordExpenseMock.mockResolvedValue(recordedExpense);
+  });
+
+  it("rejects invalid expense UUID", async () => {
+    const result = await recordExpenseAction({
+      ...validRecordInput,
+      expenseId: "not-a-uuid",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      fieldErrors: {
+        expenseId: "Enter a valid expense identifier.",
+      },
+      message: GENERIC_RECORD_EXPENSE_ERROR,
+    });
+    expect(recordExpenseMock).not.toHaveBeenCalled();
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid credit account UUID", async () => {
+    const result = await recordExpenseAction({
+      ...validRecordInput,
+      creditAccountId: "bad-id",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      fieldErrors: {
+        creditAccountId: "Enter a valid payment account.",
+      },
+      message: GENERIC_RECORD_EXPENSE_ERROR,
+    });
+    expect(recordExpenseMock).not.toHaveBeenCalled();
+  });
+
+  it("resolves organization server-side", async () => {
+    await recordExpenseAction(validRecordInput);
+
+    expect(getCurrentOrganizationIdMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not accept organizationId from client input", () => {
+    const contents = readFileSync(ACTIONS_PATH, "utf8");
+
+    expect(contents).toContain("expenseId: string");
+    expect(contents).toContain("creditAccountId: string");
+    expect(contents).not.toMatch(/RecordExpenseActionInput[\s\S]*organizationId:\s*string/);
+    expect(contents).toContain("getCurrentOrganizationId()");
+  });
+
+  it("calls repository with resolved organization id", async () => {
+    await recordExpenseAction(validRecordInput);
+
+    expect(recordExpenseMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+      TEST_EXPENSE_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+  });
+
+  it("maps duplicate-recording error", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Expense is not in draft status",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message:
+        "This expense has already been recorded or is no longer editable.",
+    });
+  });
+
+  it("maps insufficient-role error", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Insufficient role to record expense",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "You do not have permission to record this expense.",
+    });
+  });
+
+  it("maps closed-period error", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Accounting period is closed",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message:
+        "This expense cannot be recorded because its accounting period is closed.",
+    });
+  });
+
+  it("maps cross-organization account error", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Credit account does not belong to organization",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message:
+        "The selected payment account is not available for this organization.",
+    });
+  });
+
+  it("maps invalid account-type error", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Credit account type is not allowed",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "The selected payment account cannot be used for this expense.",
+    });
+  });
+
+  it("maps expired-session error", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Authenticated user is required",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "Your session has expired. Please sign in again.",
+    });
+  });
+
+  it("maps unknown error safely", async () => {
+    recordExpenseMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordExpense",
+        message: "Journal entry is not balanced",
+      }),
+    );
+
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: GENERIC_RECORD_EXPENSE_ERROR,
+    });
+    if (!result.success) {
+      expect(result.message).not.toContain("Journal entry");
+    }
+  });
+
+  it('revalidates /expenses on success', async () => {
+    await recordExpenseAction(validRecordInput);
+
+    expect(revalidatePathMock).toHaveBeenCalledWith("/expenses");
+  });
+
+  it(`revalidates /expenses/[id] on success`, async () => {
+    await recordExpenseAction(validRecordInput);
+
+    expect(revalidatePathMock).toHaveBeenCalledWith(
+      `/expenses/${TEST_EXPENSE_ID}`,
+    );
+  });
+
+  it("returns success result with recorded status", async () => {
+    const result = await recordExpenseAction(validRecordInput);
+
+    expect(result).toEqual({
+      success: true,
+      expenseId: TEST_EXPENSE_ID,
+      status: "recorded",
+      journalEntryId: TEST_JOURNAL_ENTRY_ID,
+    });
+  });
+
+  it("does not redirect", () => {
+    const contents = readFileSync(ACTIONS_PATH, "utf8");
+
+    expect(contents).not.toContain("redirect(");
+    expect(contents).not.toMatch(/from "next\/navigation"/);
   });
 });

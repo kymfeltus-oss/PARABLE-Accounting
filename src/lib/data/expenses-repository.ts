@@ -61,6 +61,10 @@ export type ExpenseDraftLineDetail = {
   amount: number;
 };
 
+export type RecordedExpenseRow = ExpenseRow & {
+  journal_entry_id: string | null;
+};
+
 function requireExpenseId(expenseId: string, operation: string): string {
   const trimmed = expenseId.trim();
 
@@ -408,4 +412,56 @@ export async function getExpenseDraftLines(
     scopedExpenseId,
     operation,
   );
+}
+
+export async function recordExpense(
+  organizationId: string,
+  expenseId: string,
+  creditAccountId: string,
+): Promise<RecordedExpenseRow> {
+  const operation = "recordExpense";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedExpenseId = requireExpenseId(expenseId, operation);
+  const scopedCreditAccountId = creditAccountId.trim();
+
+  if (!scopedCreditAccountId) {
+    throw new DataAccessError({
+      operation,
+      message: "creditAccountId is required and must be a non-empty string",
+    });
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("record_expense", {
+    target_organization_id: scopedOrganizationId,
+    target_expense_id: scopedExpenseId,
+    input_credit_account_id: scopedCreditAccountId,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[recordExpense RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+        organizationId: scopedOrganizationId,
+        expenseId: scopedExpenseId,
+        creditAccountId: scopedCreditAccountId,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Expense recording returned no row",
+    });
+  }
+
+  return result.data as RecordedExpenseRow;
 }

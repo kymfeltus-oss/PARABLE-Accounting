@@ -7,6 +7,7 @@ import { DataAccessError } from "@/lib/data/data-access-error";
 import {
   createExpenseDraft,
   getExpenseDraftLines,
+  recordExpense,
   replaceExpenseDraftLines,
   type ExpenseDraftLineDetail,
   type ExpensePaymentSource,
@@ -22,6 +23,24 @@ const GENERIC_REPLACE_EXPENSE_DRAFT_LINES_ERROR =
 const GENERIC_GET_EXPENSE_DRAFT_LINES_ERROR =
   "Unable to load expense allocation. Please try again.";
 
+const GENERIC_RECORD_EXPENSE_ERROR =
+  "The expense could not be recorded. Please try again.";
+
+const RECORD_EXPENSE_RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  "Expense is not in draft status":
+    "This expense has already been recorded or is no longer editable.",
+  "Insufficient role to record expense":
+    "You do not have permission to record this expense.",
+  "Accounting period is closed":
+    "This expense cannot be recorded because its accounting period is closed.",
+  "Credit account does not belong to organization":
+    "The selected payment account is not available for this organization.",
+  "Credit account type is not allowed":
+    "The selected payment account cannot be used for this expense.",
+  "Authenticated user is required":
+    "Your session has expired. Please sign in again.",
+};
+
 const MAX_ALLOCATION_LINES = 50;
 const MAX_ALLOCATION_AMOUNT_EXCLUSIVE = 1e16;
 const UUID_PATTERN =
@@ -34,6 +53,8 @@ const ALLOWED_ALLOCATION_LINE_KEYS = new Set([
 ]);
 
 const ALLOWED_GET_EXPENSE_DRAFT_LINES_KEYS = new Set(["expenseId"]);
+
+const ALLOWED_RECORD_EXPENSE_KEYS = new Set(["expenseId", "creditAccountId"]);
 
 const EXPENSE_PAYMENT_SOURCES: readonly ExpensePaymentSource[] = [
   "bank",
@@ -98,6 +119,27 @@ export type GetExpenseDraftLinesActionResult =
       message: string;
     };
 
+export type RecordExpenseActionInput = {
+  expenseId: string;
+  creditAccountId: string;
+};
+
+export type RecordExpenseActionResult =
+  | {
+      success: true;
+      expenseId: string;
+      status: "recorded";
+      journalEntryId: string | null;
+    }
+  | {
+      success: false;
+      fieldErrors?: {
+        expenseId?: string;
+        creditAccountId?: string;
+      };
+      message: string;
+    };
+
 type ValidatedReplaceExpenseDraftLineInput = {
   accountId: string;
   fundId: string | null;
@@ -126,6 +168,13 @@ function isExpensePaymentSource(value: string): value is ExpensePaymentSource {
 
 function isValidUuid(value: string): boolean {
   return UUID_PATTERN.test(value);
+}
+
+function mapRecordExpenseError(error: DataAccessError): string {
+  return (
+    RECORD_EXPENSE_RPC_ERROR_MESSAGES[error.message] ??
+    GENERIC_RECORD_EXPENSE_ERROR
+  );
 }
 
 function hasAtMostTwoDecimalPlaces(amount: number): boolean {
@@ -279,6 +328,58 @@ function validateGetExpenseDraftLinesInput(
   }
 
   return expenseId;
+}
+
+type ValidatedRecordExpenseInput = {
+  expenseId: string;
+  creditAccountId: string;
+};
+
+function validateRecordExpenseInput(
+  input: RecordExpenseActionInput,
+): RecordExpenseActionResult | ValidatedRecordExpenseInput {
+  if (input == null || typeof input !== "object" || Array.isArray(input)) {
+    return {
+      success: false,
+      message: GENERIC_RECORD_EXPENSE_ERROR,
+    };
+  }
+
+  for (const key of Object.keys(input)) {
+    if (!ALLOWED_RECORD_EXPENSE_KEYS.has(key)) {
+      return {
+        success: false,
+        message: GENERIC_RECORD_EXPENSE_ERROR,
+      };
+    }
+  }
+
+  const expenseId = input.expenseId.trim();
+  const creditAccountId = input.creditAccountId.trim();
+  const fieldErrors: NonNullable<
+    Extract<RecordExpenseActionResult, { success: false }>["fieldErrors"]
+  > = {};
+
+  if (expenseId === "" || !isValidUuid(expenseId)) {
+    fieldErrors.expenseId = "Enter a valid expense identifier.";
+  }
+
+  if (creditAccountId === "" || !isValidUuid(creditAccountId)) {
+    fieldErrors.creditAccountId = "Enter a valid payment account.";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return {
+      success: false,
+      fieldErrors,
+      message: GENERIC_RECORD_EXPENSE_ERROR,
+    };
+  }
+
+  return {
+    expenseId,
+    creditAccountId,
+  };
 }
 
 function validateCreateExpenseDraftInput(
@@ -469,6 +570,58 @@ export async function getExpenseDraftLinesAction(
       success: false,
       message:
         "Something went wrong while loading expense allocation. Please try again.",
+    };
+  }
+}
+
+export async function recordExpenseAction(
+  input: RecordExpenseActionInput,
+): Promise<RecordExpenseActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      success: false,
+      message: "You must be signed in to record expenses.",
+    };
+  }
+
+  const validationResult = validateRecordExpenseInput(input);
+
+  if ("success" in validationResult) {
+    return validationResult;
+  }
+
+  const validatedInput = validationResult as ValidatedRecordExpenseInput;
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const expense = await recordExpense(
+      organizationId,
+      validatedInput.expenseId,
+      validatedInput.creditAccountId,
+    );
+
+    revalidatePath("/expenses");
+    revalidatePath(`/expenses/${validatedInput.expenseId}`);
+
+    return {
+      success: true,
+      expenseId: expense.id,
+      status: "recorded",
+      journalEntryId: expense.journal_entry_id ?? null,
+    };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      return {
+        success: false,
+        message: mapRecordExpenseError(error),
+      };
+    }
+
+    return {
+      success: false,
+      message: GENERIC_RECORD_EXPENSE_ERROR,
     };
   }
 }
