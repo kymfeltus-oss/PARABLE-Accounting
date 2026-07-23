@@ -4,8 +4,12 @@ import {
   ArrowUpRight,
   FileText,
   HandCoins,
+  Landmark,
+  PieChart,
   Receipt,
+  RefreshCw,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +26,15 @@ const kpiLabels = [
   "Open Bills",
   "Unreconciled Transactions",
 ] as const;
+
+const kpiIcons = {
+  "Total Cash": Landmark,
+  "Giving This Month": HandCoins,
+  "Expenses This Month": PieChart,
+  "Net Operating Position": TrendingUp,
+  "Open Bills": FileText,
+  "Unreconciled Transactions": RefreshCw,
+} as const;
 
 const quickActions = [
   {
@@ -124,15 +137,18 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
   );
 
   return (
-    <section aria-labelledby="dashboard-title" className="space-y-8">
-      <header className="space-y-2">
+    <section
+      aria-labelledby="dashboard-title"
+      className="dashboard-overview space-y-5"
+    >
+      <header className="dashboard-overview__heading space-y-1.5">
         <h1
           id="dashboard-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
+          className="text-3xl font-semibold tracking-[-0.035em] text-foreground lg:text-4xl"
         >
           {dashboardNav.title}
         </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+        <p className="max-w-3xl text-sm leading-6 text-muted-foreground lg:text-base">
           {dashboardNav.description}
         </p>
       </header>
@@ -141,24 +157,38 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
         <WorkspaceDataEmpty message="No financial activity yet." />
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-        {kpiLabels.map((label) => (
-          <article
-            key={label}
-            className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm"
-          >
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-              {formatKpiValue(label, data.summary)}
-            </p>
-          </article>
-        ))}
+      <div className="dashboard-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {kpiLabels.slice(0, 4).map((label) => {
+          const Icon = kpiIcons[label];
+
+          return (
+            <article
+              key={label}
+              className="dashboard-card dashboard-kpi relative overflow-hidden rounded-lg border border-border bg-card p-4 text-card-foreground"
+            >
+              <div className="flex items-start gap-3.5">
+                <span className="dashboard-kpi__icon" aria-hidden>
+                  <Icon className="size-5" strokeWidth={1.7} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[0.68rem] font-semibold tracking-[0.09em] text-muted-foreground uppercase">
+                    {label}
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-foreground tabular-nums">
+                    {formatKpiValue(label, data.summary)}
+                  </p>
+                </div>
+              </div>
+              <div aria-hidden className="dashboard-kpi__sparkline" />
+            </article>
+          );
+        })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.9fr)_minmax(19rem,0.8fr)]">
         <section
           aria-labelledby="dashboard-attention-title"
-          className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+          className="dashboard-card rounded-lg border border-border bg-card p-5 text-card-foreground"
         >
           <div className="space-y-1">
             <h2
@@ -172,9 +202,9 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
             </p>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div className="mt-5 grid gap-5 lg:grid-cols-3">
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
+              <h3 className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
                 Open Exceptions
               </h3>
               {data.openExceptions.length === 0 ? (
@@ -184,7 +214,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
                   {data.openExceptions.map((exception) => (
                     <li
                       key={exception.id}
-                      className="rounded-lg border border-border p-3 text-sm"
+                      className="dashboard-row rounded-md border border-border p-3 text-sm"
                     >
                       <p className="font-medium text-foreground">
                         {exception.title}
@@ -200,7 +230,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
+              <h3 className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
                 Compliance Deadlines
               </h3>
               {openComplianceItems.length === 0 ? (
@@ -210,7 +240,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
                   {openComplianceItems.map((item) => (
                     <li
                       key={item.id}
-                      className="rounded-lg border border-border p-3 text-sm"
+                      className="dashboard-row rounded-md border border-border p-3 text-sm"
                     >
                       <p className="font-medium text-foreground">{item.name}</p>
                       <p className="mt-1 text-muted-foreground">
@@ -226,7 +256,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
+              <h3 className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
                 Bills Requiring Attention
               </h3>
               {data.openBills.length === 0 ? (
@@ -236,7 +266,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
                   {data.openBills.map((bill) => (
                     <li
                       key={bill.id}
-                      className="rounded-lg border border-border p-3 text-sm"
+                      className="dashboard-row rounded-md border border-border p-3 text-sm"
                     >
                       <p className="font-medium text-foreground">
                         {bill.bill_number ?? bill.description ?? "Bill"}
@@ -254,10 +284,10 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
           </div>
         </section>
 
-        <div className="space-y-6">
+        <div className="grid gap-4">
           <section
             aria-labelledby="dashboard-ai-close-title"
-            className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+            className="dashboard-card dashboard-ai-card relative overflow-hidden rounded-lg border border-border bg-card p-5 text-card-foreground"
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -282,7 +312,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
                   {data.closeTasks.map((task) => (
                     <li
                       key={task.id}
-                      className="rounded-lg border border-border p-3 text-sm"
+                      className="dashboard-row rounded-md border border-border p-3 text-sm"
                     >
                       <p className="font-medium text-foreground">{task.title}</p>
                       <p className="mt-1 text-muted-foreground">{task.status}</p>
@@ -292,7 +322,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
               )}
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5">
               <Button asChild className="w-full" variant="outline">
                 <Link href="/ai-close">
                   Open AI Close workspace
@@ -304,7 +334,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
 
           <section
             aria-labelledby="dashboard-quick-actions-title"
-            className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+            className="dashboard-card rounded-lg border border-border bg-card p-5 text-card-foreground"
           >
             <div className="space-y-1">
               <h2
@@ -318,12 +348,12 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
               </p>
             </div>
 
-            <ul className="mt-6 space-y-3">
+            <ul className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
               {quickActions.map((action) => (
                 <li key={action.id}>
                   <Button
                     asChild
-                    className="h-auto w-full justify-start px-3 py-3"
+                    className="dashboard-action h-auto w-full justify-start rounded-md px-3 py-3"
                     variant="outline"
                   >
                     <Link href={action.href}>
@@ -345,7 +375,7 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
 
       <section
         aria-labelledby="dashboard-recent-activity-title"
-        className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        className="dashboard-card rounded-lg border border-border bg-card p-5 text-card-foreground"
       >
         <div className="space-y-1">
           <h2
@@ -359,15 +389,15 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
           </p>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5">
           {data.recentActivity.length === 0 ? (
             <WorkspaceDataEmpty message="No recent activity yet." />
           ) : (
-            <ul className="space-y-3">
+            <ul className="grid gap-2 lg:grid-cols-2">
               {data.recentActivity.map((event) => (
                 <li
                   key={event.id}
-                  className="rounded-lg border border-border p-3 text-sm"
+                  className="dashboard-row rounded-md border border-border p-3 text-sm"
                 >
                   <p className="font-medium text-foreground">
                     {event.description ?? event.event_type}
@@ -381,6 +411,31 @@ export function DashboardPageContent({ data }: DashboardPageContentProps) {
           )}
         </div>
       </section>
+
+      <div className="dashboard-status-grid grid gap-3 sm:grid-cols-2">
+        {kpiLabels.slice(4).map((label) => {
+          const Icon = kpiIcons[label];
+
+          return (
+            <article
+              key={label}
+              className="dashboard-card dashboard-status-card flex min-h-20 items-center gap-4 rounded-lg border border-border bg-card px-4 py-3 text-card-foreground"
+            >
+              <span className="dashboard-status-card__icon" aria-hidden>
+                <Icon className="size-5" strokeWidth={1.7} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[0.68rem] font-semibold tracking-[0.09em] text-muted-foreground uppercase">
+                  {label}
+                </p>
+                <p className="mt-1 text-xl font-semibold tracking-[-0.025em] text-foreground tabular-nums">
+                  {formatKpiValue(label, data.summary)}
+                </p>
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }

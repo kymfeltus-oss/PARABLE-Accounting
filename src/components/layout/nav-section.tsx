@@ -10,10 +10,10 @@ type NavSectionProps = {
 
 export function NavSection({ group, onNavigate, compact }: NavSectionProps) {
   return (
-    <section aria-labelledby={`nav-group-${group.id}`}>
+    <section aria-labelledby={`nav-group-${group.id}`} className="mb-2">
       <h2
         id={`nav-group-${group.id}`}
-        className="px-3 py-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+        className="px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
       >
         {group.label}
       </h2>

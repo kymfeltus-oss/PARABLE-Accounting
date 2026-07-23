@@ -18,7 +18,7 @@ export function AppHeader({ onOpenMobileNav }: AppHeaderProps) {
   const pageTitle = currentItem?.title ?? "Parable Accounting";
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4 md:px-6">
+    <header className="app-header sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl md:px-7">
       <Button
         type="button"
         variant="ghost"
@@ -30,11 +30,16 @@ export function AppHeader({ onOpenMobileNav }: AppHeaderProps) {
         <Menu aria-hidden="true" />
       </Button>
 
-      <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-foreground">
+      <h1 className="min-w-0 flex-1 truncate text-sm font-medium tracking-wide text-muted-foreground">
         {pageTitle}
       </h1>
 
-      <Badge variant="secondary">Development Workspace</Badge>
+      <Badge
+        variant="secondary"
+        className="hidden border border-border bg-secondary/60 text-xs font-medium text-secondary-foreground sm:inline-flex"
+      >
+        Development Workspace
+      </Badge>
 
       <div
         aria-label="Header actions"
