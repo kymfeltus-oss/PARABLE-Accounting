@@ -87,11 +87,16 @@ export function JournalRegisterSection({
     router.replace(query ? `${pathname}?${query}` : pathname);
   }
 
+  function handleViewEntry(journalEntryId: string): void {
+    router.push(`/accounting/journals/${journalEntryId}`);
+  }
+
   return (
     <div className="space-y-4">
       <JournalRegisterTable
         filters={filters}
         onFiltersChange={(nextFilters) => navigate(nextFilters)}
+        onViewEntry={handleViewEntry}
         rows={rows}
       />
 

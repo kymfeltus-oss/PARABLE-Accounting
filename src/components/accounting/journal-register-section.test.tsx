@@ -29,12 +29,14 @@ const filters = {
 };
 
 const replaceMock = vi.fn();
+const pushMock = vi.fn();
 const pathname = "/accounting/journals";
 let currentSearchParams = "";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: replaceMock,
+    push: pushMock,
   }),
   usePathname: () => pathname,
   useSearchParams: () => new URLSearchParams(currentSearchParams),
@@ -43,6 +45,7 @@ vi.mock("next/navigation", () => ({
 afterEach(() => {
   cleanup();
   replaceMock.mockReset();
+  pushMock.mockReset();
   currentSearchParams = "";
 });
 
@@ -61,7 +64,7 @@ describe("JournalRegisterSection", () => {
     expect(screen.getByText("JE-2026-0042")).toBeVisible();
   });
 
-  it("does not render a fake View control", () => {
+  it("renders the View control for journal entries", () => {
     render(
       <JournalRegisterSection
         filters={filters}
@@ -72,9 +75,26 @@ describe("JournalRegisterSection", () => {
       />,
     );
 
-    expect(
-      screen.queryByRole("button", { name: "View" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View" })).toBeVisible();
+  });
+
+  it("navigates to the exact journal id route when View is clicked", async () => {
+    currentSearchParams = "search=July&status=posted";
+
+    render(
+      <JournalRegisterSection
+        filters={{ ...filters, search: "July", status: "posted" }}
+        page={2}
+        pageSize={25}
+        rows={rows}
+        totalCount={1}
+      />,
+    );
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "View" }));
+
+    expect(pushMock).toHaveBeenCalledWith("/accounting/journals/journal-id-123");
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("updates URL search parameters when filters change", async () => {
