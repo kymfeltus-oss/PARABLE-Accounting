@@ -1,7 +1,8 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+import { DataAccessError } from "./data-access-error";
 import { requireOrganizationId } from "./organization-id";
-import { unwrapRows } from "./query-helpers";
+import { toDataAccessError, unwrapRows } from "./query-helpers";
 import type { BillRow, ExpenseRow, VendorRow } from "./types/rows";
 
 type VendorBillAggregationRow = Pick<
@@ -35,6 +36,41 @@ export type VendorsData = {
     withExpenses: number;
   };
 };
+
+export type CreateVendorInput = {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  taxIdLastFour?: string | null;
+};
+
+function requireVendorName(name: string, operation: string): string {
+  const trimmed = name.trim();
+
+  if (!trimmed) {
+    throw new DataAccessError({
+      operation,
+      message: "name is required",
+    });
+  }
+
+  return trimmed;
+}
+
+function toVendorRecord(vendor: VendorRow): VendorRecord {
+  const metrics = createEmptyVendorMetrics();
+
+  return {
+    ...vendor,
+    hasTaxIdOnFile: vendor.tax_id_last_four !== null,
+    billCount: metrics.billCount,
+    expenseCount: metrics.expenseCount,
+    openBillCount: metrics.openBillCount,
+    totalBilledAmount: metrics.totalBilledAmount,
+    totalExpenseAmount: metrics.totalExpenseAmount,
+    openBillAmount: metrics.openBillAmount,
+  };
+}
 
 type VendorMetrics = {
   billCount: number;
@@ -187,4 +223,44 @@ export async function getVendorsData(
       withExpenses,
     },
   };
+}
+
+export async function createVendor(
+  organizationId: string,
+  input: CreateVendorInput,
+): Promise<VendorRecord> {
+  const operation = "createVendor";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const vendorName = requireVendorName(input.name, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("create_vendor", {
+    target_organization_id: scopedOrganizationId,
+    vendor_name: vendorName,
+    vendor_email: input.email ?? null,
+    vendor_phone: input.phone ?? null,
+    vendor_tax_id_last_four: input.taxIdLastFour ?? null,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[createVendor RPC diagnostic]", {
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Vendor creation returned no row",
+    });
+  }
+
+  return toVendorRecord(result.data as VendorRow);
 }

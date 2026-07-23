@@ -4,7 +4,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createEmptySettingsData,
   createPopulatedSettingsData,
+  createSettingsDataWithCurrentUserRole,
 } from "@/lib/data/test/settings-data-fixtures";
+import type { OrganizationMembershipRole } from "@/lib/data/settings-repository";
 
 import { SettingsPageContent } from "./settings-page-content";
 
@@ -23,6 +25,16 @@ vi.mock("next/link", () => ({
 afterEach(() => {
   cleanup();
 });
+
+const roleDisplayCases: Array<{
+  role: OrganizationMembershipRole;
+  label: string;
+}> = [
+  { role: "owner", label: "Owner" },
+  { role: "accountant", label: "Accountant" },
+  { role: "staff", label: "Staff" },
+  { role: "viewer", label: "Viewer" },
+];
 
 describe("SettingsPageContent", () => {
   it("renders the page heading", () => {
@@ -74,6 +86,31 @@ describe("SettingsPageContent", () => {
     ).toContain("0");
   });
 
+  it.each(roleDisplayCases)(
+    "displays the authenticated user's $role role as $label",
+    ({ role, label }) => {
+      render(
+        <SettingsPageContent
+          data={createSettingsDataWithCurrentUserRole(role)}
+        />,
+      );
+
+      const roleTerm = screen.getByText("Role");
+      expect(roleTerm.closest("dl")?.textContent).toContain(label);
+    },
+  );
+
+  it("does not display the outdated schema message about role fields", () => {
+    const { container } = render(
+      <SettingsPageContent data={createPopulatedSettingsData()} />,
+    );
+
+    expect(container.textContent).not.toContain(
+      "Role and membership status fields are not present in the current schema.",
+    );
+    expect(container.textContent).not.toMatch(/membership status/i);
+  });
+
   it("states persisted preferences are not yet implemented", () => {
     render(<SettingsPageContent data={createPopulatedSettingsData()} />);
 
@@ -94,18 +131,7 @@ describe("SettingsPageContent", () => {
     );
     expect(container.querySelector("form")).toBeNull();
     expect(container.querySelector("input")).toBeNull();
-  });
-
-  it("does not fabricate membership roles or statuses", () => {
-    const { container } = render(
-      <SettingsPageContent data={createPopulatedSettingsData()} />,
-    );
-    const text = container.textContent ?? "";
-
-    expect(text).toContain(
-      "Role and membership status fields are not present in the current schema.",
-    );
-    expect(text).not.toMatch(/\badmin\b|\beditor\b|\bviewer\b|active members/i);
+    expect(container.querySelector("select")).toBeNull();
   });
 
   it("renders related workspace navigation links", () => {

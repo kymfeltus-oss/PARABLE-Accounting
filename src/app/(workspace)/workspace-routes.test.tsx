@@ -301,6 +301,7 @@ vi.mock("@/lib/data/settings-repository", () => ({
       created_at: "2026-01-15T10:00:00.000Z",
       updated_at: "2026-07-01T12:00:00.000Z",
     },
+    currentUserRole: "owner",
     memberships: [],
     counts: {
       totalMemberships: 0,

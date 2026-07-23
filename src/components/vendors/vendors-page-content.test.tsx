@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createEmptyVendorsData,
@@ -7,6 +7,10 @@ import {
 } from "@/lib/data/test/vendors-data-fixtures";
 
 import { VendorsPageContent } from "./vendors-page-content";
+
+vi.mock("@/app/(workspace)/vendors/actions", () => ({
+  createVendorAction: vi.fn(),
+}));
 
 vi.mock("next/link", () => ({
   default: ({
@@ -20,17 +24,33 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-afterEach(() => {
-  cleanup();
-});
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
 
 describe("VendorsPageContent", () => {
+  beforeEach(() => {
+    vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
   it("renders the page heading", () => {
     render(<VendorsPageContent data={createEmptyVendorsData()} />);
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Vendors" }),
     ).toBeTruthy();
+  });
+
+  it("renders the Add Vendor control", () => {
+    render(<VendorsPageContent data={createEmptyVendorsData()} />);
+
+    expect(screen.getByRole("button", { name: "Add Vendor" })).toBeTruthy();
   });
 
   it("does not render Development Preview or demo labels", () => {

@@ -73,5 +73,6 @@ export {
 } from "./audit-vault-repository";
 export {
   getSettingsData,
+  type OrganizationMembershipRole,
   type SettingsData,
 } from "./settings-repository";

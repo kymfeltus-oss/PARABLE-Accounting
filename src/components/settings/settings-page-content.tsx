@@ -9,7 +9,10 @@ import { OrganizationMembershipsTable } from "@/components/settings/organization
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
-import type { SettingsData } from "@/lib/data/settings-repository";
+import type {
+  OrganizationMembershipRole,
+  SettingsData,
+} from "@/lib/data/settings-repository";
 
 const summaryLabels = [
   "Total Memberships",
@@ -64,6 +67,17 @@ function formatDateTime(value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+const membershipRoleLabels: Record<OrganizationMembershipRole, string> = {
+  owner: "Owner",
+  accountant: "Accountant",
+  staff: "Staff",
+  viewer: "Viewer",
+};
+
+function formatMembershipRole(role: OrganizationMembershipRole): string {
+  return membershipRoleLabels[role];
 }
 
 function formatSummaryValue(
@@ -183,10 +197,18 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
             Access & Membership
           </h2>
           <p className="text-sm text-muted-foreground">
-            Organization membership records linked to user identifiers. Role and
-            membership status fields are not present in the current schema.
+            Organization membership records linked to user identifiers.
           </p>
         </div>
+
+        <dl className="mt-6">
+          <div>
+            <dt className="text-sm font-medium text-muted-foreground">Role</dt>
+            <dd className="mt-1 text-sm text-foreground">
+              {formatMembershipRole(data.currentUserRole)}
+            </dd>
+          </div>
+        </dl>
 
         <div className="mt-6">
           {data.memberships.length === 0 ? (

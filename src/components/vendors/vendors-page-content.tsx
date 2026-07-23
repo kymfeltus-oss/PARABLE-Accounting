@@ -6,6 +6,7 @@ import {
   Receipt,
 } from "lucide-react";
 
+import { CreateVendorForm } from "@/components/vendors/create-vendor-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -131,15 +132,20 @@ export function VendorsPageContent({ data }: VendorsPageContentProps) {
   return (
     <section aria-labelledby="vendors-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="vendors-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {vendorsNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {vendorsNav.description}
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1
+              id="vendors-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {vendorsNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {vendorsNav.description}
+            </p>
+          </div>
+          <CreateVendorForm />
+        </div>
       </header>
 
       {!hasVendorActivity(data) ? (
