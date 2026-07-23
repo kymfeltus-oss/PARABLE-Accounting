@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   ArrowUpRight,
   Building2,
@@ -11,6 +14,15 @@ import {
   type ExpenseVendorOption,
 } from "@/components/expenses/create-expense-draft-form";
 import { ExpenseAllocationEditor } from "@/components/expenses/expense-allocation-editor";
+import {
+  countDraftsNeedingAllocation,
+  filterExpenses,
+  getExpenseStatusCounts,
+  sortActiveExpenses,
+  type ExpenseStatusFilterId,
+} from "@/components/expenses/expense-list-filtering";
+import { ExpenseListToolbar } from "@/components/expenses/expense-list-toolbar";
+import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
 import type {
   ExpenseAccountOption,
   ExpenseFundOption,
@@ -75,14 +87,6 @@ function formatPaymentSource(source: string): string {
   return source.replace(/_/g, " ");
 }
 
-function formatExpenseReference(expense: ExpenseRecord): string {
-  if (expense.reference) {
-    return expense.reference;
-  }
-
-  return expense.description;
-}
-
 function formatAllocationDetail(expense: ExpenseRecord): string {
   if (expense.lineCount === 0) {
     return "No allocation lines recorded";
@@ -142,6 +146,154 @@ function renderDraftAllocationControls(
   );
 }
 
+function ExpenseListItem({
+  expense,
+  accountOptions,
+  fundOptions,
+}: {
+  expense: ExpenseRecord;
+  accountOptions: ExpenseAccountOption[];
+  fundOptions: ExpenseFundOption[];
+}) {
+  return (
+    <li className="rounded-lg border border-border p-4 text-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-medium text-foreground">{expense.description}</p>
+            <ExpenseStatusBadge expense={expense} />
+          </div>
+          <p className="font-medium tabular-nums text-foreground">
+            {formatCurrency(Number(expense.total_amount))}
+          </p>
+          <dl className="grid gap-1 text-muted-foreground">
+            <div className="flex flex-wrap gap-x-2 gap-y-1">
+              <dt className="sr-only">Expense date</dt>
+              <dd>{formatDate(expense.expense_date)}</dd>
+            </div>
+            {expense.reference ? (
+              <div className="flex flex-wrap gap-x-2 gap-y-1">
+                <dt className="font-medium text-foreground">Reference:</dt>
+                <dd>{expense.reference}</dd>
+              </div>
+            ) : null}
+            {expense.vendorName ? (
+              <div className="flex flex-wrap gap-x-2 gap-y-1">
+                <dt className="font-medium text-foreground">Vendor:</dt>
+                <dd>{expense.vendorName}</dd>
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-x-2 gap-y-1">
+              <dt className="font-medium text-foreground">Payment source:</dt>
+              <dd>{formatPaymentSource(expense.payment_source)}</dd>
+            </div>
+            <div className="flex flex-wrap gap-x-2 gap-y-1">
+              <dt className="font-medium text-foreground">Allocation:</dt>
+              <dd>{formatAllocationDetail(expense)}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      {expense.status === "draft" ? (
+        <div className="mt-3">
+          {renderDraftAllocationControls(
+            expense,
+            accountOptions,
+            fundOptions,
+          )}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+function ExpenseListEmptyState({
+  activeExpenseCount,
+  statusFilter,
+  searchQuery,
+  onShowAll,
+}: {
+  activeExpenseCount: number;
+  statusFilter: ExpenseStatusFilterId;
+  searchQuery: string;
+  onShowAll: () => void;
+}) {
+  if (activeExpenseCount === 0) {
+    return (
+      <WorkspaceDataEmpty message="No expenses yet. Create an expense draft to get started." />
+    );
+  }
+
+  const trimmedSearch = searchQuery.trim();
+  const hasSearch = trimmedSearch.length > 0;
+  const hasStatusFilter = statusFilter !== "all";
+
+  if (hasSearch && hasStatusFilter) {
+    return (
+      <div className="space-y-3">
+        <WorkspaceDataEmpty message="No expenses match the current search and status filter." />
+        <Button size="sm" type="button" variant="outline" onClick={onShowAll}>
+          Show all expenses
+        </Button>
+      </div>
+    );
+  }
+
+  if (hasSearch) {
+    return (
+      <WorkspaceDataEmpty message="No expenses match your search. Clear the search field to restore results." />
+    );
+  }
+
+  if (hasStatusFilter) {
+    return (
+      <div className="space-y-3">
+        <WorkspaceDataEmpty message="No expenses match the selected status filter." />
+        <Button size="sm" type="button" variant="outline" onClick={onShowAll}>
+          Show all expenses
+        </Button>
+      </div>
+    );
+  }
+
+  return <WorkspaceDataEmpty message="No expenses match the current filter." />;
+}
+
+function NeedsAttentionSummary({
+  draftCount,
+  needsAllocationCount,
+}: {
+  draftCount: number;
+  needsAllocationCount: number;
+}) {
+  if (draftCount === 0) {
+    return <WorkspaceDataEmpty message="No draft expenses." />;
+  }
+
+  return (
+    <div className="space-y-4 rounded-lg border border-border/70 bg-muted/20 p-4 text-sm">
+      <p className="font-medium text-foreground">
+        {draftCount} draft expense{draftCount === 1 ? "" : "s"} awaiting recording
+      </p>
+      {needsAllocationCount > 0 ? (
+        <p className="text-muted-foreground">
+          {needsAllocationCount} draft
+          {needsAllocationCount === 1 ? "" : "s"} still need allocation before
+          recording.
+        </p>
+      ) : (
+        <p className="text-muted-foreground">
+          All current drafts have allocation lines assigned.
+        </p>
+      )}
+      <p className="text-muted-foreground">
+        Review and allocate draft expenses in the expense list. Allocation controls
+        open from each draft row.
+      </p>
+    </div>
+  );
+}
+
 export function ExpensesPageContent({
   data,
   vendorOptions,
@@ -149,17 +301,29 @@ export function ExpensesPageContent({
   fundOptions,
 }: ExpensesPageContentProps) {
   const expensesNav = getNavItemByPathname("/expenses");
+  const [statusFilter, setStatusFilter] = useState<ExpenseStatusFilterId>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   if (!expensesNav) {
     throw new Error("Expenses navigation item is not configured.");
   }
 
-  const activeExpenses = data.expenses.filter(
-    (expense) => expense.status !== "void",
+  const activeExpenses = useMemo(
+    () => sortActiveExpenses(data.expenses),
+    [data.expenses],
   );
-  const recentExpenses = activeExpenses.slice(0, 10);
-  const draftExpenses = activeExpenses.filter(
-    (expense) => expense.status === "draft",
+  const statusCounts = useMemo(
+    () => getExpenseStatusCounts(data.expenses),
+    [data.expenses],
+  );
+  const filteredExpenses = useMemo(
+    () => filterExpenses(data.expenses, statusFilter, searchQuery),
+    [data.expenses, searchQuery, statusFilter],
+  );
+  const draftCount = statusCounts.draft;
+  const needsAllocationCount = useMemo(
+    () => countDraftsNeedingAllocation(data.expenses),
+    [data.expenses],
   );
 
   return (
@@ -209,46 +373,48 @@ export function ExpensesPageContent({
               id="expenses-list-title"
               className="text-lg font-semibold text-foreground"
             >
-              Recent Expenses
+              Expenses
             </h2>
             <p className="text-sm text-muted-foreground">
-              Recorded ministry expenses with vendor, date, and amount details.
+              All ministry expenses with search and status filters.
             </p>
           </div>
 
           <div className="mt-6">
-            {activeExpenses.length === 0 ? (
-              <WorkspaceDataEmpty message="No expenses yet." />
+            <ExpenseListToolbar
+              searchQuery={searchQuery}
+              statusCounts={statusCounts}
+              statusFilter={statusFilter}
+              onClearSearch={() => setSearchQuery("")}
+              onSearchQueryChange={setSearchQuery}
+              onStatusFilterChange={setStatusFilter}
+            />
+          </div>
+
+          <div
+            aria-live="polite"
+            className="mt-6"
+            role="status"
+          >
+            <p className="sr-only">
+              Showing {filteredExpenses.length} of {activeExpenses.length} expenses
+            </p>
+            {filteredExpenses.length === 0 ? (
+              <ExpenseListEmptyState
+                activeExpenseCount={activeExpenses.length}
+                searchQuery={searchQuery}
+                statusFilter={statusFilter}
+                onShowAll={() => setStatusFilter("all")}
+              />
             ) : (
               <ul className="space-y-3">
-                {recentExpenses.map((expense) => (
-                  <li
+                {filteredExpenses.map((expense) => (
+                  <ExpenseListItem
                     key={expense.id}
-                    className="rounded-lg border border-border p-3 text-sm"
-                  >
-                    <p className="font-medium text-foreground">
-                      {expense.vendorName ?? "No vendor recorded"} ·{" "}
-                      {formatExpenseReference(expense)}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {formatDate(expense.expense_date)} ·{" "}
-                      {formatCurrency(Number(expense.total_amount))} ·{" "}
-                      {expense.status}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {formatPaymentSource(expense.payment_source)} ·{" "}
-                      {formatAllocationDetail(expense)}
-                    </p>
-                    {expense.status === "draft" ? (
-                      <div className="mt-3">
-                        {renderDraftAllocationControls(
-                          expense,
-                          accountOptions,
-                          fundOptions,
-                        )}
-                      </div>
-                    ) : null}
-                  </li>
+                    accountOptions={accountOptions}
+                    expense={expense}
+                    fundOptions={fundOptions}
+                  />
                 ))}
               </ul>
             )}
@@ -267,44 +433,15 @@ export function ExpensesPageContent({
               Needs Attention
             </h2>
             <p className="text-sm text-muted-foreground">
-              Draft expenses awaiting final recording.
+              Draft expense summary and allocation follow-up.
             </p>
           </div>
 
           <div className="mt-6">
-            {draftExpenses.length === 0 ? (
-              <WorkspaceDataEmpty message="No draft expenses." />
-            ) : (
-              <ul className="space-y-3">
-                {draftExpenses.map((expense) => (
-                  <li
-                    key={expense.id}
-                    className="rounded-lg border border-border/70 bg-muted/20 p-4 text-sm"
-                  >
-                    <p className="font-medium text-foreground">
-                      {expense.vendorName ?? "No vendor recorded"}
-                    </p>
-                    <p className="mt-2 text-muted-foreground">
-                      {formatExpenseReference(expense)} ·{" "}
-                      {formatDate(expense.expense_date)} ·{" "}
-                      {formatCurrency(Number(expense.total_amount))}
-                    </p>
-                    {expense.lineCount === 0 ? (
-                      <p className="mt-2 text-sm font-medium text-foreground">
-                        Needs allocation
-                      </p>
-                    ) : null}
-                    <div className="mt-3">
-                      {renderDraftAllocationControls(
-                        expense,
-                        accountOptions,
-                        fundOptions,
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <NeedsAttentionSummary
+              draftCount={draftCount}
+              needsAllocationCount={needsAllocationCount}
+            />
           </div>
         </section>
       </div>
