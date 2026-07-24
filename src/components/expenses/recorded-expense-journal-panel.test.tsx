@@ -44,15 +44,15 @@ describe("RecordedExpenseJournalPanel", () => {
     expect(screen.getByText("July 23, 2026")).toBeVisible();
   });
 
-  it.each(["posted", "draft", "reversed"] as const)(
-    "renders readable %s status text",
-    (status) => {
-      render(
-        <RecordedExpenseJournalPanel {...createProps({ status })} />,
-      );
-      expect(screen.getAllByText(status)).toHaveLength(2);
-    },
-  );
+  it.each([
+    ["posted", "Posted"],
+    ["draft", "Draft"],
+    ["reversed", "Reversed"],
+    ["void", "VOID"],
+  ] as const)("renders readable %s status text", (status, label) => {
+    render(<RecordedExpenseJournalPanel {...createProps({ status })} />);
+    expect(screen.getAllByText(label)).toHaveLength(2);
+  });
 
   it("renders formatted debit and credit amounts with tabular numerals", () => {
     render(<RecordedExpenseJournalPanel {...createProps()} />);
