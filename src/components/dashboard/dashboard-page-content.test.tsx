@@ -44,6 +44,10 @@ describe("DashboardPageContent", () => {
     expect(screen.getByText("Unmatched deposit")).toBeVisible();
     expect(screen.getByText("Form 990 filing")).toBeVisible();
     expect(screen.getByRole("button", { name: /Record Transaction/i })).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /Create journal entry/i }),
+    ).toHaveAttribute("href", "/accounting/journals/new");
     expect(screen.getByRole("link", { name: /Ask Parable/i })).toHaveAttribute("href", "/ai-close");
   });
 });
+

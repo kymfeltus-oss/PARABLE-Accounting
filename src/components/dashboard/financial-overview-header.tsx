@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Bell,
+  BookPlus,
   CalendarDays,
   ChevronDown,
   Search,
@@ -127,6 +128,13 @@ export function FinancialOverviewHeader({
           triggerLabel="Record Transaction"
           triggerClassName="h-11 px-4"
         />
+
+        <Button asChild className="h-11 px-4">
+          <Link href="/accounting/journals/new">
+            <BookPlus aria-hidden className="size-4" />
+            Create journal entry
+          </Link>
+        </Button>
 
         <Button
           asChild

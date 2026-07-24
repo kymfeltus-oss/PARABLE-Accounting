@@ -56,6 +56,19 @@ describe("AccountingPageContent", () => {
     expect(screen.getByRole("button", { name: "Add Account" })).toBeTruthy();
   });
 
+  it("links to the new manual journal entry page", () => {
+    render(<AccountingPageContent data={createEmptyAccountingData()} />);
+
+    const createJournalLinks = screen.getAllByRole("link", {
+      name: "Create journal entry",
+    });
+
+    expect(createJournalLinks.length).toBeGreaterThan(0);
+    for (const link of createJournalLinks) {
+      expect(link).toHaveAttribute("href", "/accounting/journals/new");
+    }
+  });
+
   it("renders the Add Period control", () => {
     render(<AccountingPageContent data={createEmptyAccountingData()} />);
 
