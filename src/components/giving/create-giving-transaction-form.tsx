@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import {
   createGivingTransactionAction,
   type CreateGivingTransactionActionInput,
 } from "@/app/(workspace)/giving/actions";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -23,13 +23,13 @@ const inputClassName =
   "mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground";
 
 const GIVING_SHEET_CONTENT_CLASS =
-  "flex h-dvh max-h-dvh flex-col gap-0 overflow-hidden p-0 data-[side=right]:h-dvh data-[side=right]:max-h-dvh";
+  "flex !h-dvh !max-h-dvh flex-col !gap-0 overflow-hidden !p-0 data-[side=right]:!h-dvh data-[side=right]:!max-h-dvh data-[side=right]:!w-full data-[side=right]:sm:!max-w-md";
 
 const GIVING_SHEET_SCROLL_BODY_CLASS =
-  "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4";
+  "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 [-webkit-overflow-scrolling:touch]";
 
 const GIVING_SHEET_FOOTER_CLASS =
-  "mt-0 shrink-0 border-t border-border bg-popover";
+  "mt-0 shrink-0 border-t border-border bg-popover z-10";
 
 const GIVING_METHOD_OPTIONS: Array<{ label: string; value: GivingMethod }> = [
   { label: "Cash", value: "cash" },
@@ -94,6 +94,8 @@ export function CreateGivingTransactionForm({
   revenueAccountOptions = [],
   triggerLabel = "Record Giving",
 }: CreateGivingTransactionFormProps) {
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [transactionDate, setTransactionDate] = useState("");
   const [amount, setAmount] = useState("");
@@ -114,6 +116,28 @@ export function CreateGivingTransactionForm({
       allowedTypes.includes(account.accountType as "asset" | "liability"),
     );
   }, [debitAccountOptions, givingMethod]);
+
+  function scrollToSave() {
+    const body = scrollBodyRef.current;
+
+    if (body) {
+      body.scrollTo({ top: body.scrollHeight, behavior: "smooth" });
+    }
+
+    saveButtonRef.current?.focus({ preventScroll: true });
+  }
+
+  useEffect(() => {
+    if (!recordImmediately) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      scrollToSave();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [recordImmediately]);
 
   function resetFormFields() {
     setTransactionDate("");
@@ -218,6 +242,7 @@ export function CreateGivingTransactionForm({
             onSubmit={handleSubmit}
           >
             <div
+              ref={scrollBodyRef}
               className={`${GIVING_SHEET_SCROLL_BODY_CLASS} space-y-4`}
               data-giving-sheet-scroll-body
             >
@@ -388,6 +413,16 @@ export function CreateGivingTransactionForm({
                         ))}
                       </select>
                     </div>
+
+                    <Button
+                      className="w-full"
+                      type="button"
+                      variant="outline"
+                      onClick={scrollToSave}
+                    >
+                      <ChevronDown aria-hidden className="size-4" />
+                      Scroll to Save
+                    </Button>
                   </div>
                 ) : null}
               </div>
@@ -397,6 +432,17 @@ export function CreateGivingTransactionForm({
                   {error}
                 </p>
               ) : null}
+
+              <div className="pb-2 pt-2">
+                <Button
+                  ref={saveButtonRef}
+                  className="w-full"
+                  disabled={isPending}
+                  type="submit"
+                >
+                  {isPending ? "Saving…" : "Save giving"}
+                </Button>
+              </div>
             </div>
 
             <SheetFooter className={GIVING_SHEET_FOOTER_CLASS}>
