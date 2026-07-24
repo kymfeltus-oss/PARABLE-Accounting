@@ -24,6 +24,15 @@ export type JournalEntryDetailLineRecord = {
   fundName: string | null;
 };
 
+export type JournalEntryDetailReversalRelation = {
+  isReversal: boolean;
+  isReversed: boolean;
+  relatedJournalEntryId: string | null;
+  relatedEntryNumber: string | null;
+  reversalDate: string | null;
+  reversalReason: string | null;
+};
+
 export type JournalEntryDetailRecord = {
   id: string;
   entryNumber: string;
@@ -35,11 +44,13 @@ export type JournalEntryDetailRecord = {
     | "manual"
     | "banking"
     | "opening_balance"
+    | "reversal"
     | "other";
   sourceReference: string | null;
   periodName: string | null;
   status: "draft" | "posted" | "reversed";
   lines: JournalEntryDetailLineRecord[];
+  reversal: JournalEntryDetailReversalRelation;
 };
 
 type JournalEntryDetailJournalRow = Pick<
@@ -54,6 +65,8 @@ type JournalEntryDetailJournalRow = Pick<
   | "status"
 > & {
   source_id: string | null;
+  reverses_journal_entry_id: string | null;
+  reversal_reason: string | null;
 };
 
 type ExpenseReferenceRow = {
@@ -109,7 +122,7 @@ export async function getJournalEntryDetail(
   const journalResult = await supabase
     .from("journal_entries")
     .select(
-      "id, organization_id, accounting_period_id, entry_number, entry_date, description, source_type, source_id, status",
+      "id, organization_id, accounting_period_id, entry_number, entry_date, description, source_type, source_id, status, reverses_journal_entry_id, reversal_reason",
     )
     .eq("id", scopedJournalEntryId)
     .eq("organization_id", scopedOrganizationId);
@@ -169,35 +182,57 @@ export async function getJournalEntryDetail(
     ),
   ];
 
-  const [periodResult, accountsResult, fundsResult, expensesResult] =
-    await Promise.all([
-      supabase
-        .from("accounting_periods")
-        .select("id, name, organization_id")
-        .eq("id", journal.accounting_period_id)
-        .eq("organization_id", scopedOrganizationId),
-      accountIds.length > 0
-        ? supabase
-            .from("accounts")
-            .select("id, organization_id, code, name")
-            .eq("organization_id", scopedOrganizationId)
-            .in("id", accountIds)
-        : Promise.resolve({ data: [], error: null }),
-      fundIds.length > 0
-        ? supabase
-            .from("funds")
-            .select("id, organization_id, code, name")
-            .eq("organization_id", scopedOrganizationId)
-            .in("id", fundIds)
-        : Promise.resolve({ data: [], error: null }),
-      journal.source_type === "expense" && journal.source_id
-        ? supabase
-            .from("expenses")
-            .select("id, reference")
-            .eq("organization_id", scopedOrganizationId)
-            .eq("id", journal.source_id)
-        : Promise.resolve({ data: [], error: null }),
-    ]);
+  const [
+    periodResult,
+    accountsResult,
+    fundsResult,
+    expensesResult,
+    reversalOfOriginalResult,
+    originalForReversalResult,
+  ] = await Promise.all([
+    supabase
+      .from("accounting_periods")
+      .select("id, name, organization_id")
+      .eq("id", journal.accounting_period_id)
+      .eq("organization_id", scopedOrganizationId),
+    accountIds.length > 0
+      ? supabase
+          .from("accounts")
+          .select("id, organization_id, code, name")
+          .eq("organization_id", scopedOrganizationId)
+          .in("id", accountIds)
+      : Promise.resolve({ data: [], error: null }),
+    fundIds.length > 0
+      ? supabase
+          .from("funds")
+          .select("id, organization_id, code, name")
+          .eq("organization_id", scopedOrganizationId)
+          .in("id", fundIds)
+      : Promise.resolve({ data: [], error: null }),
+    journal.source_type === "expense" && journal.source_id
+      ? supabase
+          .from("expenses")
+          .select("id, reference")
+          .eq("organization_id", scopedOrganizationId)
+          .eq("id", journal.source_id)
+      : Promise.resolve({ data: [], error: null }),
+    journal.source_type !== "reversal"
+      ? supabase
+          .from("journal_entries")
+          .select(
+            "id, entry_number, entry_date, reversal_reason, organization_id",
+          )
+          .eq("organization_id", scopedOrganizationId)
+          .eq("reverses_journal_entry_id", journal.id)
+      : Promise.resolve({ data: [], error: null }),
+    journal.reverses_journal_entry_id
+      ? supabase
+          .from("journal_entries")
+          .select("id, entry_number, organization_id")
+          .eq("organization_id", scopedOrganizationId)
+          .eq("id", journal.reverses_journal_entry_id)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
 
   const periods = unwrapRows<
     Pick<AccountingPeriodRow, "id" | "name" | "organization_id">
@@ -217,6 +252,22 @@ export async function getJournalEntryDetail(
   const expenses = unwrapRows<ExpenseReferenceRow>(
     `${operation}.expenses`,
     expensesResult,
+  );
+  const reversalOfOriginal = unwrapRows<{
+    id: string;
+    entry_number: string;
+    entry_date: string;
+    reversal_reason: string | null;
+    organization_id: string;
+  }>(`${operation}.reversalOfOriginal`, reversalOfOriginalResult).filter(
+    (row) => row.organization_id === scopedOrganizationId,
+  );
+  const originalForReversal = unwrapRows<{
+    id: string;
+    entry_number: string;
+    organization_id: string;
+  }>(`${operation}.originalForReversal`, originalForReversalResult).filter(
+    (row) => row.organization_id === scopedOrganizationId,
   );
 
   const accountById = new Map(accounts.map((account) => [account.id, account]));
@@ -246,15 +297,44 @@ export async function getJournalEntryDetail(
     }),
   );
 
+  const isReversal =
+    journal.source_type === "reversal" ||
+    journal.reverses_journal_entry_id != null;
+  const linkedReversal = reversalOfOriginal[0] ?? null;
+  const linkedOriginal = originalForReversal[0] ?? null;
+
+  const reversal: JournalEntryDetailReversalRelation = isReversal
+    ? {
+        isReversal: true,
+        isReversed: false,
+        relatedJournalEntryId: linkedOriginal?.id ?? journal.reverses_journal_entry_id,
+        relatedEntryNumber: linkedOriginal?.entry_number ?? null,
+        reversalDate: journal.entry_date,
+        reversalReason: journal.reversal_reason,
+      }
+    : {
+        isReversal: false,
+        isReversed:
+          journal.status === "reversed" || linkedReversal != null,
+        relatedJournalEntryId: linkedReversal?.id ?? null,
+        relatedEntryNumber: linkedReversal?.entry_number ?? null,
+        reversalDate: linkedReversal?.entry_date ?? null,
+        reversalReason: linkedReversal?.reversal_reason ?? null,
+      };
+
   return {
     id: journal.id,
     entryNumber: journal.entry_number,
     entryDate: journal.entry_date,
     description: journal.description,
-    source: mapDatabaseSourceType(journal.source_type),
+    source:
+      journal.source_type === "reversal"
+        ? "reversal"
+        : mapDatabaseSourceType(journal.source_type),
     sourceReference,
     periodName: periods[0]?.name ?? null,
     status: journal.status,
     lines,
+    reversal,
   };
 }

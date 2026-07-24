@@ -39,6 +39,8 @@ function createJournalRow(
     source_type: string;
     source_id: string | null;
     status: string;
+    reverses_journal_entry_id: string | null;
+    reversal_reason: string | null;
   }> = {},
 ) {
   return {
@@ -51,6 +53,8 @@ function createJournalRow(
     source_type: "expense",
     source_id: EXPENSE_ID,
     status: "posted",
+    reverses_journal_entry_id: null,
+    reversal_reason: null,
     ...overrides,
   };
 }
@@ -81,13 +85,32 @@ function createDetailMockClient(options: {
     name: string;
   }>;
   expenses?: Array<{ id: string; reference: string | null }>;
+  reversalLookup?: Array<{
+    id: string;
+    entry_number: string;
+    entry_date: string;
+    reversal_reason: string | null;
+    organization_id: string;
+  }>;
+  originalLookup?: Array<{
+    id: string;
+    entry_number: string;
+    organization_id: string;
+  }>;
   journalError?: ReturnType<typeof createBackendError> | null;
 }) {
+  const primaryJournal = {
+    data: options.journalError ? null : (options.journal ?? []),
+    error: options.journalError ?? null,
+  };
+
   return createMockSupabaseClient({
     journal_entries: [
+      primaryJournal,
+      // Second journal_entries query is either "reversal of original" or "original for reversal".
       {
-        data: options.journalError ? null : (options.journal ?? []),
-        error: options.journalError ?? null,
+        data: options.reversalLookup ?? options.originalLookup ?? [],
+        error: null,
       },
     ],
     journal_entry_lines: [
@@ -433,5 +456,95 @@ describe("getJournalEntryDetail", () => {
     await getJournalEntryDetail(TEST_ORGANIZATION_ID, JOURNAL_ENTRY_ID);
 
     expect(createServerSupabaseClientMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns empty reversal relation for an unreverted journal", async () => {
+    const { client } = createDetailMockClient({
+      journal: [createJournalRow()],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getJournalEntryDetail(
+      TEST_ORGANIZATION_ID,
+      JOURNAL_ENTRY_ID,
+    );
+
+    expect(result?.reversal).toEqual({
+      isReversal: false,
+      isReversed: false,
+      relatedJournalEntryId: null,
+      relatedEntryNumber: null,
+      reversalDate: null,
+      reversalReason: null,
+    });
+  });
+
+  it("links a reversed original journal to its reversal", async () => {
+    const reversalId = "99999999-9999-4999-8999-999999999999";
+    const { client } = createDetailMockClient({
+      journal: [createJournalRow({ status: "reversed", source_type: "manual", source_id: null })],
+      reversalLookup: [
+        {
+          id: reversalId,
+          entry_number: "REV-TEST",
+          entry_date: "2026-07-20",
+          reversal_reason: "Corrected allocation",
+          organization_id: TEST_ORGANIZATION_ID,
+        },
+      ],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getJournalEntryDetail(
+      TEST_ORGANIZATION_ID,
+      JOURNAL_ENTRY_ID,
+    );
+
+    expect(result?.reversal).toEqual({
+      isReversal: false,
+      isReversed: true,
+      relatedJournalEntryId: reversalId,
+      relatedEntryNumber: "REV-TEST",
+      reversalDate: "2026-07-20",
+      reversalReason: "Corrected allocation",
+    });
+  });
+
+  it("links a reversal journal back to its original", async () => {
+    const originalId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+    const { client } = createDetailMockClient({
+      journal: [
+        createJournalRow({
+          source_type: "reversal",
+          source_id: null,
+          reverses_journal_entry_id: originalId,
+          reversal_reason: "Corrected allocation",
+          description: "Reversal of MAN-TEST",
+        }),
+      ],
+      originalLookup: [
+        {
+          id: originalId,
+          entry_number: "MAN-TEST",
+          organization_id: TEST_ORGANIZATION_ID,
+        },
+      ],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getJournalEntryDetail(
+      TEST_ORGANIZATION_ID,
+      JOURNAL_ENTRY_ID,
+    );
+
+    expect(result?.source).toBe("reversal");
+    expect(result?.reversal).toEqual({
+      isReversal: true,
+      isReversed: false,
+      relatedJournalEntryId: originalId,
+      relatedEntryNumber: "MAN-TEST",
+      reversalDate: "2026-07-23",
+      reversalReason: "Corrected allocation",
+    });
   });
 });

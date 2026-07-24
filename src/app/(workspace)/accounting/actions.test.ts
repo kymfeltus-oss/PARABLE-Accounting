@@ -13,11 +13,13 @@ const {
   getAuthenticatedUserMock,
   getCurrentOrganizationIdMock,
   createManualJournalMock,
+  reverseJournalEntryMock,
   revalidatePathMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
   getCurrentOrganizationIdMock: vi.fn(),
   createManualJournalMock: vi.fn(),
+  reverseJournalEntryMock: vi.fn(),
   revalidatePathMock: vi.fn(),
 }));
 
@@ -33,11 +35,18 @@ vi.mock("@/lib/data/manual-journal-repository", () => ({
   createManualJournal: createManualJournalMock,
 }));
 
+vi.mock("@/lib/data/journal-reversal-repository", () => ({
+  reverseJournalEntry: reverseJournalEntryMock,
+}));
+
 vi.mock("next/cache", () => ({
   revalidatePath: revalidatePathMock,
 }));
 
-import { createManualJournalAction } from "./actions";
+import {
+  createManualJournalAction,
+  reverseJournalEntryAction,
+} from "./actions";
 
 const validInput = {
   entryDate: "2026-07-15",
@@ -390,5 +399,115 @@ describe("createManualJournalAction", () => {
       message: GENERIC_CREATE_MANUAL_JOURNAL_ERROR,
     });
     expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+});
+
+const REVERSAL_JOURNAL_ID = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+
+const validReverseInput = {
+  journalEntryId: TEST_JOURNAL_ENTRY_ID,
+  reversalDate: "2026-07-20",
+  periodId: TEST_PERIOD_ID,
+  reason: "Corrected allocation",
+};
+
+const GENERIC_REVERSE_JOURNAL_ERROR =
+  "The journal entry could not be reversed. Please try again.";
+
+describe("reverseJournalEntryAction", () => {
+  beforeEach(() => {
+    getAuthenticatedUserMock.mockReset();
+    getCurrentOrganizationIdMock.mockReset();
+    reverseJournalEntryMock.mockReset();
+    revalidatePathMock.mockReset();
+    getAuthenticatedUserMock.mockResolvedValue({ id: "user-1" });
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    reverseJournalEntryMock.mockResolvedValue({
+      journalEntryId: REVERSAL_JOURNAL_ID,
+      entryNumber: "REV-TEST",
+    });
+  });
+
+  it("requires authentication", async () => {
+    getAuthenticatedUserMock.mockResolvedValue(null);
+
+    const result = await reverseJournalEntryAction(validReverseInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "You must be signed in to reverse journal entries.",
+    });
+    expect(reverseJournalEntryMock).not.toHaveBeenCalled();
+  });
+
+  it("invokes the repository with normalized inputs", async () => {
+    const result = await reverseJournalEntryAction({
+      ...validReverseInput,
+      reason: "  Corrected allocation  ",
+    });
+
+    expect(reverseJournalEntryMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID, {
+      journalEntryId: TEST_JOURNAL_ENTRY_ID,
+      reversalDate: "2026-07-20",
+      periodId: TEST_PERIOD_ID,
+      reason: "Corrected allocation",
+    });
+    expect(result).toEqual({
+      success: true,
+      journalEntryId: REVERSAL_JOURNAL_ID,
+      entryNumber: "REV-TEST",
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/accounting/journals");
+    expect(revalidatePathMock).toHaveBeenCalledWith(
+      `/accounting/journals/${TEST_JOURNAL_ENTRY_ID}`,
+    );
+    expect(revalidatePathMock).toHaveBeenCalledWith(
+      `/accounting/journals/${REVERSAL_JOURNAL_ID}`,
+    );
+  });
+
+  it("rejects a blank reason", async () => {
+    const result = await reverseJournalEntryAction({
+      ...validReverseInput,
+      reason: "   ",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      message: "A reversal reason is required.",
+    });
+    expect(reverseJournalEntryMock).not.toHaveBeenCalled();
+  });
+
+  it("maps already-reversed errors safely", async () => {
+    reverseJournalEntryMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "reverseJournalEntry",
+        message: "Journal entry has already been reversed",
+      }),
+    );
+
+    const result = await reverseJournalEntryAction(validReverseInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "This journal entry has already been reversed.",
+    });
+  });
+
+  it("maps unknown RPC errors generically", async () => {
+    reverseJournalEntryMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "reverseJournalEntry",
+        message: "relation journal_entries does not exist",
+      }),
+    );
+
+    const result = await reverseJournalEntryAction(validReverseInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: GENERIC_REVERSE_JOURNAL_ERROR,
+    });
   });
 });

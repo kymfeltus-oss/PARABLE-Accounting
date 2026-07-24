@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 
 import { JournalEntryDetail } from "@/components/accounting/journal-entry-detail";
+import { JournalReversalSection } from "@/components/accounting/journal-reversal-section";
 import { getJournalEntryDetail } from "@/lib/data/journal-entry-detail-repository";
+import { getJournalReversalEligibility } from "@/lib/data/journal-reversal-repository";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
 
 const UUID_PATTERN =
@@ -31,5 +33,25 @@ export default async function JournalEntryDetailPage({
     notFound();
   }
 
-  return <JournalEntryDetail {...detail} />;
+  const eligibility = await getJournalReversalEligibility(organizationId, id);
+
+  return (
+    <div className="space-y-6">
+      <JournalEntryDetail {...detail} />
+
+      {eligibility.canReverse ? (
+        <JournalReversalSection
+          journalEntryId={detail.id}
+          originalEntryNumber={detail.entryNumber}
+          periods={eligibility.periods}
+        />
+      ) : eligibility.reason &&
+        eligibility.reason !== "This journal source type cannot be reversed." &&
+        eligibility.reason !== "Journal entry was not found." ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {eligibility.reason}
+        </p>
+      ) : null}
+    </div>
+  );
 }

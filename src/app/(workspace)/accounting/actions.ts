@@ -8,6 +8,7 @@ import {
   createManualJournal,
   type CreateManualJournalLineInput,
 } from "@/lib/data/manual-journal-repository";
+import { reverseJournalEntry } from "@/lib/data/journal-reversal-repository";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
 
 const GENERIC_CREATE_MANUAL_JOURNAL_ERROR =
@@ -363,6 +364,203 @@ export async function createManualJournalAction(
     return {
       success: false,
       message: GENERIC_CREATE_MANUAL_JOURNAL_ERROR,
+    };
+  }
+}
+
+const GENERIC_REVERSE_JOURNAL_ERROR =
+  "The journal entry could not be reversed. Please try again.";
+
+const REVERSE_JOURNAL_RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  "Authenticated user is required":
+    "Your session has expired. Please sign in again.",
+  "Insufficient role to reverse journal entry":
+    "You do not have permission to reverse journal entries.",
+  "Journal entry not found": "The journal entry was not found.",
+  "Journal entry does not belong to organization":
+    "The journal entry was not found.",
+  "Only posted journal entries can be reversed":
+    "Only posted journal entries can be reversed.",
+  "Journal entry has already been reversed":
+    "This journal entry has already been reversed.",
+  "Reversal journal cannot be reversed":
+    "Reversal journals cannot be reversed.",
+  "Journal source type cannot be reversed":
+    "This journal source type cannot be reversed.",
+  "Accounting period is closed": "The selected accounting period is closed.",
+  "Accounting period is locked": "The selected accounting period is locked.",
+  "Accounting period is not open":
+    "The selected accounting period is not open.",
+  "Accounting period does not belong to organization":
+    "The selected accounting period is not available for this organization.",
+  "Accounting period not found":
+    "The selected accounting period is not available.",
+  "Reversal date is outside the selected accounting period":
+    "The reversal date must fall within the selected accounting period.",
+  "Reversal reason is required": "A reversal reason is required.",
+  "Reversal reason must be 500 characters or fewer":
+    "The reversal reason must be 500 characters or fewer.",
+  "Journal entry must have at least two lines to reverse":
+    "The journal entry must have at least two lines to reverse.",
+  "Journal entry is not balanced":
+    "The journal entry is not balanced and cannot be reversed.",
+  "Journal entry total must be greater than zero":
+    "The journal entry total must be greater than zero.",
+  "Original account does not belong to organization":
+    "One or more original accounts are not available for this organization.",
+  "Original fund does not belong to organization":
+    "One or more original funds are not available for this organization.",
+};
+
+const ALLOWED_REVERSE_JOURNAL_KEYS = new Set([
+  "journalEntryId",
+  "reversalDate",
+  "periodId",
+  "reason",
+]);
+
+export type ReverseJournalEntryActionInput = {
+  journalEntryId: string;
+  reversalDate: string;
+  periodId: string;
+  reason: string;
+};
+
+export type ReverseJournalEntryActionResult =
+  | {
+      success: true;
+      journalEntryId: string;
+      entryNumber: string;
+    }
+  | {
+      success: false;
+      message: string;
+    };
+
+type ValidatedReverseJournalEntryInput = {
+  journalEntryId: string;
+  reversalDate: string;
+  periodId: string;
+  reason: string;
+};
+
+function mapReverseJournalError(error: DataAccessError): string {
+  return (
+    REVERSE_JOURNAL_RPC_ERROR_MESSAGES[error.message] ??
+    GENERIC_REVERSE_JOURNAL_ERROR
+  );
+}
+
+function validateReverseJournalEntryInput(
+  input: ReverseJournalEntryActionInput,
+): ReverseJournalEntryActionResult | ValidatedReverseJournalEntryInput {
+  const unknownKeys = Object.keys(input).filter(
+    (key) => !ALLOWED_REVERSE_JOURNAL_KEYS.has(key),
+  );
+
+  if (unknownKeys.length > 0) {
+    return {
+      success: false,
+      message: GENERIC_REVERSE_JOURNAL_ERROR,
+    };
+  }
+
+  const journalEntryId = input.journalEntryId.trim();
+
+  if (journalEntryId === "" || !isValidUuid(journalEntryId)) {
+    return {
+      success: false,
+      message: GENERIC_REVERSE_JOURNAL_ERROR,
+    };
+  }
+
+  const reversalDate = input.reversalDate.trim();
+
+  if (!isValidIsoDate(reversalDate)) {
+    return {
+      success: false,
+      message: GENERIC_REVERSE_JOURNAL_ERROR,
+    };
+  }
+
+  const periodId = input.periodId.trim();
+
+  if (periodId === "" || !isValidUuid(periodId)) {
+    return {
+      success: false,
+      message: GENERIC_REVERSE_JOURNAL_ERROR,
+    };
+  }
+
+  const reason = input.reason.trim();
+
+  if (reason === "") {
+    return {
+      success: false,
+      message: "A reversal reason is required.",
+    };
+  }
+
+  if (reason.length > 500) {
+    return {
+      success: false,
+      message: "The reversal reason must be 500 characters or fewer.",
+    };
+  }
+
+  return {
+    journalEntryId,
+    reversalDate,
+    periodId,
+    reason,
+  };
+}
+
+export async function reverseJournalEntryAction(
+  input: ReverseJournalEntryActionInput,
+): Promise<ReverseJournalEntryActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      success: false,
+      message: "You must be signed in to reverse journal entries.",
+    };
+  }
+
+  const validationResult = validateReverseJournalEntryInput(input);
+
+  if ("success" in validationResult) {
+    return validationResult;
+  }
+
+  const validatedInput = validationResult as ValidatedReverseJournalEntryInput;
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const result = await reverseJournalEntry(organizationId, validatedInput);
+
+    revalidatePath("/accounting/journals");
+    revalidatePath(`/accounting/journals/${validatedInput.journalEntryId}`);
+    revalidatePath(`/accounting/journals/${result.journalEntryId}`);
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      journalEntryId: result.journalEntryId,
+      entryNumber: result.entryNumber,
+    };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      return {
+        success: false,
+        message: mapReverseJournalError(error),
+      };
+    }
+
+    return {
+      success: false,
+      message: GENERIC_REVERSE_JOURNAL_ERROR,
     };
   }
 }

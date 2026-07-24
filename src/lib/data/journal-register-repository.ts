@@ -83,7 +83,12 @@ const KNOWN_REGISTER_SOURCES = new Set<JournalRegisterEntry["source"]>([
   "other",
 ]);
 
-const OTHER_DATABASE_SOURCE_TYPES = ["bill", "adjustment", "closing"] as const;
+const OTHER_DATABASE_SOURCE_TYPES = [
+  "bill",
+  "adjustment",
+  "closing",
+  "reversal",
+] as const;
 
 type JournalRegisterStatusFilter = NonNullable<JournalRegisterQuery["status"]>;
 type JournalRegisterSourceFilter = NonNullable<JournalRegisterQuery["source"]>;
@@ -154,6 +159,7 @@ export function mapDatabaseSourceType(
     case "opening_balance":
       return "opening_balance";
     default:
+      // Includes bill, adjustment, closing, and reversal.
       return "other";
   }
 }

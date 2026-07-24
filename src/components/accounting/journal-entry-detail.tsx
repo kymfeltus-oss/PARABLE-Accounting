@@ -6,6 +6,7 @@ export type JournalEntryDetailSource =
   | "manual"
   | "banking"
   | "opening_balance"
+  | "reversal"
   | "other";
 
 export type JournalEntryLineView = {
@@ -20,6 +21,15 @@ export type JournalEntryLineView = {
   fundName?: string | null;
 };
 
+export type JournalEntryDetailReversalInfo = {
+  isReversal: boolean;
+  isReversed: boolean;
+  relatedJournalEntryId: string | null;
+  relatedEntryNumber: string | null;
+  reversalDate: string | null;
+  reversalReason: string | null;
+};
+
 export type JournalEntryDetailProps = {
   id: string;
   entryNumber: string;
@@ -30,6 +40,7 @@ export type JournalEntryDetailProps = {
   periodName?: string | null;
   status: JournalEntryDetailStatus;
   lines: JournalEntryLineView[];
+  reversal?: JournalEntryDetailReversalInfo | null;
 };
 
 const sourceLabels: Record<JournalEntryDetailSource, string> = {
@@ -38,6 +49,7 @@ const sourceLabels: Record<JournalEntryDetailSource, string> = {
   manual: "Manual",
   banking: "Banking",
   opening_balance: "Opening balance",
+  reversal: "Reversal",
   other: "Other",
 };
 
@@ -122,6 +134,7 @@ export function JournalEntryDetail({
   periodName,
   status,
   lines,
+  reversal = null,
 }: JournalEntryDetailProps): React.ReactElement {
   const sortedLines = [...lines].sort(
     (left, right) => left.lineNumber - right.lineNumber,
@@ -208,6 +221,88 @@ export function JournalEntryDetail({
                 {sourceReference}
               </dd>
             </div>
+          ) : null}
+          {reversal?.isReversed ? (
+            <>
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Reversal status
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  This journal has been reversed
+                  {reversal.relatedEntryNumber
+                    ? ` by ${reversal.relatedEntryNumber}`
+                    : ""}
+                  .
+                </dd>
+              </div>
+              {reversal.relatedJournalEntryId ? (
+                <div className="min-w-0 sm:col-span-2">
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Reversal journal
+                  </dt>
+                  <dd className="mt-1 text-sm text-foreground">
+                    <a
+                      className="font-medium text-primary underline-offset-4 hover:underline"
+                      href={`/accounting/journals/${reversal.relatedJournalEntryId}`}
+                    >
+                      {reversal.relatedEntryNumber || "View reversal journal"}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+              {reversal.reversalDate ? (
+                <div className="min-w-0">
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Reversal date
+                  </dt>
+                  <dd className="mt-1 text-sm text-foreground">
+                    {formatEntryDate(reversal.reversalDate)}
+                  </dd>
+                </div>
+              ) : null}
+              {reversal.reversalReason ? (
+                <div className="min-w-0 sm:col-span-2">
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Reversal reason
+                  </dt>
+                  <dd className="mt-1 break-words text-sm text-foreground">
+                    {reversal.reversalReason}
+                  </dd>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+          {reversal?.isReversal ? (
+            <>
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Reversal of
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {reversal.relatedJournalEntryId ? (
+                    <a
+                      className="font-medium text-primary underline-offset-4 hover:underline"
+                      href={`/accounting/journals/${reversal.relatedJournalEntryId}`}
+                    >
+                      {reversal.relatedEntryNumber || "Original journal"}
+                    </a>
+                  ) : (
+                    reversal.relatedEntryNumber || "Original journal"
+                  )}
+                </dd>
+              </div>
+              {reversal.reversalReason ? (
+                <div className="min-w-0 sm:col-span-2">
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Reversal reason
+                  </dt>
+                  <dd className="mt-1 break-words text-sm text-foreground">
+                    {reversal.reversalReason}
+                  </dd>
+                </div>
+              ) : null}
+            </>
           ) : null}
           <div className="min-w-0">
             <dt className="text-xs font-medium text-muted-foreground">

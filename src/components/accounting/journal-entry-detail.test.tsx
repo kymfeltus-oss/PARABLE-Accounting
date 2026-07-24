@@ -233,7 +233,7 @@ describe("JournalEntryDetail", () => {
   });
 
   it.each(["edit", "post", "reverse", "delete", "void", "duplicate", "repost"])(
-    "does not render a %s control",
+    "does not render a %s control on the detail summary",
     (name) => {
       render(<JournalEntryDetail {...createProps()} />);
       expect(
@@ -242,9 +242,59 @@ describe("JournalEntryDetail", () => {
     },
   );
 
-  it("does not invent a link", () => {
+  it("does not invent a link when no reversal relation exists", () => {
     render(<JournalEntryDetail {...createProps()} />);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("links a reversed journal to its reversal", () => {
+    render(
+      <JournalEntryDetail
+        {...createProps({
+          status: "reversed",
+          source: "manual",
+          reversal: {
+            isReversal: false,
+            isReversed: true,
+            relatedJournalEntryId: "rev-journal-id",
+            relatedEntryNumber: "REV-TEST",
+            reversalDate: "2026-07-20",
+            reversalReason: "Corrected allocation",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/This journal has been reversed/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "REV-TEST" })).toHaveAttribute(
+      "href",
+      "/accounting/journals/rev-journal-id",
+    );
+    expect(screen.getByText("Corrected allocation")).toBeVisible();
+  });
+
+  it("links a reversal journal to its original", () => {
+    render(
+      <JournalEntryDetail
+        {...createProps({
+          source: "reversal",
+          reversal: {
+            isReversal: true,
+            isReversed: false,
+            relatedJournalEntryId: "original-journal-id",
+            relatedEntryNumber: "MAN-TEST",
+            reversalDate: "2026-07-20",
+            reversalReason: "Corrected allocation",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Reversal")).toBeVisible();
+    expect(screen.getByRole("link", { name: "MAN-TEST" })).toHaveAttribute(
+      "href",
+      "/accounting/journals/original-journal-id",
+    );
   });
 
   it("uses semantic article, metadata, and table markup", () => {

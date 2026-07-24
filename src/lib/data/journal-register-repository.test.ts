@@ -155,7 +155,9 @@ describe("journal register normalization helpers", () => {
       "bill",
       "adjustment",
       "closing",
+      "reversal",
     ]);
+    expect(mapDatabaseSourceType("reversal")).toBe("other");
   });
 });
 
