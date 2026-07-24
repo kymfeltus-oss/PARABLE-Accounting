@@ -64,6 +64,16 @@ describe("GivingPageContent", () => {
     expect(screen.getByText("General Fund")).toBeTruthy();
   });
 
+  it("links recent giving transactions to their detail pages", () => {
+    render(<GivingPageContent data={createPopulatedGivingData()} />);
+
+    const viewLinks = screen.getAllByRole("link", { name: "View" });
+    expect(viewLinks.map((link) => link.getAttribute("href"))).toEqual([
+      "/giving/gift-1",
+      "/giving/gift-2",
+    ]);
+  });
+
   it("renders honest zero KPI values when giving data is empty", () => {
     render(<GivingPageContent data={createEmptyGivingData()} />);
 

@@ -47,6 +47,10 @@ function requireGivingTransactionId(
   return trimmed;
 }
 
+export type GivingTransactionRecord = GivingTransactionRow & {
+  fundName: string | null;
+};
+
 export async function getGivingData(
   organizationId: string,
 ): Promise<GivingData> {
@@ -133,6 +137,53 @@ export async function getGivingData(
       transactionCount: transactions.length,
       activeGiverCount,
     },
+  };
+}
+
+export async function getGivingTransactionById(
+  organizationId: string,
+  givingTransactionId: string,
+): Promise<GivingTransactionRecord | null> {
+  const operation = "getGivingTransactionById";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedGivingTransactionId = requireGivingTransactionId(
+    givingTransactionId,
+    operation,
+  );
+  const supabase = await createServerSupabaseClient();
+
+  const transactionResult = await supabase
+    .from("giving_transactions")
+    .select("*")
+    .eq("id", scopedGivingTransactionId)
+    .eq("organization_id", scopedOrganizationId);
+
+  const transactions = unwrapRows<GivingTransactionRow>(
+    `${operation}.givingTransaction`,
+    transactionResult,
+  );
+
+  if (transactions.length === 0) {
+    return null;
+  }
+
+  const transaction = transactions[0];
+  let fundName: string | null = null;
+
+  if (transaction.fund_id) {
+    const fundResult = await supabase
+      .from("funds")
+      .select("name")
+      .eq("id", transaction.fund_id)
+      .eq("organization_id", scopedOrganizationId);
+
+    const funds = unwrapRows<{ name: string }>(`${operation}.fund`, fundResult);
+    fundName = funds[0]?.name ?? null;
+  }
+
+  return {
+    ...transaction,
+    fundName,
   };
 }
 

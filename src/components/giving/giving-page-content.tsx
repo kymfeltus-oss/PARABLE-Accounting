@@ -281,6 +281,11 @@ export function GivingPageContent({ data }: GivingPageContentProps) {
                       {formatDate(transaction.transaction_date)} ·{" "}
                       {transaction.status}
                     </p>
+                    <div className="mt-3">
+                      <Button asChild size="sm" type="button" variant="outline">
+                        <Link href={`/giving/${transaction.id}`}>View</Link>
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>

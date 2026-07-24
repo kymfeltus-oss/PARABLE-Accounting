@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAccessError } from "./data-access-error";
-import { getGivingData, recordGiving } from "./giving-repository";
+import { getGivingData, getGivingTransactionById, recordGiving } from "./giving-repository";
 import {
   createBackendError,
   createMockSupabaseClient,
@@ -271,5 +271,104 @@ describe("recordGiving", () => {
         TEST_CREDIT_ACCOUNT_ID,
       ),
     ).rejects.toBeInstanceOf(DataAccessError);
+  });
+});
+
+const TEST_GIVING_DETAIL_ID = "55555555-5555-4555-8555-555555555555";
+const TEST_FUND_ID = "966522d9-8fe4-497b-b5a6-8cb449f2372e";
+
+function createGivingTransactionRow(
+  overrides: Partial<{
+    id: string;
+    organization_id: string;
+    fund_id: string | null;
+    status: string;
+    journal_entry_id: string | null;
+    reference: string | null;
+  }> = {},
+) {
+  return {
+    id: TEST_GIVING_DETAIL_ID,
+    organization_id: TEST_ORGANIZATION_ID,
+    member_id: "member-1",
+    fund_id: TEST_FUND_ID,
+    transaction_date: "2026-07-10",
+    amount: 250,
+    giving_method: "check",
+    reference: "CHK-1001",
+    status: "recorded",
+    journal_entry_id: null,
+    created_at: "2026-07-10T12:00:00.000Z",
+    updated_at: "2026-07-10T12:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("getGivingTransactionById", () => {
+  beforeEach(() => {
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("requires organizationId", async () => {
+    await expect(getGivingTransactionById("", TEST_GIVING_DETAIL_ID)).rejects.toBeInstanceOf(
+      DataAccessError,
+    );
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("returns null when no organization-scoped transaction exists", async () => {
+    const { client } = createMockSupabaseClient({
+      giving_transactions: [{ data: [], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      getGivingTransactionById(TEST_ORGANIZATION_ID, TEST_GIVING_DETAIL_ID),
+    ).resolves.toBeNull();
+  });
+
+  it("returns the transaction with fund name when fund lookup succeeds", async () => {
+    const transaction = createGivingTransactionRow();
+    const { client, queryLog } = createMockSupabaseClient({
+      giving_transactions: [{ data: [transaction], error: null }],
+      funds: [{ data: [{ name: "General Fund" }], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getGivingTransactionById(
+      TEST_ORGANIZATION_ID,
+      TEST_GIVING_DETAIL_ID,
+    );
+
+    expect(result).toEqual({
+      ...transaction,
+      fundName: "General Fund",
+    });
+    expect(
+      queryLog.some(
+        (query) =>
+          query.table === "giving_transactions" &&
+          hasOrganizationFilter(query, TEST_ORGANIZATION_ID),
+      ),
+    ).toBe(true);
+  });
+
+  it("returns the transaction without querying funds when fund_id is null", async () => {
+    const transaction = createGivingTransactionRow({ fund_id: null });
+    const { client, queryLog } = createMockSupabaseClient({
+      giving_transactions: [{ data: [transaction], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await getGivingTransactionById(
+      TEST_ORGANIZATION_ID,
+      TEST_GIVING_DETAIL_ID,
+    );
+
+    expect(result).toEqual({
+      ...transaction,
+      fundName: null,
+    });
+    expect(queryLog.some((query) => query.table === "funds")).toBe(false);
   });
 });
