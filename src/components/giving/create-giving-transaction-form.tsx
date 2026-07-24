@@ -22,14 +22,24 @@ import type { GivingMethod } from "@/lib/data/giving-repository";
 const inputClassName =
   "mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground";
 
+const GIVING_FORM_ID = "create-giving-transaction-form";
+
 const GIVING_SHEET_CONTENT_CLASS =
-  "flex !h-dvh !max-h-dvh flex-col !gap-0 overflow-hidden !p-0 data-[side=right]:!h-dvh data-[side=right]:!max-h-dvh data-[side=right]:!w-full data-[side=right]:sm:!max-w-md";
+  "!grid h-[100dvh] max-h-[100dvh] !gap-0 !overflow-hidden !p-0 data-[side=right]:!h-[100dvh] data-[side=right]:!max-h-[100dvh] data-[side=right]:!w-full data-[side=right]:!overflow-hidden data-[side=right]:sm:!max-w-md";
+
+const GIVING_SHEET_CONTENT_STYLE = {
+  display: "grid",
+  gridTemplateRows: "auto minmax(0, 1fr) auto",
+  height: "100dvh",
+  maxHeight: "100dvh",
+  overflow: "hidden",
+} as const;
 
 const GIVING_SHEET_SCROLL_BODY_CLASS =
-  "min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 [-webkit-overflow-scrolling:touch]";
+  "min-h-0 overflow-y-auto overscroll-y-contain px-4 py-4 [-webkit-overflow-scrolling:touch]";
 
 const GIVING_SHEET_FOOTER_CLASS =
-  "mt-0 shrink-0 border-t border-border bg-popover z-10";
+  "mt-0 shrink-0 border-t border-border bg-popover p-4";
 
 const GIVING_METHOD_OPTIONS: Array<{ label: string; value: GivingMethod }> = [
   { label: "Cash", value: "cash" },
@@ -228,6 +238,7 @@ export function CreateGivingTransactionForm({
         <SheetContent
           aria-describedby="record-giving-description"
           className={GIVING_SHEET_CONTENT_CLASS}
+          style={GIVING_SHEET_CONTENT_STYLE}
         >
           <SheetHeader className="shrink-0 border-b border-border">
             <SheetTitle>Record giving</SheetTitle>
@@ -237,14 +248,15 @@ export function CreateGivingTransactionForm({
             </SheetDescription>
           </SheetHeader>
 
-          <form
-            className="flex min-h-0 flex-1 flex-col overflow-hidden"
-            onSubmit={handleSubmit}
+          <div
+            ref={scrollBodyRef}
+            className={GIVING_SHEET_SCROLL_BODY_CLASS}
+            data-giving-sheet-scroll-body
           >
-            <div
-              ref={scrollBodyRef}
-              className={`${GIVING_SHEET_SCROLL_BODY_CLASS} space-y-4`}
-              data-giving-sheet-scroll-body
+            <form
+              className="space-y-4"
+              id={GIVING_FORM_ID}
+              onSubmit={handleSubmit}
             >
               <div>
                 <label className="text-sm font-medium" htmlFor="giving-date">
@@ -421,7 +433,7 @@ export function CreateGivingTransactionForm({
                       onClick={scrollToSave}
                     >
                       <ChevronDown aria-hidden className="size-4" />
-                      Scroll to Save
+                      Scroll to bottom
                     </Button>
                   </div>
                 ) : null}
@@ -432,25 +444,20 @@ export function CreateGivingTransactionForm({
                   {error}
                 </p>
               ) : null}
+            </form>
+          </div>
 
-              <div className="pb-2 pt-2">
-                <Button
-                  ref={saveButtonRef}
-                  className="w-full"
-                  disabled={isPending}
-                  type="submit"
-                >
-                  {isPending ? "Saving…" : "Save giving"}
-                </Button>
-              </div>
-            </div>
-
-            <SheetFooter className={GIVING_SHEET_FOOTER_CLASS}>
-              <Button className="w-full" disabled={isPending} type="submit">
-                {isPending ? "Saving…" : "Save giving"}
-              </Button>
-            </SheetFooter>
-          </form>
+          <SheetFooter className={GIVING_SHEET_FOOTER_CLASS}>
+            <Button
+              ref={saveButtonRef}
+              className="w-full"
+              disabled={isPending}
+              form={GIVING_FORM_ID}
+              type="submit"
+            >
+              {isPending ? "Saving…" : "Save giving"}
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>

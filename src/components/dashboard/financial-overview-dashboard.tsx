@@ -91,12 +91,12 @@ export function FinancialOverviewDashboard({
 
       <KpiGrid kpis={kpis} />
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.08fr)_minmax(28rem,0.92fr)]">
-        <section aria-labelledby="activity-title" className="dashboard-command-card min-h-[19.5rem] overflow-hidden p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+        <section aria-labelledby="activity-title" className="dashboard-command-card min-h-[19.5rem] min-w-0 overflow-hidden p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="min-w-0">
               <h2 id="activity-title" className="text-sm font-semibold tracking-[0.04em] text-[#F7FAFF] uppercase">Giving &amp; Expense Activity</h2>
-              <div className="mt-3 flex items-start gap-8 text-xs text-[#AEB9CE]">
+              <div className="mt-3 flex flex-wrap items-start gap-4 text-xs text-[#AEB9CE] sm:gap-8">
                 <span className="flex items-start gap-2">
                   <span className="mt-1 size-2.5 rounded-full bg-[#1677FF]" />
                   <span>Giving<br /><span className="text-[#7E8AA8]">(Contributions)</span></span>
@@ -107,14 +107,14 @@ export function FinancialOverviewDashboard({
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div aria-label="Activity range" className="flex overflow-hidden rounded-md border border-white/10 text-[0.68rem] text-[#AEB9CE]">
+            <div className="flex shrink-0 items-center gap-2 self-start">
+              <div aria-label="Activity range" className="flex max-w-full overflow-x-auto rounded-md border border-white/10 text-[0.68rem] text-[#AEB9CE]">
                 {["7D", "30D", "90D", "YTD"].map((range) => (
                   <button
                     key={range}
                     type="button"
                     aria-pressed={range === "30D"}
-                    className={`min-w-12 border-r border-white/10 px-3 py-2 last:border-r-0 ${range === "30D" ? "bg-[#0B3577] text-[#F7FAFF] shadow-[inset_0_0_12px_rgb(22_119_255/22%)]" : "bg-[#07111D] hover:bg-white/[0.04]"}`}
+                    className={`min-w-10 shrink-0 border-r border-white/10 px-2.5 py-2 last:border-r-0 sm:min-w-12 sm:px-3 ${range === "30D" ? "bg-[#0B3577] text-[#F7FAFF] shadow-[inset_0_0_12px_rgb(22_119_255/22%)]" : "bg-[#07111D] hover:bg-white/[0.04]"}`}
                   >
                     {range}
                   </button>
@@ -176,11 +176,13 @@ export function FinancialOverviewDashboard({
           </div>
           <div className="mt-5 space-y-3">
             {fundRows.length === 0 ? <WorkspaceDataEmpty message="No funds yet." /> : fundRows.map((fund) => (
-              <div key={fund.id} className="grid grid-cols-[6.5rem_minmax(3rem,1fr)_5rem_5.5rem] items-center gap-3 text-xs">
-                <p className="truncate text-[#F7FAFF]">{fund.name}</p>
-                <span className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]"><span className="block h-full rounded-full bg-[linear-gradient(90deg,#13C6FF,#1677FF)]" style={{ width: `${Math.max((Math.abs(fund.balance) / maxFundBalance) * 100, 2)}%` }} /></span>
-                <span className="text-right text-[#DDE5F3] tabular-nums">{formatCurrency(fund.balance)}</span>
-                <span className={`justify-self-end rounded-md border px-2.5 py-1.5 text-[0.64rem] capitalize ${fund.fund_type.toLowerCase() === "unrestricted" ? "border-[#1677FF]/30 text-[#1677FF]" : "border-white/10 text-[#AEB9CE]"}`}>
+              <div key={fund.id} className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3">
+                <div className="flex min-w-0 items-center justify-between gap-2 sm:contents">
+                  <p className="truncate text-[#F7FAFF]">{fund.name}</p>
+                  <span className="shrink-0 text-right text-[#DDE5F3] tabular-nums sm:order-3">{formatCurrency(fund.balance)}</span>
+                </div>
+                <span className="h-1.5 overflow-hidden rounded-full bg-white/[0.06] sm:order-2"><span className="block h-full rounded-full bg-[linear-gradient(90deg,#13C6FF,#1677FF)]" style={{ width: `${Math.max((Math.abs(fund.balance) / maxFundBalance) * 100, 2)}%` }} /></span>
+                <span className={`w-fit rounded-md border px-2.5 py-1.5 text-[0.64rem] capitalize sm:order-4 sm:justify-self-end ${fund.fund_type.toLowerCase() === "unrestricted" ? "border-[#1677FF]/30 text-[#1677FF]" : "border-white/10 text-[#AEB9CE]"}`}>
                   {fund.fund_type}
                 </span>
               </div>
@@ -189,8 +191,8 @@ export function FinancialOverviewDashboard({
         </section>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(29rem,1.2fr)_minmax(18rem,0.9fr)]">
-        <section className="dashboard-command-card p-4" aria-labelledby="attention-title">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_minmax(0,0.9fr)]">
+        <section className="dashboard-command-card min-w-0 p-4" aria-labelledby="attention-title">
           <h2 id="attention-title" className="text-sm font-semibold uppercase">Needs Attention</h2>
           <div className="mt-3 space-y-2">
             {attentionIsEmpty ? <WorkspaceDataEmpty message="No items yet." /> : null}
@@ -198,13 +200,13 @@ export function FinancialOverviewDashboard({
             {openCompliance.slice(0, 2).map((item) => <div key={item.id} className="dashboard-row flex items-center gap-2 rounded-md border p-3 text-xs"><BookOpenCheck aria-hidden className="size-4 shrink-0 text-[#13C6FF]" /><div className="min-w-0"><p className="truncate text-[#F7FAFF]">{item.name}</p><p className="mt-1 text-[#7E8AA8]">{item.due_date ? `Due ${item.due_date}` : "No due date recorded"}</p></div></div>)}
           </div>
         </section>
-        <section className="dashboard-command-card overflow-hidden" aria-labelledby="recent-title">
-          <div className="flex items-center justify-between px-4 pt-4"><h2 id="recent-title" className="text-sm font-semibold uppercase">Recent Expenses</h2><Link href="/expenses" className="text-xs text-[#1677FF]">View all</Link></div>
+        <section className="dashboard-command-card min-w-0 overflow-hidden" aria-labelledby="recent-title">
+          <div className="flex items-center justify-between gap-2 px-4 pt-4"><h2 id="recent-title" className="text-sm font-semibold uppercase">Recent Expenses</h2><Link href="/expenses" className="shrink-0 text-xs text-[#1677FF]">View all</Link></div>
           <div className="mt-3 overflow-x-auto">
             {recentExpenses.length === 0 ? <div className="p-4"><WorkspaceDataEmpty message="No recent expenses yet." /></div> : (
-              <table className="w-full min-w-[30rem] text-left text-xs">
+              <table className="w-full min-w-[20rem] text-left text-xs sm:min-w-[30rem]">
                 <thead className="text-[0.62rem] tracking-[0.06em] text-[#7E8AA8] uppercase"><tr><th className="px-4 py-2 font-medium">Date</th><th className="px-3 py-2 font-medium">Description</th><th className="px-3 py-2 text-right font-medium">Amount</th><th className="px-3 py-2 font-medium">Status</th></tr></thead>
-                <tbody>{recentExpenses.map((expense) => <tr key={expense.id} className="border-t border-white/[0.055] hover:bg-white/[0.025]"><td className="whitespace-nowrap px-4 py-3 text-[#AEB9CE]">{expense.expense_date}</td><td className="px-3 py-3 text-[#F7FAFF]">{expense.description}</td><td className="px-3 py-3 text-right text-[#F7FAFF] tabular-nums">{formatCurrency(Number(expense.total_amount))}</td><td className="px-3 py-3"><span className="rounded border border-[#7E8AA8]/25 bg-[#7E8AA8]/8 px-2 py-1 text-[#AEB9CE]">{expense.status}</span></td></tr>)}</tbody>
+                <tbody>{recentExpenses.map((expense) => <tr key={expense.id} className="border-t border-white/[0.055] hover:bg-white/[0.025]"><td className="whitespace-nowrap px-4 py-3 text-[#AEB9CE]">{expense.expense_date}</td><td className="max-w-[10rem] truncate px-3 py-3 text-[#F7FAFF] sm:max-w-none">{expense.description}</td><td className="px-3 py-3 text-right text-[#F7FAFF] tabular-nums">{formatCurrency(Number(expense.total_amount))}</td><td className="px-3 py-3"><span className="rounded border border-[#7E8AA8]/25 bg-[#7E8AA8]/8 px-2 py-1 text-[#AEB9CE]">{expense.status}</span></td></tr>)}</tbody>
               </table>
             )}
           </div>

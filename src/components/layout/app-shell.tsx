@@ -14,7 +14,7 @@ export function AppShell({ children }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="app-shell flex min-h-svh bg-background">
+    <div className="app-shell flex min-h-svh min-w-0 overflow-x-clip bg-background">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
@@ -22,11 +22,11 @@ export function AppShell({ children }: AppShellProps) {
         Skip to main content
       </a>
       <AppSidebar />
-      <div className="flex min-h-svh min-w-0 flex-1 flex-col">
+      <div className="flex min-h-svh min-w-0 flex-1 flex-col overflow-x-clip">
         <AppHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <main
           id="main-content"
-          className="app-main flex-1 overflow-y-auto px-4 py-5 md:px-7 lg:px-8 lg:py-7"
+          className="app-main min-w-0 flex-1 overflow-x-auto overflow-y-auto px-3 py-4 sm:px-4 sm:py-5 md:px-7 lg:px-8 lg:py-7"
         >
           {children}
         </main>
