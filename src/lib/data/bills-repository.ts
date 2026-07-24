@@ -1,11 +1,34 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+import { DataAccessError } from "./data-access-error";
 import { requireOrganizationId } from "./organization-id";
-import { sumAmounts, unwrapRows } from "./query-helpers";
+import { sumAmounts, toDataAccessError, unwrapRows } from "./query-helpers";
 import type { BillRow, VendorRow } from "./types/rows";
 
 export type BillRecord = BillRow & {
   vendorName: string | null;
+};
+
+export type BillStatus = "draft" | "open";
+
+export type CreateBillInput = {
+  vendorId: string;
+  billDate: string;
+  totalAmount: number;
+  billNumber?: string | null;
+  dueDate?: string | null;
+  description?: string | null;
+  status?: BillStatus;
+  expenseAccountId?: string | null;
+  fundId?: string | null;
+};
+
+export type PayBillInput = {
+  billId: string;
+  paymentDate: string;
+  cashAccountId: string;
+  expenseAccountId: string;
+  fundId?: string | null;
 };
 
 export type BillsData = {
@@ -36,6 +59,19 @@ function isOverdueBill(bill: BillRow, today: string): boolean {
   }
 
   return bill.due_date < today;
+}
+
+function requireBillId(billId: string, operation: string): string {
+  const trimmed = billId.trim();
+
+  if (!trimmed) {
+    throw new DataAccessError({
+      operation,
+      message: "billId is required and must be a non-empty string",
+    });
+  }
+
+  return trimmed;
 }
 
 function attachVendorNames(
@@ -97,4 +133,147 @@ export async function getBillsData(organizationId: string): Promise<BillsData> {
       ),
     },
   };
+}
+
+export async function createBill(
+  organizationId: string,
+  input: CreateBillInput,
+): Promise<BillRow> {
+  const operation = "createBill";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("create_bill", {
+    target_organization_id: scopedOrganizationId,
+    input_vendor_id: input.vendorId,
+    input_bill_date: input.billDate,
+    input_total_amount: input.totalAmount,
+    input_bill_number: input.billNumber ?? null,
+    input_due_date: input.dueDate ?? null,
+    input_description: input.description ?? null,
+    input_status: input.status ?? "draft",
+    input_expense_account_id: input.expenseAccountId ?? null,
+    input_fund_id: input.fundId ?? null,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[createBill RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        organizationId: scopedOrganizationId,
+        vendorId: input.vendorId,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Bill creation returned no row",
+    });
+  }
+
+  return result.data as BillRow;
+}
+
+export async function openBill(
+  organizationId: string,
+  billId: string,
+): Promise<BillRow> {
+  const operation = "openBill";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedBillId = requireBillId(billId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("open_bill", {
+    target_organization_id: scopedOrganizationId,
+    target_bill_id: scopedBillId,
+  });
+
+  if (result.error) {
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Bill open returned no row",
+    });
+  }
+
+  return result.data as BillRow;
+}
+
+export async function payBill(
+  organizationId: string,
+  input: PayBillInput,
+): Promise<BillRow> {
+  const operation = "payBill";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedBillId = requireBillId(input.billId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("pay_bill", {
+    target_organization_id: scopedOrganizationId,
+    target_bill_id: scopedBillId,
+    input_payment_date: input.paymentDate,
+    input_cash_account_id: input.cashAccountId,
+    input_expense_account_id: input.expenseAccountId,
+    input_fund_id: input.fundId ?? null,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[payBill RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        organizationId: scopedOrganizationId,
+        billId: scopedBillId,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Bill payment returned no row",
+    });
+  }
+
+  return result.data as BillRow;
+}
+
+export async function voidBill(
+  organizationId: string,
+  billId: string,
+): Promise<BillRow> {
+  const operation = "voidBill";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedBillId = requireBillId(billId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("void_bill", {
+    target_organization_id: scopedOrganizationId,
+    target_bill_id: scopedBillId,
+  });
+
+  if (result.error) {
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Bill void returned no row",
+    });
+  }
+
+  return result.data as BillRow;
 }

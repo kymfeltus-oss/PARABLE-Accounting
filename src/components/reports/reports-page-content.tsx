@@ -65,6 +65,77 @@ function formatAccountType(accountType: string): string {
   return accountType.replace(/_/g, " ");
 }
 
+function formatReportDate(value: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+  }).format(new Date(`${value}T12:00:00.000Z`));
+}
+
+function FinancialReportTable({
+  caption,
+  headers,
+  rows,
+  footer,
+}: {
+  caption: string;
+  headers: string[];
+  rows: string[][];
+  footer?: string[];
+}) {
+  return (
+    <div className="mt-4 overflow-x-auto">
+      <table className="w-full min-w-[32rem] border-collapse text-sm">
+        <caption className="sr-only">{caption}</caption>
+        <thead>
+          <tr className="border-b border-border text-left">
+            {headers.map((header) => (
+              <th key={header} className="px-3 py-2 font-medium text-foreground">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td
+                className="px-3 py-3 text-muted-foreground"
+                colSpan={headers.length}
+              >
+                No posted activity for this report.
+              </td>
+            </tr>
+          ) : (
+            rows.map((row, index) => (
+              <tr key={`${caption}-row-${index}`} className="border-b border-border/70">
+                {row.map((cell, cellIndex) => (
+                  <td
+                    key={`${caption}-cell-${index}-${cellIndex}`}
+                    className="px-3 py-2 text-muted-foreground"
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+        {footer ? (
+          <tfoot>
+            <tr className="border-t border-border font-medium text-foreground">
+              {footer.map((cell, index) => (
+                <td key={`${caption}-footer-${index}`} className="px-3 py-2">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        ) : null}
+      </table>
+    </div>
+  );
+}
+
 function formatSnapshotValue(
   label: (typeof snapshotLabels)[number],
   data: ReportsData,
@@ -223,6 +294,146 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
                   {formatCurrency(data.summaries.accounting.postedCreditTotal)}
                 </p>
               ) : null}
+              {report.id === "trial-balance" ? (
+                <>
+                  <p className="mt-2 text-muted-foreground">
+                    As of {formatReportDate(data.financialReports.asOfDate)} ·
+                    Balanced:{" "}
+                    {data.financialReports.trialBalance.isBalanced ? "Yes" : "No"}
+                  </p>
+                  <FinancialReportTable
+                    caption="Trial balance"
+                    headers={["Account", "Type", "Debit", "Credit"]}
+                    rows={data.financialReports.trialBalance.rows.map((row) => [
+                      `${row.code} · ${row.name}`,
+                      formatAccountType(row.accountType),
+                      row.debitBalance > 0 ? formatCurrency(row.debitBalance) : "—",
+                      row.creditBalance > 0 ? formatCurrency(row.creditBalance) : "—",
+                    ])}
+                    footer={[
+                      "Totals",
+                      "",
+                      formatCurrency(data.financialReports.trialBalance.totalDebits),
+                      formatCurrency(data.financialReports.trialBalance.totalCredits),
+                    ]}
+                  />
+                </>
+              ) : null}
+              {report.id === "balance-sheet" ? (
+                <>
+                  <p className="mt-2 text-muted-foreground">
+                    As of {formatReportDate(data.financialReports.asOfDate)}
+                  </p>
+                  <FinancialReportTable
+                    caption="Balance sheet"
+                    headers={["Section", "Account", "Balance"]}
+                    rows={data.financialReports.balanceSheet.sections.flatMap(
+                      (section) =>
+                        section.rows.map((row) => [
+                          formatAccountType(section.accountType),
+                          `${row.code} · ${row.name}`,
+                          formatCurrency(row.balance),
+                        ]),
+                    )}
+                    footer={[
+                      "Totals",
+                      `Assets ${formatCurrency(data.financialReports.balanceSheet.totalAssets)} · Liabilities ${formatCurrency(data.financialReports.balanceSheet.totalLiabilities)} · Net assets ${formatCurrency(data.financialReports.balanceSheet.totalNetAssets)}`,
+                      formatCurrency(
+                        data.financialReports.balanceSheet.totalLiabilitiesAndNetAssets,
+                      ),
+                    ]}
+                  />
+                </>
+              ) : null}
+              {report.id === "income-statement" ? (
+                <>
+                  <p className="mt-2 text-muted-foreground">
+                    Period {formatReportDate(data.financialReports.periodStartDate)} –{" "}
+                    {formatReportDate(data.financialReports.periodEndDate)} · Net
+                    income:{" "}
+                    {formatCurrency(data.financialReports.incomeStatement.netIncome)}
+                  </p>
+                  <FinancialReportTable
+                    caption="Income statement"
+                    headers={["Section", "Account", "Amount"]}
+                    rows={[
+                      ...data.financialReports.incomeStatement.revenue.map((row) => [
+                        "Revenue",
+                        `${row.code} · ${row.name}`,
+                        formatCurrency(row.amount),
+                      ]),
+                      ...data.financialReports.incomeStatement.expenses.map((row) => [
+                        "Expense",
+                        `${row.code} · ${row.name}`,
+                        formatCurrency(row.amount),
+                      ]),
+                    ]}
+                    footer={[
+                      "Totals",
+                      `Revenue ${formatCurrency(data.financialReports.incomeStatement.totalRevenue)} · Expenses ${formatCurrency(data.financialReports.incomeStatement.totalExpenses)}`,
+                      formatCurrency(data.financialReports.incomeStatement.netIncome),
+                    ]}
+                  />
+                </>
+              ) : null}
+              {report.id === "fund-balance" ? (
+                <>
+                  <p className="mt-2 text-muted-foreground">
+                    As of {formatReportDate(data.financialReports.asOfDate)} · Total:{" "}
+                    {formatCurrency(data.financialReports.fundBalance.totalBalance)}
+                  </p>
+                  <FinancialReportTable
+                    caption="Fund balance"
+                    headers={["Fund", "Code", "Balance"]}
+                    rows={data.financialReports.fundBalance.rows.map((row) => [
+                      row.name,
+                      row.code ?? "—",
+                      formatCurrency(row.balance),
+                    ])}
+                    footer={[
+                      "Total",
+                      "",
+                      formatCurrency(data.financialReports.fundBalance.totalBalance),
+                    ]}
+                  />
+                </>
+              ) : null}
+              {report.id === "budget-vs-actual" ? (
+                <>
+                  {data.budgetVsActual ? (
+                    <>
+                      <p className="mt-2 text-muted-foreground">
+                        {data.budgetVsActual.budgetName} ·{" "}
+                        {formatReportDate(data.budgetVsActual.startDate)} –{" "}
+                        {formatReportDate(data.budgetVsActual.endDate)} · Total
+                        variance: {formatCurrency(data.budgetVsActual.totalVariance)}
+                      </p>
+                      <FinancialReportTable
+                        caption="Budget vs actual"
+                        headers={["Account", "Fund", "Budgeted", "Actual", "Variance"]}
+                        rows={data.budgetVsActual.rows.map((row) => [
+                          `${row.accountCode} · ${row.accountName}`,
+                          row.fundName ?? "—",
+                          formatCurrency(row.budgetedAmount),
+                          formatCurrency(row.actualAmount),
+                          formatCurrency(row.variance),
+                        ])}
+                        footer={[
+                          "Totals",
+                          "",
+                          formatCurrency(data.budgetVsActual.totalBudgeted),
+                          formatCurrency(data.budgetVsActual.totalActual),
+                          formatCurrency(data.budgetVsActual.totalVariance),
+                        ]}
+                      />
+                    </>
+                  ) : (
+                    <p className="mt-2 text-muted-foreground">
+                      No active budget with lines covers the current date.
+                    </p>
+                  )}
+                </>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -235,37 +446,39 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
         </p>
       </section>
 
-      <section
-        aria-labelledby="reports-unavailable-title"
-        className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
-      >
-        <div className="space-y-1">
-          <h2
-            id="reports-unavailable-title"
-            className="text-lg font-semibold text-foreground"
-          >
-            Financial Statements / Advanced Reports
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Formal financial statements are unavailable until ledger balance
-            aggregation and close workflows are fully implemented.
-          </p>
-        </div>
-
-        <ul className="mt-6 space-y-3">
-          {data.unavailableReports.map((report) => (
-            <li
-              key={report.id}
-              className="rounded-lg border border-border/70 bg-muted/20 p-4 text-sm"
+      {data.unavailableReports.length > 0 ? (
+        <section
+          aria-labelledby="reports-unavailable-title"
+          className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        >
+          <div className="space-y-1">
+            <h2
+              id="reports-unavailable-title"
+              className="text-lg font-semibold text-foreground"
             >
-              <p className="font-medium text-foreground">{report.name}</p>
-              <p className="mt-1 text-muted-foreground">
-                Unavailable — {report.reason}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+              Advanced Reports Not Yet Available
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              The following reports require additional classification or variance
+              logic.
+            </p>
+          </div>
+
+          <ul className="mt-6 space-y-3">
+            {data.unavailableReports.map((report) => (
+              <li
+                key={report.id}
+                className="rounded-lg border border-border/70 bg-muted/20 p-4 text-sm"
+              >
+                <p className="font-medium text-foreground">{report.name}</p>
+                <p className="mt-1 text-muted-foreground">
+                  Unavailable — {report.reason}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section
         aria-labelledby="reports-related-workspaces-title"

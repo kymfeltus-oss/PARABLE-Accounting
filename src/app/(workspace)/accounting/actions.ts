@@ -5,12 +5,312 @@ import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@/lib/auth/get-authenticated-user";
 import { DataAccessError } from "@/lib/data/data-access-error";
 import {
+  closeAccountingPeriod,
+  createAccount,
+  createAccountingPeriod,
+  type AccountingPeriodRecord,
+  updateAccount,
+} from "@/lib/data/accounting-repository";
+import { getCurrentOrganizationId } from "@/lib/data/organization-context";
+import type { AccountRow } from "@/lib/data/types/rows";
+import {
   createManualJournal,
   type CreateManualJournalLineInput,
 } from "@/lib/data/manual-journal-repository";
 import { reverseJournalEntry } from "@/lib/data/journal-reversal-repository";
 import { voidJournalEntry } from "@/lib/data/journal-void-repository";
-import { getCurrentOrganizationId } from "@/lib/data/organization-context";
+
+const GENERIC_CREATE_ACCOUNT_ERROR =
+  "Unable to create account. Please verify the information and your access, then try again.";
+
+const GENERIC_UPDATE_ACCOUNT_ERROR =
+  "Unable to update account. Please verify the information and your access, then try again.";
+
+const GENERIC_CREATE_ACCOUNTING_PERIOD_ERROR =
+  "Unable to create accounting period. Please verify the information and your access, then try again.";
+
+const GENERIC_CLOSE_ACCOUNTING_PERIOD_ERROR =
+  "Unable to close accounting period. Please verify the information and your access, then try again.";
+
+export type CreateAccountActionResult =
+  | { ok: true; account: AccountRow }
+  | { ok: false; error: string };
+
+export type UpdateAccountActionResult =
+  | { ok: true; account: AccountRow }
+  | { ok: false; error: string };
+
+export type CreateAccountingPeriodActionResult =
+  | { ok: true; period: AccountingPeriodRecord }
+  | { ok: false; error: string };
+
+export type CloseAccountingPeriodActionResult =
+  | { ok: true; period: AccountingPeriodRecord }
+  | { ok: false; error: string };
+
+function readFormString(formData: FormData, field: string): string {
+  const value = formData.get(field);
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value;
+}
+
+function readOptionalFormString(
+  formData: FormData,
+  field: string,
+): string | null {
+  const trimmed = readFormString(formData, field).trim();
+
+  return trimmed === "" ? null : trimmed;
+}
+
+function readFormBoolean(formData: FormData, field: string): boolean {
+  const value = formData.get(field);
+
+  if (value === "on" || value === "true" || value === "1") {
+    return true;
+  }
+
+  return false;
+}
+
+export async function createAccountAction(
+  formData: FormData,
+): Promise<CreateAccountActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      error: "You must be signed in to create accounts.",
+    };
+  }
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const account = await createAccount(organizationId, {
+      code: readFormString(formData, "code"),
+      name: readFormString(formData, "name"),
+      accountType: readFormString(formData, "accountType"),
+      isPosting: readFormBoolean(formData, "isPosting"),
+    });
+
+    revalidatePath("/accounting");
+
+    return { ok: true, account };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      if (error.message === "code is required") {
+        return {
+          ok: false,
+          error: "Account code is required.",
+        };
+      }
+
+      if (error.message === "name is required") {
+        return {
+          ok: false,
+          error: "Account name is required.",
+        };
+      }
+
+      if (error.message === "accountType is required") {
+        return {
+          ok: false,
+          error: "Account type is required.",
+        };
+      }
+
+      return {
+        ok: false,
+        error: GENERIC_CREATE_ACCOUNT_ERROR,
+      };
+    }
+
+    return {
+      ok: false,
+      error: "Something went wrong while creating an account. Please try again.",
+    };
+  }
+}
+
+export async function updateAccountAction(
+  formData: FormData,
+): Promise<UpdateAccountActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      error: "You must be signed in to update accounts.",
+    };
+  }
+
+  const accountId = readFormString(formData, "accountId").trim();
+
+  if (accountId === "") {
+    return {
+      ok: false,
+      error: GENERIC_UPDATE_ACCOUNT_ERROR,
+    };
+  }
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const account = await updateAccount(organizationId, {
+      accountId,
+      code: readFormString(formData, "code"),
+      name: readFormString(formData, "name"),
+      accountType: readFormString(formData, "accountType"),
+      isPosting: readFormBoolean(formData, "isPosting"),
+      status: readOptionalFormString(formData, "status"),
+    });
+
+    revalidatePath("/accounting");
+
+    return { ok: true, account };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      if (error.message === "code is required") {
+        return {
+          ok: false,
+          error: "Account code is required.",
+        };
+      }
+
+      if (error.message === "name is required") {
+        return {
+          ok: false,
+          error: "Account name is required.",
+        };
+      }
+
+      if (error.message === "accountType is required") {
+        return {
+          ok: false,
+          error: "Account type is required.",
+        };
+      }
+
+      return {
+        ok: false,
+        error: GENERIC_UPDATE_ACCOUNT_ERROR,
+      };
+    }
+
+    return {
+      ok: false,
+      error: "Something went wrong while updating an account. Please try again.",
+    };
+  }
+}
+
+export async function createAccountingPeriodAction(
+  formData: FormData,
+): Promise<CreateAccountingPeriodActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      error: "You must be signed in to create accounting periods.",
+    };
+  }
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const period = await createAccountingPeriod(organizationId, {
+      name: readFormString(formData, "name"),
+      startDate: readFormString(formData, "startDate"),
+      endDate: readFormString(formData, "endDate"),
+    });
+
+    revalidatePath("/accounting");
+
+    return { ok: true, period };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      if (error.message === "name is required") {
+        return {
+          ok: false,
+          error: "Accounting period name is required.",
+        };
+      }
+
+      if (error.message === "startDate is required") {
+        return {
+          ok: false,
+          error: "Accounting period start date is required.",
+        };
+      }
+
+      if (error.message === "endDate is required") {
+        return {
+          ok: false,
+          error: "Accounting period end date is required.",
+        };
+      }
+
+      return {
+        ok: false,
+        error: GENERIC_CREATE_ACCOUNTING_PERIOD_ERROR,
+      };
+    }
+
+    return {
+      ok: false,
+      error:
+        "Something went wrong while creating an accounting period. Please try again.",
+    };
+  }
+}
+
+export async function closeAccountingPeriodAction(
+  formData: FormData,
+): Promise<CloseAccountingPeriodActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      error: "You must be signed in to close accounting periods.",
+    };
+  }
+
+  const periodId = readFormString(formData, "periodId").trim();
+
+  if (periodId === "") {
+    return {
+      ok: false,
+      error: GENERIC_CLOSE_ACCOUNTING_PERIOD_ERROR,
+    };
+  }
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const period = await closeAccountingPeriod(organizationId, periodId);
+
+    revalidatePath("/accounting");
+
+    return { ok: true, period };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      return {
+        ok: false,
+        error: GENERIC_CLOSE_ACCOUNTING_PERIOD_ERROR,
+      };
+    }
+
+    return {
+      ok: false,
+      error:
+        "Something went wrong while closing an accounting period. Please try again.",
+    };
+  }
+}
 
 const GENERIC_CREATE_MANUAL_JOURNAL_ERROR =
   "The manual journal entry could not be recorded. Please try again.";

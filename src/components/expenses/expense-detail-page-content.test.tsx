@@ -345,7 +345,7 @@ describe("ExpenseDetailPageContent", () => {
       { journalLinkage },
     );
 
-    expect(within(getJournalPanel()).getAllByText("posted")).toHaveLength(2);
+    expect(within(getJournalPanel()).getAllByText("Posted")).toHaveLength(2);
   });
 
   it("passes debit and credit totals to the panel", () => {

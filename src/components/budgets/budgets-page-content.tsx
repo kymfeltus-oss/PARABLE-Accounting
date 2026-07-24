@@ -8,10 +8,16 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { AddBudgetLineForm } from "@/components/budgets/add-budget-line-form";
+import { CreateBudgetForm } from "@/components/budgets/create-budget-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
-import type { BudgetRecord, BudgetsData } from "@/lib/data/budgets-repository";
+import type {
+  BudgetRecord,
+  BudgetsData,
+  BudgetVsActualReport,
+} from "@/lib/data/budgets-repository";
 
 const summaryLabels = [
   "Total Budgets",
@@ -120,6 +126,74 @@ function hasBudgetActivity(data: BudgetsData): boolean {
   return data.budgets.length > 0;
 }
 
+function BudgetVsActualTable({ report }: { report: BudgetVsActualReport }) {
+  return (
+    <div className="mt-4 overflow-x-auto">
+      <table className="w-full min-w-[40rem] border-collapse text-sm">
+        <caption className="sr-only">
+          Budget vs actual for {report.budgetName}
+        </caption>
+        <thead>
+          <tr className="border-b border-border text-left">
+            <th className="px-3 py-2 font-medium text-foreground">Account</th>
+            <th className="px-3 py-2 font-medium text-foreground">Fund</th>
+            <th className="px-3 py-2 font-medium text-foreground">Budgeted</th>
+            <th className="px-3 py-2 font-medium text-foreground">Actual</th>
+            <th className="px-3 py-2 font-medium text-foreground">Variance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {report.rows.length === 0 ? (
+            <tr>
+              <td
+                className="px-3 py-3 text-muted-foreground"
+                colSpan={5}
+              >
+                No budget lines to compare.
+              </td>
+            </tr>
+          ) : (
+            report.rows.map((row) => (
+              <tr
+                key={`${row.accountId}-${row.fundId ?? "none"}`}
+                className="border-b border-border/70"
+              >
+                <td className="px-3 py-2 text-muted-foreground">
+                  {row.accountCode} · {row.accountName}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {row.fundName ?? "—"}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {formatCurrency(row.budgetedAmount)}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {formatCurrency(row.actualAmount)}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {formatCurrency(row.variance)}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+        {report.rows.length > 0 ? (
+          <tfoot>
+            <tr className="border-t border-border font-medium text-foreground">
+              <td className="px-3 py-2" colSpan={2}>
+                Totals
+              </td>
+              <td className="px-3 py-2">{formatCurrency(report.totalBudgeted)}</td>
+              <td className="px-3 py-2">{formatCurrency(report.totalActual)}</td>
+              <td className="px-3 py-2">{formatCurrency(report.totalVariance)}</td>
+            </tr>
+          </tfoot>
+        ) : null}
+      </table>
+    </div>
+  );
+}
+
 export function BudgetsPageContent({ data }: BudgetsPageContentProps) {
   const budgetsNav = getNavItemByPathname("/budgets");
 
@@ -137,16 +211,27 @@ export function BudgetsPageContent({ data }: BudgetsPageContentProps) {
 
   return (
     <section aria-labelledby="budgets-title" className="space-y-8">
-      <header className="space-y-2">
-        <h1
-          id="budgets-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {budgetsNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {budgetsNav.description}
-        </p>
+      <header className="space-y-4">
+        <div className="space-y-2">
+          <h1
+            id="budgets-title"
+            className="text-3xl font-semibold tracking-tight text-foreground"
+          >
+            {budgetsNav.title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            {budgetsNav.description}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <CreateBudgetForm />
+          <AddBudgetLineForm
+            accounts={data.accounts}
+            budgets={data.budgets}
+            funds={data.funds}
+          />
+        </div>
       </header>
 
       {!hasBudgetActivity(data) ? (
@@ -167,10 +252,33 @@ export function BudgetsPageContent({ data }: BudgetsPageContentProps) {
         ))}
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Actual-to-budget comparison unavailable with the current allocation
-        model.
-      </p>
+      {data.budgetVsActual ? (
+        <section
+          aria-labelledby="budget-vs-actual-title"
+          className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        >
+          <div className="space-y-1">
+            <h2
+              id="budget-vs-actual-title"
+              className="text-lg font-semibold text-foreground"
+            >
+              Budget vs Actual
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {data.budgetVsActual.budgetName} ·{" "}
+              {formatDate(data.budgetVsActual.startDate)} –{" "}
+              {formatDate(data.budgetVsActual.endDate)} · Posted ledger activity
+              compared to budget lines.
+            </p>
+          </div>
+          <BudgetVsActualTable report={data.budgetVsActual} />
+        </section>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Budget vs actual comparison appears when an active budget with lines
+          covers the current date.
+        </p>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <section

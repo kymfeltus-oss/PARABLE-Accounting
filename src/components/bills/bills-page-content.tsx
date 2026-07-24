@@ -6,6 +6,13 @@ import {
   Receipt,
 } from "lucide-react";
 
+import { BillActions } from "@/components/bills/bill-actions";
+import {
+  CreateBillForm,
+  type BillExpenseAccountOption,
+  type BillFundOption,
+  type BillVendorOption,
+} from "@/components/bills/create-bill-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -44,6 +51,10 @@ const navigationLinks = [
 
 type BillsPageContentProps = {
   data: BillsData;
+  vendorOptions?: BillVendorOption[];
+  expenseAccountOptions?: BillExpenseAccountOption[];
+  cashAccountOptions?: BillExpenseAccountOption[];
+  fundOptions?: BillFundOption[];
 };
 
 function formatCurrency(amount: number): string {
@@ -109,7 +120,13 @@ function hasBillActivity(data: BillsData): boolean {
   return data.bills.length > 0;
 }
 
-export function BillsPageContent({ data }: BillsPageContentProps) {
+export function BillsPageContent({
+  data,
+  vendorOptions = [],
+  expenseAccountOptions = [],
+  cashAccountOptions = [],
+  fundOptions = [],
+}: BillsPageContentProps) {
   const billsNav = getNavItemByPathname("/bills");
 
   if (!billsNav) {
@@ -123,15 +140,24 @@ export function BillsPageContent({ data }: BillsPageContentProps) {
   return (
     <section aria-labelledby="bills-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="bills-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {billsNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {billsNav.description}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1
+              id="bills-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {billsNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {billsNav.description}
+            </p>
+          </div>
+          <CreateBillForm
+            expenseAccountOptions={expenseAccountOptions}
+            fundOptions={fundOptions}
+            vendorOptions={vendorOptions}
+          />
+        </div>
       </header>
 
       {!hasBillActivity(data) ? (
@@ -198,6 +224,12 @@ export function BillsPageContent({ data }: BillsPageContentProps) {
                     <p className="mt-1 text-muted-foreground">
                       {formatCurrency(Number(bill.total_amount))} · {bill.status}
                     </p>
+                    <BillActions
+                      bill={bill}
+                      cashAccountOptions={cashAccountOptions}
+                      expenseAccountOptions={expenseAccountOptions}
+                      fundOptions={fundOptions}
+                    />
                   </li>
                 ))}
               </ul>

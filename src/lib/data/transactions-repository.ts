@@ -3,14 +3,21 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireOrganizationId } from "./organization-id";
 import { unwrapRows } from "./query-helpers";
 import type {
+  BankAccountRow,
   BankTransactionMatchRow,
   BankTransactionRow,
 } from "./types/rows";
+
+export type BankAccountOption = {
+  id: string;
+  name: string;
+};
 
 export type TransactionsData = {
   organizationId: string;
   transactions: BankTransactionRow[];
   matches: BankTransactionMatchRow[];
+  bankAccounts: BankAccountOption[];
   counts: {
     total: number;
     unmatched: number;
@@ -28,7 +35,7 @@ export async function getTransactionsData(
   );
   const supabase = await createServerSupabaseClient();
 
-  const [transactionsResult, matchesResult] = await Promise.all([
+  const [transactionsResult, matchesResult, bankAccountsResult] = await Promise.all([
     supabase
       .from("bank_transactions")
       .select("*")
@@ -39,6 +46,12 @@ export async function getTransactionsData(
       .select("*")
       .eq("organization_id", scopedOrganizationId)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("bank_accounts")
+      .select("id, name")
+      .eq("organization_id", scopedOrganizationId)
+      .eq("status", "active")
+      .order("name", { ascending: true }),
   ]);
 
   const transactions = unwrapRows<BankTransactionRow>(
@@ -48,6 +61,10 @@ export async function getTransactionsData(
   const matches = unwrapRows<BankTransactionMatchRow>(
     "getTransactionsData.matches",
     matchesResult,
+  );
+  const bankAccountRows = unwrapRows<Pick<BankAccountRow, "id" | "name">>(
+    "getTransactionsData.bankAccounts",
+    bankAccountsResult,
   );
 
   const unmatched = transactions.filter(
@@ -64,6 +81,10 @@ export async function getTransactionsData(
     organizationId: scopedOrganizationId,
     transactions,
     matches,
+    bankAccounts: bankAccountRows.map((account) => ({
+      id: account.id,
+      name: account.name,
+    })),
     counts: {
       total: transactions.length,
       unmatched,

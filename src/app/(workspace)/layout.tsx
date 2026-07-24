@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { getAuthenticatedUser } from "@/lib/auth/get-authenticated-user";
-import { resolveOrganizationContext } from "@/lib/data/organization-context";
+import { resolveOrganizationContextForAuthenticatedUser } from "@/lib/data/organization-context";
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode;
@@ -15,7 +15,11 @@ export default async function WorkspaceLayout({ children }: WorkspaceLayoutProps
     redirect("/login");
   }
 
-  const resolution = await resolveOrganizationContext(user.id);
+  const resolution = await resolveOrganizationContextForAuthenticatedUser();
+
+  if (resolution.status === "unauthenticated") {
+    redirect("/login");
+  }
 
   if (resolution.status === "none") {
     redirect("/no-membership");

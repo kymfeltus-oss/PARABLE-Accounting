@@ -20,6 +20,20 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/app/(workspace)/bills/actions", () => ({
+  createBillAction: vi.fn(),
+  openBillAction: vi.fn(),
+  payBillAction: vi.fn(),
+  voidBillAction: vi.fn(),
+}));
+
+const emptyFormProps = {
+  vendorOptions: [],
+  expenseAccountOptions: [],
+  cashAccountOptions: [],
+  fundOptions: [],
+};
+
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -27,7 +41,7 @@ afterEach(() => {
 
 describe("BillsPageContent", () => {
   it("renders the page heading", () => {
-    render(<BillsPageContent data={createEmptyBillsData()} />);
+    render(<BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />);
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Bills" }),
@@ -36,7 +50,7 @@ describe("BillsPageContent", () => {
 
   it("does not render Development Preview or demo labels", () => {
     const { container } = render(
-      <BillsPageContent data={createEmptyBillsData()} />,
+      <BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />,
     );
 
     expect(container.textContent).not.toContain("Development Preview");
@@ -44,14 +58,14 @@ describe("BillsPageContent", () => {
   });
 
   it("renders the honest production empty state", () => {
-    render(<BillsPageContent data={createEmptyBillsData()} />);
+    render(<BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />);
 
     expect(screen.getAllByText("No bills yet.").length).toBeGreaterThan(0);
     expect(screen.getByText("No overdue bills.")).toBeTruthy();
   });
 
   it("renders live bill props", () => {
-    render(<BillsPageContent data={createPopulatedBillsData()} />);
+    render(<BillsPageContent data={createPopulatedBillsData()} {...emptyFormProps} />);
 
     expect(screen.getByText(/Northside Supplies · INV-1001/)).toBeTruthy();
     expect(
@@ -64,7 +78,7 @@ describe("BillsPageContent", () => {
   });
 
   it("renders honest zero counts when bills data is empty", () => {
-    render(<BillsPageContent data={createEmptyBillsData()} />);
+    render(<BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />);
 
     expect(
       screen.getByText("Total Bills").closest("article")?.textContent,
@@ -81,7 +95,7 @@ describe("BillsPageContent", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-17T12:00:00.000Z"));
 
-    render(<BillsPageContent data={createPopulatedBillsData()} />);
+    render(<BillsPageContent data={createPopulatedBillsData()} {...emptyFormProps} />);
 
     expect(
       screen.getByRole("heading", { name: "Needs Attention" }).closest("section")
@@ -91,7 +105,7 @@ describe("BillsPageContent", () => {
   });
 
   it("does not fabricate remaining balances or approval workflow labels", () => {
-    render(<BillsPageContent data={createPopulatedBillsData()} />);
+    render(<BillsPageContent data={createPopulatedBillsData()} {...emptyFormProps} />);
 
     expect(screen.queryByText(/remaining balance/i)).toBeNull();
     expect(screen.queryByText(/approval/i)).toBeNull();
@@ -99,7 +113,7 @@ describe("BillsPageContent", () => {
   });
 
   it("renders related workspace navigation links", () => {
-    render(<BillsPageContent data={createEmptyBillsData()} />);
+    render(<BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />);
 
     expect(screen.getByRole("link", { name: /Vendors/i }).getAttribute("href")).toBe(
       "/vendors",

@@ -33,10 +33,20 @@ export {
 export { getFundsData, type FundsData, type FundRecord } from "./funds-repository";
 export {
   getBudgetsData,
+  createBudget,
+  upsertBudgetLine,
+  activateBudget,
+  computeBudgetVsActualForOrganization,
   type BudgetsData,
   type BudgetRecord,
   type BudgetFundAllocation,
   type BudgetAccountAllocation,
+  type BudgetFormAccount,
+  type BudgetFormFund,
+  type BudgetVsActualReport,
+  type BudgetVsActualRow,
+  type CreateBudgetInput,
+  type UpsertBudgetLineInput,
 } from "./budgets-repository";
 export {
   getAccountingData,

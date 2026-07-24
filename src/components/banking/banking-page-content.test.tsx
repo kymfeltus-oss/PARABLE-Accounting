@@ -20,6 +20,14 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/components/banking/create-bank-account-form", () => ({
+  CreateBankAccountForm: () => <div>Add Bank Account Form</div>,
+}));
+
+vi.mock("@/components/banking/create-bank-transaction-form", () => ({
+  CreateBankTransactionForm: () => <div>Add Transaction Form</div>,
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -50,7 +58,7 @@ describe("BankingPageContent", () => {
     ).toBeTruthy();
   });
 
-  it("renders live banking props", () => {
+  it("renders live banking props with ledger balances", () => {
     render(<BankingPageContent data={createPopulatedBankingData()} />);
 
     expect(screen.getAllByText("Operating Account").length).toBeGreaterThan(0);
@@ -61,7 +69,10 @@ describe("BankingPageContent", () => {
     expect(
       screen.getByText("Unmatched Transactions").closest("article")?.textContent,
     ).toContain("1");
-    expect(screen.getByText("Balance unavailable")).toBeTruthy();
+    expect(screen.getByText(/Ledger balance: \$12,500\.00/)).toBeTruthy();
+    expect(
+      screen.getByText("Total Bank Balance").closest("article")?.textContent,
+    ).toContain("$12,500.00");
   });
 
   it("renders honest zero counts when banking data is empty", () => {
@@ -75,7 +86,7 @@ describe("BankingPageContent", () => {
     ).toContain("0");
   });
 
-  it("does not fabricate unsupported banking metrics", () => {
+  it("does not fabricate unsupported banking attention metrics", () => {
     render(<BankingPageContent data={createPopulatedBankingData()} />);
 
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);

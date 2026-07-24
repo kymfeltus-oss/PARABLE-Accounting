@@ -1,5 +1,14 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+import {
+  buildFinancialReportsFromContext,
+  loadLedgerBalanceContext,
+  type FinancialReports,
+} from "./ledger-balances-repository";
+import {
+  buildBudgetVsActualReport,
+  type BudgetVsActualReport,
+} from "./ledger-balances";
 import { requireOrganizationId } from "./organization-id";
 import {
   getMonthDateRange,
@@ -27,7 +36,10 @@ type JournalEntryLineAggregationRow = {
   credit_amount: number | string;
 };
 
-type BudgetLineAmountRow = Pick<BudgetLineRow, "budget_id" | "amount">;
+type BudgetLineAmountRow = Pick<
+  BudgetLineRow,
+  "budget_id" | "account_id" | "fund_id" | "amount"
+>;
 
 type ReportExpenseRow = Pick<
   ExpenseRow,
@@ -36,7 +48,10 @@ type ReportExpenseRow = Pick<
 
 type ReportBillRow = Pick<BillRow, "id" | "status" | "total_amount">;
 
-type ReportBudgetRow = Pick<BudgetRow, "id">;
+type ReportBudgetRow = Pick<
+  BudgetRow,
+  "id" | "name" | "start_date" | "end_date" | "status"
+>;
 
 type ReportAccountingPeriodRow = Pick<
   AccountingPeriodRow,
@@ -110,6 +125,8 @@ export type ReportsData = {
   };
   availableReports: ReportCatalogEntry[];
   unavailableReports: UnavailableReportEntry[];
+  financialReports: FinancialReports;
+  budgetVsActual: BudgetVsActualReport | null;
 };
 
 const AVAILABLE_REPORTS: ReportCatalogEntry[] = [
@@ -138,38 +155,39 @@ const AVAILABLE_REPORTS: ReportCatalogEntry[] = [
     name: "Accounting Activity Summary",
     description: "Journal entry counts and posted debit/credit totals.",
   },
-];
-
-const UNAVAILABLE_REPORTS: UnavailableReportEntry[] = [
   {
     id: "trial-balance",
     name: "Trial Balance",
-    reason: "Requires ledger balance aggregation across all accounts.",
+    description: "Posted ledger debit and credit balances by account.",
   },
   {
     id: "balance-sheet",
     name: "Balance Sheet / Statement of Financial Position",
-    reason: "Requires account balance aggregation not yet implemented.",
+    description: "Assets, liabilities, and net assets through the as-of date.",
   },
   {
     id: "income-statement",
     name: "Income Statement / Statement of Activities",
-    reason: "Requires revenue and expense balance aggregation.",
-  },
-  {
-    id: "cash-flow",
-    name: "Cash Flow Statement",
-    reason: "Requires cash position and activity classification.",
+    description: "Revenue and expense activity for the selected period.",
   },
   {
     id: "fund-balance",
     name: "Fund Balance Report",
-    reason: "Requires fund balance aggregation not yet implemented.",
+    description: "Net credit balance by designated fund from posted activity.",
   },
   {
     id: "budget-vs-actual",
     name: "Budget vs Actual",
-    reason: "Requires actual-to-budget variance logic not yet implemented.",
+    description:
+      "Compare active budget line amounts to posted ledger activity for the budget period.",
+  },
+];
+
+const UNAVAILABLE_REPORTS: UnavailableReportEntry[] = [
+  {
+    id: "cash-flow",
+    name: "Cash Flow Statement",
+    reason: "Requires cash position and activity classification.",
   },
 ];
 
@@ -263,6 +281,74 @@ function countBudgetsWithLines(
   return budgets.filter((budget) => budgetIdsWithLines.has(budget.id)).length;
 }
 
+function buildReportBudgetVsActual(
+  budgets: ReportBudgetRow[],
+  budgetLines: BudgetLineAmountRow[],
+  accounts: ReadonlyArray<Pick<AccountRow, "id" | "code" | "name" | "account_type">>,
+  funds: ReadonlyArray<Pick<FundRow, "id" | "name">>,
+  ledgerLines: Awaited<ReturnType<typeof loadLedgerBalanceContext>>["lines"],
+  today: string,
+): BudgetVsActualReport | null {
+  const activeBudget = budgets.find(
+    (budget) =>
+      budget.status === "active" &&
+      budget.start_date <= today &&
+      budget.end_date >= today,
+  );
+
+  if (!activeBudget) {
+    return null;
+  }
+
+  const linesForBudget = budgetLines.filter(
+    (line) => line.budget_id === activeBudget.id,
+  );
+
+  if (linesForBudget.length === 0) {
+    return null;
+  }
+
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
+  const fundNames = new Map(funds.map((fund) => [fund.id, fund.name]));
+  const budgetLineInputs = linesForBudget.flatMap((line) => {
+    const account = accountById.get(line.account_id);
+
+    if (
+      !account ||
+      (account.account_type !== "expense" && account.account_type !== "revenue")
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        accountId: line.account_id,
+        accountType: account.account_type as "expense" | "revenue",
+        accountCode: account.code,
+        accountName: account.name,
+        fundId: line.fund_id,
+        fundName: line.fund_id ? (fundNames.get(line.fund_id) ?? null) : null,
+        budgetedAmount: Number(line.amount),
+      },
+    ];
+  });
+
+  if (budgetLineInputs.length === 0) {
+    return null;
+  }
+
+  return buildBudgetVsActualReport(
+    {
+      id: activeBudget.id,
+      name: activeBudget.name,
+      startDate: activeBudget.start_date,
+      endDate: activeBudget.end_date,
+    },
+    budgetLineInputs,
+    ledgerLines,
+  );
+}
+
 export async function getReportsData(
   organizationId: string,
 ): Promise<ReportsData> {
@@ -301,7 +387,7 @@ export async function getReportsData(
       .eq("organization_id", scopedOrganizationId),
     supabase
       .from("budgets")
-      .select("id")
+      .select("id, name, start_date, end_date, status")
       .eq("organization_id", scopedOrganizationId),
     supabase
       .from("journal_entries")
@@ -309,7 +395,7 @@ export async function getReportsData(
       .eq("organization_id", scopedOrganizationId),
     supabase
       .from("accounts")
-      .select("id, account_type")
+      .select("id, code, name, account_type")
       .eq("organization_id", scopedOrganizationId),
     supabase
       .from("accounting_periods")
@@ -325,7 +411,7 @@ export async function getReportsData(
       .eq("organization_id", scopedOrganizationId),
     supabase
       .from("funds")
-      .select("id")
+      .select("id, name")
       .eq("organization_id", scopedOrganizationId),
   ]);
 
@@ -348,7 +434,7 @@ export async function getReportsData(
     "getReportsData.journalEntries",
     journalEntriesResult,
   );
-  const accounts = unwrapRows<Pick<AccountRow, "id" | "account_type">>(
+  const accounts = unwrapRows<Pick<AccountRow, "id" | "code" | "name" | "account_type">>(
     "getReportsData.accounts",
     accountsResult,
   );
@@ -364,7 +450,7 @@ export async function getReportsData(
     "getReportsData.vendors",
     vendorsResult,
   );
-  const funds = unwrapRows<Pick<FundRow, "id">>(
+  const funds = unwrapRows<Pick<FundRow, "id" | "name">>(
     "getReportsData.funds",
     fundsResult,
   );
@@ -402,7 +488,7 @@ export async function getReportsData(
   if (budgetIds.length > 0) {
     const budgetLinesResult = await supabase
       .from("budget_lines")
-      .select("budget_id, amount")
+      .select("budget_id, account_id, fund_id, amount")
       .in("budget_id", budgetIds);
     budgetLines = unwrapRows<BudgetLineAmountRow>(
       "getReportsData.budgetLines",
@@ -446,6 +532,21 @@ export async function getReportsData(
   ).size;
   const currentPeriod = accountingPeriods.find((period) =>
     isCurrentPeriod(period, today),
+  );
+
+  const ledgerContext = await loadLedgerBalanceContext(scopedOrganizationId, {
+    asOfDate: today,
+    periodStartDate: yearStart,
+    periodEndDate: yearEnd,
+  });
+  const financialReports = buildFinancialReportsFromContext(ledgerContext);
+  const budgetVsActual = buildReportBudgetVsActual(
+    budgets,
+    budgetLines,
+    accounts,
+    funds,
+    ledgerContext.lines,
+    today,
   );
 
   return {
@@ -510,5 +611,7 @@ export async function getReportsData(
     },
     availableReports: AVAILABLE_REPORTS,
     unavailableReports: UNAVAILABLE_REPORTS,
+    financialReports,
+    budgetVsActual,
   };
 }

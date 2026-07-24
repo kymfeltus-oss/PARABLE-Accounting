@@ -8,13 +8,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const {
   getAuthenticatedUserMock,
   redirectMock,
-  resolveOrganizationContextMock,
+  resolveOrganizationContextForAuthenticatedUserMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
   redirectMock: vi.fn((destination: string) => {
     throw new Error(`NEXT_REDIRECT:${destination}`);
   }),
-  resolveOrganizationContextMock: vi.fn(),
+  resolveOrganizationContextForAuthenticatedUserMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -26,7 +26,8 @@ vi.mock("@/lib/auth/get-authenticated-user", () => ({
 }));
 
 vi.mock("@/lib/data/organization-context", () => ({
-  resolveOrganizationContext: resolveOrganizationContextMock,
+  resolveOrganizationContextForAuthenticatedUser:
+    resolveOrganizationContextForAuthenticatedUserMock,
 }));
 
 vi.mock("@/components/layout/app-shell", () => ({
@@ -52,7 +53,7 @@ describe("WorkspaceLayout auth gate", () => {
       id: "user-1",
       email: "treasurer@example.org",
     });
-    resolveOrganizationContextMock.mockResolvedValue({
+    resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({
       status: "resolved",
       organizationId: "22222222-2222-4222-8222-222222222222",
     });
@@ -75,17 +76,17 @@ describe("WorkspaceLayout auth gate", () => {
   });
 
   it("redirects authenticated users with zero memberships to /no-membership", async () => {
-    resolveOrganizationContextMock.mockResolvedValue({ status: "none" });
+    resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({ status: "none" });
 
     await expect(
       WorkspaceLayout({ children: <p>Workspace child content</p> }),
     ).rejects.toThrow("NEXT_REDIRECT:/no-membership");
 
-    expect(resolveOrganizationContextMock).toHaveBeenCalledWith("user-1");
+    expect(resolveOrganizationContextForAuthenticatedUserMock).toHaveBeenCalledTimes(1);
   });
 
   it("redirects authenticated users with multiple memberships to /select-organization", async () => {
-    resolveOrganizationContextMock.mockResolvedValue({
+    resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({
       status: "multiple",
       organizations: [
         {
@@ -121,7 +122,7 @@ describe("WorkspaceLayout auth gate", () => {
     const contents = readFileSync(WORKSPACE_LAYOUT_PATH, "utf8");
 
     expect(contents).toContain("getAuthenticatedUser");
-    expect(contents).toContain("resolveOrganizationContext");
+    expect(contents).toContain("resolveOrganizationContextForAuthenticatedUser");
     expect(contents).not.toMatch(/PARABLE_ORGANIZATION_ID|getConfiguredOrganizationId/);
     expect(contents).not.toContain("@/lib/supabase/admin");
     expect(contents).not.toMatch(/organization_memberships/);

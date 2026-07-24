@@ -8,6 +8,7 @@ export function createEmptyTransactionsData(
     organizationId,
     transactions: [],
     matches: [],
+    bankAccounts: [],
     counts: {
       total: 0,
       unmatched: 0,
@@ -63,6 +64,12 @@ export function createPopulatedTransactionsData(): TransactionsData {
         status: "confirmed",
         created_at: "2026-07-09T12:00:00.000Z",
         updated_at: "2026-07-09T12:00:00.000Z",
+      },
+    ],
+    bankAccounts: [
+      {
+        id: "bank-account-1",
+        name: "Operating Account",
       },
     ],
     counts: {

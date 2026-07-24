@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createEmptyFundsData,
@@ -7,6 +7,11 @@ import {
 } from "@/lib/data/test/funds-data-fixtures";
 
 import { FundsPageContent } from "./funds-page-content";
+
+vi.mock("@/app/(workspace)/funds/actions", () => ({
+  createFundAction: vi.fn(),
+  updateFundAction: vi.fn(),
+}));
 
 vi.mock("next/link", () => ({
   default: ({
@@ -20,8 +25,19 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+beforeEach(() => {
+  vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+});
+
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
 });
 
 describe("FundsPageContent", () => {
@@ -31,6 +47,18 @@ describe("FundsPageContent", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Funds" }),
     ).toBeTruthy();
+  });
+
+  it("renders the Add Fund control", () => {
+    render(<FundsPageContent data={createEmptyFundsData()} />);
+
+    expect(screen.getByRole("button", { name: "Add Fund" })).toBeTruthy();
+  });
+
+  it("renders Edit controls for populated funds", () => {
+    render(<FundsPageContent data={createPopulatedFundsData()} />);
+
+    expect(screen.getAllByRole("button", { name: "Edit" }).length).toBeGreaterThan(0);
   });
 
   it("does not render Development Preview or demo labels", () => {
@@ -74,20 +102,19 @@ describe("FundsPageContent", () => {
     ).toContain("0");
   });
 
-  it("states current fund balance is unavailable", () => {
+  it("renders ledger-derived fund balances", () => {
     render(<FundsPageContent data={createPopulatedFundsData()} />);
 
     expect(
-      screen.getByText(/Current fund balance unavailable — a reliable ledger-derived balance/i),
+      screen.getByText(/Ledger-derived fund balances as of/i),
     ).toBeTruthy();
-    expect(screen.getAllByText("Current fund balance unavailable").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Ledger balance \$850\.00/).length).toBeGreaterThan(0);
   });
 
-  it("does not fabricate fund balances or restriction compliance values", () => {
+  it("does not fabricate restriction compliance values", () => {
     render(<FundsPageContent data={createPopulatedFundsData()} />);
 
     expect(screen.queryByText(/available to spend/i)).toBeNull();
-    expect(screen.queryByText(/net assets/i)).toBeNull();
     expect(screen.queryByText(/budget variance/i)).toBeNull();
     expect(screen.queryByText(/AI recommendation/i)).toBeNull();
   });

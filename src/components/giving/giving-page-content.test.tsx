@@ -20,13 +20,24 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/app/(workspace)/giving/actions", () => ({
+  createGivingTransactionAction: vi.fn(),
+}));
+
+const emptyFormProps = {
+  memberOptions: [],
+  fundOptions: [],
+  debitAccountOptions: [],
+  revenueAccountOptions: [],
+};
+
 afterEach(() => {
   cleanup();
 });
 
 describe("GivingPageContent", () => {
   it("renders the page heading", () => {
-    render(<GivingPageContent data={createEmptyGivingData()} />);
+    render(<GivingPageContent data={createEmptyGivingData()} {...emptyFormProps} />);
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Giving" }),
@@ -35,7 +46,7 @@ describe("GivingPageContent", () => {
 
   it("does not render Development Preview or demo labels", () => {
     const { container } = render(
-      <GivingPageContent data={createEmptyGivingData()} />,
+      <GivingPageContent data={createEmptyGivingData()} {...emptyFormProps} />,
     );
 
     expect(container.textContent).not.toContain("Development Preview");
@@ -43,7 +54,7 @@ describe("GivingPageContent", () => {
   });
 
   it("renders the honest production empty state", () => {
-    render(<GivingPageContent data={createEmptyGivingData()} />);
+    render(<GivingPageContent data={createEmptyGivingData()} {...emptyFormProps} />);
 
     expect(
       screen.getAllByText("No giving transactions yet.").length,
@@ -51,7 +62,7 @@ describe("GivingPageContent", () => {
   });
 
   it("renders live KPI values from props", () => {
-    render(<GivingPageContent data={createPopulatedGivingData()} />);
+    render(<GivingPageContent data={createPopulatedGivingData()} {...emptyFormProps} />);
 
     expect(
       screen.getByText("Giving This Month").closest("article")?.textContent,
@@ -65,7 +76,7 @@ describe("GivingPageContent", () => {
   });
 
   it("links recent giving transactions to their detail pages", () => {
-    render(<GivingPageContent data={createPopulatedGivingData()} />);
+    render(<GivingPageContent data={createPopulatedGivingData()} {...emptyFormProps} />);
 
     const viewLinks = screen.getAllByRole("link", { name: "View" });
     expect(viewLinks.map((link) => link.getAttribute("href"))).toEqual([
@@ -75,7 +86,7 @@ describe("GivingPageContent", () => {
   });
 
   it("renders honest zero KPI values when giving data is empty", () => {
-    render(<GivingPageContent data={createEmptyGivingData()} />);
+    render(<GivingPageContent data={createEmptyGivingData()} {...emptyFormProps} />);
 
     expect(
       screen.getByText("Giving This Month").closest("article")?.textContent,
@@ -86,14 +97,14 @@ describe("GivingPageContent", () => {
   });
 
   it("does not fabricate unsupported insight metrics", () => {
-    render(<GivingPageContent data={createPopulatedGivingData()} />);
+    render(<GivingPageContent data={createPopulatedGivingData()} {...emptyFormProps} />);
 
     expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
     expect(screen.queryByText(/%\s*recurring/i)).toBeNull();
   });
 
   it("renders related workspace navigation links", () => {
-    render(<GivingPageContent data={createEmptyGivingData()} />);
+    render(<GivingPageContent data={createEmptyGivingData()} {...emptyFormProps} />);
 
     expect(screen.getByRole("link", { name: /Members/i }).getAttribute("href")).toBe(
       "/members",

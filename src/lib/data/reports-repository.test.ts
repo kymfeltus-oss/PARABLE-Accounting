@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAccessError } from "./data-access-error";
 import { getReportsData } from "./reports-repository";
+import { createEmptyFinancialReports } from "./test/financial-reports-fixtures";
 import {
   createBackendError,
   createMockSupabaseClient,
@@ -11,11 +12,17 @@ import {
 
 vi.mock("server-only", () => ({}));
 
-const { createAdminSupabaseClientMock, createServerSupabaseClientMock } =
-  vi.hoisted(() => ({
-    createAdminSupabaseClientMock: vi.fn(),
-    createServerSupabaseClientMock: vi.fn(),
-  }));
+const {
+  createAdminSupabaseClientMock,
+  createServerSupabaseClientMock,
+  loadLedgerBalanceContextMock,
+  buildFinancialReportsFromContextMock,
+} = vi.hoisted(() => ({
+  createAdminSupabaseClientMock: vi.fn(),
+  createServerSupabaseClientMock: vi.fn(),
+  loadLedgerBalanceContextMock: vi.fn(),
+  buildFinancialReportsFromContextMock: vi.fn(),
+}));
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminSupabaseClient: createAdminSupabaseClientMock,
@@ -24,6 +31,33 @@ vi.mock("@/lib/supabase/admin", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: createServerSupabaseClientMock,
 }));
+
+vi.mock("./ledger-balances-repository", () => ({
+  loadLedgerBalanceContext: loadLedgerBalanceContextMock,
+  buildFinancialReportsFromContext: buildFinancialReportsFromContextMock,
+}));
+
+function mockLedgerReports() {
+  const context = {
+    organizationId: TEST_ORGANIZATION_ID,
+    asOfDate: "2026-07-24",
+    periodStartDate: "2026-01-01",
+    periodEndDate: "2026-07-24",
+    lines: [],
+    accounts: [],
+    funds: [],
+  };
+  const reports = createEmptyFinancialReports(
+    context.asOfDate,
+    context.periodStartDate,
+    context.periodEndDate,
+  );
+
+  loadLedgerBalanceContextMock.mockResolvedValue(context);
+  buildFinancialReportsFromContextMock.mockReturnValue(reports);
+
+  return { context, reports };
+}
 
 function createEmptyReportsMockClient() {
   return createMockSupabaseClient({
@@ -44,6 +78,9 @@ describe("getReportsData", () => {
   beforeEach(() => {
     createAdminSupabaseClientMock.mockReset();
     createServerSupabaseClientMock.mockReset();
+    loadLedgerBalanceContextMock.mockReset();
+    buildFinancialReportsFromContextMock.mockReset();
+    mockLedgerReports();
     vi.useRealTimers();
   });
 
@@ -332,17 +369,30 @@ describe("getReportsData", () => {
     expect(result.summaries.accounting.postedCreditTotal).toBe(150);
   });
 
-  it("does not expose formal financial statements or account balances", async () => {
+  it("includes financial reports and marks only advanced reports unavailable", async () => {
     const { client } = createEmptyReportsMockClient();
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     const result = await getReportsData(TEST_ORGANIZATION_ID);
 
-    expect(result).not.toHaveProperty("balanceSheet");
-    expect(result).not.toHaveProperty("incomeStatement");
-    expect(result).not.toHaveProperty("trialBalance");
-    expect(result).not.toHaveProperty("accountBalances");
-    expect(result.unavailableReports.length).toBeGreaterThan(0);
+    expect(result.financialReports).toBeDefined();
+    expect(result.financialReports.trialBalance).toBeDefined();
+    expect(result.financialReports.balanceSheet).toBeDefined();
+    expect(result.financialReports.incomeStatement).toBeDefined();
+    expect(result.financialReports.fundBalance).toBeDefined();
+    expect(result.availableReports.map((report) => report.id)).toEqual(
+      expect.arrayContaining([
+        "trial-balance",
+        "balance-sheet",
+        "income-statement",
+        "fund-balance",
+      ]),
+    );
+    expect(result.unavailableReports.map((report) => report.id)).toEqual([
+      "cash-flow",
+    ]);
+    expect(loadLedgerBalanceContextMock).toHaveBeenCalledTimes(1);
+    expect(buildFinancialReportsFromContextMock).toHaveBeenCalledTimes(1);
   });
 
   it("throws DataAccessError when a query fails", async () => {

@@ -22,6 +22,22 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/components/settings/organization-profile-form", () => ({
+  OrganizationProfileForm: () => <div>Organization profile form</div>,
+}));
+
+vi.mock("@/components/settings/organization-settings-form", () => ({
+  OrganizationSettingsForm: () => <div>Organization settings form</div>,
+}));
+
+vi.mock("@/components/settings/create-invite-form", () => ({
+  CreateInviteForm: () => <div>Create invite form</div>,
+}));
+
+vi.mock("@/components/settings/organization-invites-table", () => ({
+  OrganizationInvitesTable: () => <div>Organization invites table</div>,
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -55,7 +71,11 @@ describe("SettingsPageContent", () => {
   });
 
   it("renders live organization profile data", () => {
-    render(<SettingsPageContent data={createPopulatedSettingsData()} />);
+    render(
+      <SettingsPageContent
+        data={createSettingsDataWithCurrentUserRole("staff")}
+      />,
+    );
 
     expect(screen.getByText("Parable Community Church")).toBeTruthy();
     expect(screen.getByText("parable-community-church")).toBeTruthy();
@@ -111,27 +131,43 @@ describe("SettingsPageContent", () => {
     expect(container.textContent).not.toMatch(/membership status/i);
   });
 
-  it("states persisted preferences are not yet implemented", () => {
+  it("states some preferences are still not persisted", () => {
     render(<SettingsPageContent data={createPopulatedSettingsData()} />);
 
     expect(
-      screen.getByText(/Configurable application preferences are not yet persisted in the current schema/i),
+      screen.getByText(/Other application preferences are not yet available/i),
     ).toBeTruthy();
-    expect(screen.getByText(/Application preferences — not persisted/i)).toBeTruthy();
+    expect(
+      screen.getByText(/Application preferences — not persisted/i),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Accounting defaults — not persisted/i)).toBeNull();
   });
 
-  it("does not render fake editable controls or dead save actions", () => {
-    const { container } = render(
-      <SettingsPageContent data={createPopulatedSettingsData()} />,
-    );
-    const text = container.textContent ?? "";
+  it("renders owner management forms", () => {
+    render(<SettingsPageContent data={createPopulatedSettingsData("owner")} />);
 
-    expect(text).not.toMatch(
-      /save changes|update organization|invite member|change role|remove member|toggle|switch/i,
+    expect(screen.getByText("Organization profile form")).toBeTruthy();
+    expect(screen.getByText("Organization settings form")).toBeTruthy();
+    expect(screen.getByText("Create invite form")).toBeTruthy();
+    expect(screen.getByText("Organization invites table")).toBeTruthy();
+  });
+
+  it("renders accounting defaults for accountants without owner invite controls", () => {
+    render(
+      <SettingsPageContent data={createPopulatedSettingsData("accountant")} />,
     );
-    expect(container.querySelector("form")).toBeNull();
-    expect(container.querySelector("input")).toBeNull();
-    expect(container.querySelector("select")).toBeNull();
+
+    expect(screen.getByText("Organization settings form")).toBeTruthy();
+    expect(screen.queryByText("Organization profile form")).toBeNull();
+    expect(screen.queryByText("Create invite form")).toBeNull();
+  });
+
+  it("does not render editable owner controls for staff", () => {
+    render(<SettingsPageContent data={createPopulatedSettingsData("staff")} />);
+
+    expect(screen.queryByText("Organization profile form")).toBeNull();
+    expect(screen.queryByText("Organization settings form")).toBeNull();
+    expect(screen.queryByText("Create invite form")).toBeNull();
   });
 
   it("renders related workspace navigation links", () => {

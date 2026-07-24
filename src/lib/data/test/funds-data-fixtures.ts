@@ -7,6 +7,7 @@ export function createEmptyFundsData(
   return {
     organizationId,
     funds: [],
+    asOfDate: "2026-07-24",
     counts: {
       total: 0,
       withGiving: 0,
@@ -37,6 +38,7 @@ export function createPopulatedFundsData(): FundsData {
         billAllocationTotal: 200,
         budgetLineCount: 1,
         budgetAllocationTotal: 5000,
+        ledgerBalance: 850,
       },
       {
         id: "fund-2",
@@ -55,8 +57,10 @@ export function createPopulatedFundsData(): FundsData {
         billAllocationTotal: 0,
         budgetLineCount: 0,
         budgetAllocationTotal: 0,
+        ledgerBalance: 0,
       },
     ],
+    asOfDate: "2026-07-24",
     counts: {
       total: 2,
       withGiving: 1,

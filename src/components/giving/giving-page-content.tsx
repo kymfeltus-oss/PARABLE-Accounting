@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { ArrowUpRight, BarChart3, HandCoins, Wallet } from "lucide-react";
 
+import {
+  CreateGivingTransactionForm,
+  type GivingAccountOption,
+  type GivingFundOption,
+  type GivingMemberOption,
+} from "@/components/giving/create-giving-transaction-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -48,6 +54,10 @@ const navigationLinks = [
 
 type GivingPageContentProps = {
   data: GivingData;
+  memberOptions?: GivingMemberOption[];
+  fundOptions?: GivingFundOption[];
+  debitAccountOptions?: GivingAccountOption[];
+  revenueAccountOptions?: GivingAccountOption[];
 };
 
 function formatCurrency(amount: number): string {
@@ -204,7 +214,13 @@ function formatTransactionLabel(transaction: GivingTransactionRow): string {
   return `${amount} · ${method}${reference}`;
 }
 
-export function GivingPageContent({ data }: GivingPageContentProps) {
+export function GivingPageContent({
+  data,
+  memberOptions = [],
+  fundOptions = [],
+  debitAccountOptions = [],
+  revenueAccountOptions = [],
+}: GivingPageContentProps) {
   const givingNav = getNavItemByPathname("/giving");
 
   if (!givingNav) {
@@ -218,15 +234,25 @@ export function GivingPageContent({ data }: GivingPageContentProps) {
   return (
     <section aria-labelledby="giving-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="giving-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {givingNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {givingNav.description}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1
+              id="giving-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {givingNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {givingNav.description}
+            </p>
+          </div>
+          <CreateGivingTransactionForm
+            debitAccountOptions={debitAccountOptions}
+            fundOptions={fundOptions}
+            memberOptions={memberOptions}
+            revenueAccountOptions={revenueAccountOptions}
+          />
+        </div>
       </header>
 
       {!hasGivingActivity(data) ? (

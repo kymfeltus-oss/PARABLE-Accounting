@@ -7,6 +7,8 @@ import {
   Receipt,
 } from "lucide-react";
 
+import { CreateFundForm } from "@/components/funds/create-fund-form";
+import { EditFundForm } from "@/components/funds/edit-fund-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -145,15 +147,20 @@ export function FundsPageContent({ data }: FundsPageContentProps) {
   return (
     <section aria-labelledby="funds-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="funds-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {fundsNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {fundsNav.description}
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1
+              id="funds-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {fundsNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {fundsNav.description}
+            </p>
+          </div>
+          <CreateFundForm />
+        </div>
       </header>
 
       {!hasFundActivity(data) ? (
@@ -175,8 +182,8 @@ export function FundsPageContent({ data }: FundsPageContentProps) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Current fund balance unavailable — a reliable ledger-derived balance is
-        not supported by the current schema.
+        Ledger-derived fund balances as of {formatDate(data.asOfDate)} from posted
+        journal activity (credit minus debit by fund).
       </p>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -206,20 +213,25 @@ export function FundsPageContent({ data }: FundsPageContentProps) {
                     key={fund.id}
                     className="rounded-lg border border-border p-3 text-sm"
                   >
-                    <p className="font-medium text-foreground">
-                      {fund.name}
-                      {fund.code ? ` · ${fund.code}` : ""}
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground">
+                          {fund.name}
+                          {fund.code ? ` · ${fund.code}` : ""}
+                        </p>
+                        <p className="mt-1 text-muted-foreground">
+                          {formatFundType(fund.fund_type)} · {fund.status} · Added{" "}
+                          {formatDate(fund.created_at)}
+                        </p>
+                        <p className="mt-1 text-muted-foreground">
+                          {formatAllocationSummary(fund)}
+                        </p>
                     <p className="mt-1 text-muted-foreground">
-                      {formatFundType(fund.fund_type)} · {fund.status} · Added{" "}
-                      {formatDate(fund.created_at)}
+                      Ledger balance {formatCurrency(fund.ledgerBalance)}
                     </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {formatAllocationSummary(fund)}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      Current fund balance unavailable
-                    </p>
+                      </div>
+                      <EditFundForm fund={fund} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -264,6 +276,9 @@ export function FundsPageContent({ data }: FundsPageContentProps) {
                       <p className="font-medium text-foreground">{fund.name}</p>
                       <p className="mt-2 text-muted-foreground">
                         {formatAllocationSummary(fund)}
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        Ledger balance {formatCurrency(fund.ledgerBalance)}
                       </p>
                     </li>
                   ))}

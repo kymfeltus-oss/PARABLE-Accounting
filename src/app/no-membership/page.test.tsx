@@ -63,8 +63,9 @@ describe("No membership page route", () => {
 
     const page = await NoMembershipPage();
 
+    expect(page.props.children.props.title).toBe("Welcome to Parable");
     expect(page.props.children.props.description).toContain(
-      "Your account is signed in, but it is not currently connected to a Parable Accounting organization.",
+      "Set up your ministry workspace, or join one with an invite code.",
     );
     expect(page.props.children.props.footer.type.name).toBe("SignOutButton");
   });

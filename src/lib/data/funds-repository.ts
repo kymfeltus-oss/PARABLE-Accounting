@@ -1,7 +1,10 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+import { DataAccessError } from "./data-access-error";
+import { buildFundBalanceMap } from "./ledger-balances";
+import { loadLedgerBalanceContext } from "./ledger-balances-repository";
 import { requireOrganizationId } from "./organization-id";
-import { unwrapRows } from "./query-helpers";
+import { toDataAccessError, unwrapRows } from "./query-helpers";
 import type { BillRow, ExpenseRow, FundRow } from "./types/rows";
 
 type GivingFundAggregationRow = {
@@ -39,11 +42,13 @@ export type FundRecord = FundRow & {
   billAllocationTotal: number;
   budgetLineCount: number;
   budgetAllocationTotal: number;
+  ledgerBalance: number;
 };
 
 export type FundsData = {
   organizationId: string;
   funds: FundRecord[];
+  asOfDate: string;
   counts: {
     total: number;
     withGiving: number;
@@ -51,6 +56,41 @@ export type FundsData = {
     withBudgetAllocations: number;
   };
 };
+
+export type CreateFundInput = {
+  name: string;
+  code?: string | null;
+  fundType?: string | null;
+};
+
+export type UpdateFundInput = {
+  fundId: string;
+  name: string;
+  code?: string | null;
+  fundType?: string | null;
+  status?: string | null;
+};
+
+function requireFundName(name: string, operation: string): string {
+  const trimmed = name.trim();
+
+  if (!trimmed) {
+    throw new DataAccessError({
+      operation,
+      message: "name is required",
+    });
+  }
+
+  return trimmed;
+}
+
+function toFundRecord(fund: FundRow): FundRecord {
+  return {
+    ...fund,
+    ...createEmptyFundMetrics(),
+    ledgerBalance: 0,
+  };
+}
 
 type FundMetrics = {
   givingTransactionCount: number;
@@ -153,6 +193,7 @@ function buildFundMetrics(
 function attachFundMetrics(
   funds: FundRow[],
   metrics: Map<string, FundMetrics>,
+  fundBalanceMap: Map<string, number>,
 ): FundRecord[] {
   return funds.map((fund) => {
     const fundMetrics = metrics.get(fund.id) ?? createEmptyFundMetrics();
@@ -160,8 +201,13 @@ function attachFundMetrics(
     return {
       ...fund,
       ...fundMetrics,
+      ledgerBalance: fundBalanceMap.get(fund.id) ?? 0,
     };
   });
+}
+
+function getTodayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 export async function getFundsData(organizationId: string): Promise<FundsData> {
@@ -271,11 +317,17 @@ export async function getFundsData(organizationId: string): Promise<FundsData> {
     billLines,
     budgetLines,
   );
-  const fundRecords = attachFundMetrics(funds, metrics);
+  const asOfDate = getTodayDateString();
+  const ledgerContext = await loadLedgerBalanceContext(scopedOrganizationId, {
+    asOfDate,
+  });
+  const fundBalanceMap = buildFundBalanceMap(ledgerContext.lines, asOfDate);
+  const fundRecords = attachFundMetrics(funds, metrics, fundBalanceMap);
 
   return {
     organizationId: scopedOrganizationId,
     funds: fundRecords,
+    asOfDate,
     counts: {
       total: funds.length,
       withGiving: fundRecords.filter((fund) => fund.givingTransactionCount > 0)
@@ -287,4 +339,84 @@ export async function getFundsData(organizationId: string): Promise<FundsData> {
       ).length,
     },
   };
+}
+
+export async function createFund(
+  organizationId: string,
+  input: CreateFundInput,
+): Promise<FundRecord> {
+  const operation = "createFund";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const fundName = requireFundName(input.name, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("create_fund", {
+    target_organization_id: scopedOrganizationId,
+    fund_name: fundName,
+    fund_code: input.code ?? null,
+    fund_type: input.fundType ?? null,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[createFund RPC diagnostic]", {
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Fund creation returned no row",
+    });
+  }
+
+  return toFundRecord(result.data as FundRow);
+}
+
+export async function updateFund(
+  organizationId: string,
+  input: UpdateFundInput,
+): Promise<FundRecord> {
+  const operation = "updateFund";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const fundName = requireFundName(input.name, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("update_fund", {
+    target_organization_id: scopedOrganizationId,
+    target_fund_id: input.fundId,
+    fund_name: fundName,
+    fund_code: input.code ?? null,
+    fund_type: input.fundType ?? null,
+    fund_status: input.status ?? null,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[updateFund RPC diagnostic]", {
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Fund update returned no row",
+    });
+  }
+
+  return toFundRecord(result.data as FundRow);
 }
