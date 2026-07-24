@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 
-export type JournalRegisterStatus = "draft" | "posted" | "reversed";
+export type JournalRegisterStatus = "draft" | "posted" | "reversed" | "void";
 
 export type JournalRegisterSource =
   | "expense"
@@ -52,12 +52,14 @@ const statusLabels: Record<JournalRegisterStatus, string> = {
   draft: "Draft",
   posted: "Posted",
   reversed: "Reversed",
+  void: "VOID",
 };
 
 const statusClasses: Record<JournalRegisterStatus, string> = {
   draft: "border-border bg-background text-muted-foreground",
   posted: "border-border bg-muted text-foreground",
   reversed: "border-destructive/40 bg-destructive/10 text-destructive",
+  void: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -160,6 +162,7 @@ export function JournalRegisterTable({
             <option value="draft">Draft</option>
             <option value="posted">Posted</option>
             <option value="reversed">Reversed</option>
+            <option value="void">VOID</option>
           </select>
         </label>
 

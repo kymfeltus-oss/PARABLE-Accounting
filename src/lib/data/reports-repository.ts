@@ -413,6 +413,7 @@ export async function getReportsData(
   const postedJournalEntries = journalEntries.filter(
     (entry) => entry.status === "posted",
   );
+  // Default financial reports include only posted journals (excludes draft/reversed/void).
   const postedJournalIds = new Set(
     postedJournalEntries.map((entry) => entry.id),
   );

@@ -10,11 +10,13 @@ const {
   getCurrentOrganizationIdMock,
   getJournalEntryDetailMock,
   getJournalReversalEligibilityMock,
+  getJournalVoidEligibilityMock,
   notFoundMock,
 } = vi.hoisted(() => ({
   getCurrentOrganizationIdMock: vi.fn(),
   getJournalEntryDetailMock: vi.fn(),
   getJournalReversalEligibilityMock: vi.fn(),
+  getJournalVoidEligibilityMock: vi.fn(),
   notFoundMock: vi.fn(() => {
     throw new Error("NOT_FOUND");
   }),
@@ -36,9 +38,14 @@ vi.mock("@/lib/data/journal-reversal-repository", () => ({
   getJournalReversalEligibility: getJournalReversalEligibilityMock,
 }));
 
+vi.mock("@/lib/data/journal-void-repository", () => ({
+  getJournalVoidEligibility: getJournalVoidEligibilityMock,
+}));
+
 import JournalEntryDetailPage from "./page";
 import { JournalEntryDetail } from "@/components/accounting/journal-entry-detail";
 import { JournalReversalSection } from "@/components/accounting/journal-reversal-section";
+import { JournalVoidSection } from "@/components/accounting/journal-void-section";
 
 const VALID_JOURNAL_ID = "77777777-7777-4777-8777-777777777777";
 const PERIOD_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -76,6 +83,7 @@ function createDetailRecord(
       reversalDate: null,
       reversalReason: null,
     },
+    voidReason: null,
     ...overrides,
   };
 }
@@ -85,12 +93,17 @@ describe("Journal entry detail page wiring", () => {
     getCurrentOrganizationIdMock.mockReset();
     getJournalEntryDetailMock.mockReset();
     getJournalReversalEligibilityMock.mockReset();
+    getJournalVoidEligibilityMock.mockReset();
     notFoundMock.mockClear();
     getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
     getJournalReversalEligibilityMock.mockResolvedValue({
       canReverse: false,
       reason: "This journal source type cannot be reversed.",
       periods: [],
+    });
+    getJournalVoidEligibilityMock.mockResolvedValue({
+      canVoid: false,
+      reason: "This journal source type cannot be voided.",
     });
   });
 
@@ -135,6 +148,21 @@ describe("Journal entry detail page wiring", () => {
     expect(page.props.children[1].props.journalEntryId).toBe(VALID_JOURNAL_ID);
   });
 
+  it("shows the void action for an eligible journal", async () => {
+    getJournalEntryDetailMock.mockResolvedValue(createDetailRecord());
+    getJournalVoidEligibilityMock.mockResolvedValue({
+      canVoid: true,
+      reason: null,
+    });
+
+    const page = await JournalEntryDetailPage({
+      params: Promise.resolve({ id: VALID_JOURNAL_ID }),
+    });
+
+    expect(page.props.children[2].type).toBe(JournalVoidSection);
+    expect(page.props.children[2].props.journalEntryId).toBe(VALID_JOURNAL_ID);
+  });
+
   it("hides the reversal action when ineligible and shows a concise reason", async () => {
     getJournalEntryDetailMock.mockResolvedValue(
       createDetailRecord({
@@ -153,6 +181,10 @@ describe("Journal entry detail page wiring", () => {
       canReverse: false,
       reason: "This journal entry has already been reversed.",
       periods: [],
+    });
+    getJournalVoidEligibilityMock.mockResolvedValue({
+      canVoid: false,
+      reason: "This journal entry has already been reversed.",
     });
 
     const page = await JournalEntryDetailPage({
@@ -188,6 +220,8 @@ describe("Journal entry detail page wiring", () => {
 
   it("does not import browser Supabase clients", () => {
     const source = readFileSync(path.join(__dirname, "page.tsx"), "utf8");
-    expect(source).not.toMatch(/createBrowserSupabaseClient|@\/lib\/supabase\/browser/);
+    expect(source).not.toMatch(
+      /createBrowserSupabaseClient|@\/lib\/supabase\/browser/,
+    );
   });
 });

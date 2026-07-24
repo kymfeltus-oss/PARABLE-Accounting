@@ -9,7 +9,7 @@ export type GivingJournalLinkage = {
   journalEntryId: string;
   entryNumber: string;
   entryDate: string;
-  status: "posted" | "draft" | "reversed";
+  status: "posted" | "draft" | "reversed" | "void";
   totalDebit: number;
   totalCredit: number;
   periodName: string | null;
@@ -57,7 +57,12 @@ function normalizeAmount(value: number | string | null | undefined): number {
 function isJournalStatus(
   value: string,
 ): value is GivingJournalLinkage["status"] {
-  return value === "posted" || value === "draft" || value === "reversed";
+  return (
+    value === "posted" ||
+    value === "draft" ||
+    value === "reversed" ||
+    value === "void"
+  );
 }
 
 function sumJournalLineTotals(lines: JournalEntryLineTotalRow[]): {

@@ -7,7 +7,7 @@ import type { AccountingPeriodRow, JournalEntryRow } from "./types/rows";
 
 export type JournalRegisterQuery = {
   search?: string;
-  status?: "all" | "draft" | "posted" | "reversed";
+  status?: "all" | "draft" | "posted" | "reversed" | "void";
   source?:
     | "all"
     | "expense"
@@ -34,7 +34,7 @@ export type JournalRegisterEntry = {
     | "other";
   sourceReference: string | null;
   periodName: string | null;
-  status: "draft" | "posted" | "reversed";
+  status: "draft" | "posted" | "reversed" | "void";
   totalDebit: number;
   totalCredit: number;
 };
@@ -120,7 +120,12 @@ export function clampJournalRegisterPageSize(pageSize?: number): number {
 export function normalizeJournalRegisterStatus(
   status?: string,
 ): JournalRegisterStatusFilter {
-  if (status === "draft" || status === "posted" || status === "reversed") {
+  if (
+    status === "draft" ||
+    status === "posted" ||
+    status === "reversed" ||
+    status === "void"
+  ) {
     return status;
   }
 
@@ -190,7 +195,12 @@ export function resolveDatabaseSourceTypes(
 function isJournalStatus(
   value: string,
 ): value is JournalRegisterEntry["status"] {
-  return value === "draft" || value === "posted" || value === "reversed";
+  return (
+    value === "draft" ||
+    value === "posted" ||
+    value === "reversed" ||
+    value === "void"
+  );
 }
 
 function buildLineTotals(

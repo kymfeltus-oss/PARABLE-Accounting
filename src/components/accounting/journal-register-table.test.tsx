@@ -140,6 +140,7 @@ describe("JournalRegisterTable", () => {
     ["posted", "Posted"],
     ["draft", "Draft"],
     ["reversed", "Reversed"],
+    ["void", "VOID"],
   ] as const)("renders readable %s status text", (status, label) => {
     renderTable({ rows: [{ ...row, status }] });
     expect(screen.getByRole("cell", { name: label })).toBeVisible();

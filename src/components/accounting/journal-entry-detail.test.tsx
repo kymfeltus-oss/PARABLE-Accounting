@@ -110,6 +110,7 @@ describe("JournalEntryDetail", () => {
     ["posted", "Posted"],
     ["draft", "Draft"],
     ["reversed", "Reversed"],
+    ["void", "VOID"],
   ] as const)("renders readable %s status text", (status, label) => {
     render(<JournalEntryDetail {...createProps({ status })} />);
     expect(screen.getAllByText(label)).toHaveLength(2);
@@ -230,6 +231,21 @@ describe("JournalEntryDetail", () => {
     );
     expect(screen.getAllByText("$0.00")).toHaveLength(2);
     expect(screen.getByText("Balanced")).toBeVisible();
+  });
+
+  it("renders void reason when status is void", () => {
+    render(
+      <JournalEntryDetail
+        {...createProps({
+          status: "void",
+          voidReason: "Duplicate entry",
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Void reason")).toBeVisible();
+    expect(screen.getByText("Duplicate entry")).toBeVisible();
+    expect(screen.getAllByText("VOID")).toHaveLength(2);
   });
 
   it.each(["edit", "post", "reverse", "delete", "void", "duplicate", "repost"])(

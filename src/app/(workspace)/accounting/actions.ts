@@ -9,6 +9,7 @@ import {
   type CreateManualJournalLineInput,
 } from "@/lib/data/manual-journal-repository";
 import { reverseJournalEntry } from "@/lib/data/journal-reversal-repository";
+import { voidJournalEntry } from "@/lib/data/journal-void-repository";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
 
 const GENERIC_CREATE_MANUAL_JOURNAL_ERROR =
@@ -561,6 +562,155 @@ export async function reverseJournalEntryAction(
     return {
       success: false,
       message: GENERIC_REVERSE_JOURNAL_ERROR,
+    };
+  }
+}
+
+const GENERIC_VOID_JOURNAL_ERROR =
+  "The journal entry could not be voided. Please try again.";
+
+const VOID_JOURNAL_RPC_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  "Authenticated user is required":
+    "Your session has expired. Please sign in again.",
+  "Insufficient role to void journal entry":
+    "You do not have permission to void journal entries.",
+  "Journal entry not found": "The journal entry was not found.",
+  "Journal entry does not belong to organization":
+    "The journal entry was not found.",
+  "Only posted journal entries can be voided":
+    "Only posted journal entries can be voided.",
+  "Journal entry has already been voided":
+    "This journal entry has already been voided.",
+  "Journal entry has already been reversed":
+    "This journal entry has already been reversed.",
+  "Reversal journal cannot be voided":
+    "Reversal journals cannot be voided.",
+  "Journal source type cannot be voided":
+    "This journal source type cannot be voided.",
+  "Void reason is required": "A void reason is required.",
+  "Void reason must be 500 characters or fewer":
+    "The void reason must be 500 characters or fewer.",
+};
+
+const ALLOWED_VOID_JOURNAL_KEYS = new Set(["journalEntryId", "reason"]);
+
+export type VoidJournalEntryActionInput = {
+  journalEntryId: string;
+  reason: string;
+};
+
+export type VoidJournalEntryActionResult =
+  | {
+      success: true;
+      journalEntryId: string;
+      entryNumber: string;
+    }
+  | {
+      success: false;
+      message: string;
+    };
+
+type ValidatedVoidJournalEntryInput = {
+  journalEntryId: string;
+  reason: string;
+};
+
+function mapVoidJournalError(error: DataAccessError): string {
+  return (
+    VOID_JOURNAL_RPC_ERROR_MESSAGES[error.message] ?? GENERIC_VOID_JOURNAL_ERROR
+  );
+}
+
+function validateVoidJournalEntryInput(
+  input: VoidJournalEntryActionInput,
+): VoidJournalEntryActionResult | ValidatedVoidJournalEntryInput {
+  const unknownKeys = Object.keys(input).filter(
+    (key) => !ALLOWED_VOID_JOURNAL_KEYS.has(key),
+  );
+
+  if (unknownKeys.length > 0) {
+    return {
+      success: false,
+      message: GENERIC_VOID_JOURNAL_ERROR,
+    };
+  }
+
+  const journalEntryId = input.journalEntryId.trim();
+
+  if (journalEntryId === "" || !isValidUuid(journalEntryId)) {
+    return {
+      success: false,
+      message: GENERIC_VOID_JOURNAL_ERROR,
+    };
+  }
+
+  const reason = input.reason.trim();
+
+  if (reason === "") {
+    return {
+      success: false,
+      message: "A void reason is required.",
+    };
+  }
+
+  if (reason.length > 500) {
+    return {
+      success: false,
+      message: "The void reason must be 500 characters or fewer.",
+    };
+  }
+
+  return {
+    journalEntryId,
+    reason,
+  };
+}
+
+export async function voidJournalEntryAction(
+  input: VoidJournalEntryActionInput,
+): Promise<VoidJournalEntryActionResult> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    return {
+      success: false,
+      message: "You must be signed in to void journal entries.",
+    };
+  }
+
+  const validationResult = validateVoidJournalEntryInput(input);
+
+  if ("success" in validationResult) {
+    return validationResult;
+  }
+
+  const validatedInput = validationResult as ValidatedVoidJournalEntryInput;
+
+  try {
+    const organizationId = await getCurrentOrganizationId();
+    const result = await voidJournalEntry(organizationId, validatedInput);
+
+    revalidatePath("/accounting/journals");
+    revalidatePath(`/accounting/journals/${validatedInput.journalEntryId}`);
+    revalidatePath("/dashboard");
+    revalidatePath("/reports");
+
+    return {
+      success: true,
+      journalEntryId: result.journalEntryId,
+      entryNumber: result.entryNumber,
+    };
+  } catch (error) {
+    if (error instanceof DataAccessError) {
+      return {
+        success: false,
+        message: mapVoidJournalError(error),
+      };
+    }
+
+    return {
+      success: false,
+      message: GENERIC_VOID_JOURNAL_ERROR,
     };
   }
 }
