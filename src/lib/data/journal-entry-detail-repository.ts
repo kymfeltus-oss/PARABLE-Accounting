@@ -48,9 +48,10 @@ export type JournalEntryDetailRecord = {
     | "other";
   sourceReference: string | null;
   periodName: string | null;
-  status: "draft" | "posted" | "reversed";
+  status: "draft" | "posted" | "reversed" | "void";
   lines: JournalEntryDetailLineRecord[];
   reversal: JournalEntryDetailReversalRelation;
+  voidReason: string | null;
 };
 
 type JournalEntryDetailJournalRow = Pick<
@@ -67,6 +68,7 @@ type JournalEntryDetailJournalRow = Pick<
   source_id: string | null;
   reverses_journal_entry_id: string | null;
   reversal_reason: string | null;
+  void_reason: string | null;
 };
 
 type ExpenseReferenceRow = {
@@ -101,7 +103,12 @@ function normalizeAmount(value: number | string | null | undefined): number {
 function isJournalStatus(
   value: string,
 ): value is JournalEntryDetailRecord["status"] {
-  return value === "draft" || value === "posted" || value === "reversed";
+  return (
+    value === "draft" ||
+    value === "posted" ||
+    value === "reversed" ||
+    value === "void"
+  );
 }
 
 function sortLinesByLineNumber(
@@ -122,7 +129,7 @@ export async function getJournalEntryDetail(
   const journalResult = await supabase
     .from("journal_entries")
     .select(
-      "id, organization_id, accounting_period_id, entry_number, entry_date, description, source_type, source_id, status, reverses_journal_entry_id, reversal_reason",
+      "id, organization_id, accounting_period_id, entry_number, entry_date, description, source_type, source_id, status, reverses_journal_entry_id, reversal_reason, void_reason",
     )
     .eq("id", scopedJournalEntryId)
     .eq("organization_id", scopedOrganizationId);
@@ -336,5 +343,6 @@ export async function getJournalEntryDetail(
     status: journal.status,
     lines,
     reversal,
+    voidReason: journal.void_reason,
   };
 }

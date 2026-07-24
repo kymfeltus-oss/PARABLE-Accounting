@@ -41,7 +41,7 @@ describe("JournalReversalForm", () => {
 
     await user.type(screen.getByLabelText("Reversal date"), "2026-07-20");
     await user.type(screen.getByLabelText("Reversal reason"), "Corrected allocation");
-    await user.click(screen.getByRole("button", { name: "Reverse journal" }));
+    await user.click(screen.getByRole("button", { name: "Reverse Journal" }));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith({
@@ -81,7 +81,7 @@ describe("JournalReversalForm", () => {
     await user.type(screen.getByLabelText("Reversal date"), "2026-07-20");
     await user.type(screen.getByLabelText("Reversal reason"), "Corrected allocation");
 
-    const submitButton = screen.getByRole("button", { name: "Reverse journal" });
+    const submitButton = screen.getByRole("button", { name: "Reverse Journal" });
     await user.click(submitButton);
     await user.click(submitButton);
 

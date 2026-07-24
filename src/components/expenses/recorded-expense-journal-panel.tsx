@@ -2,7 +2,7 @@ export type RecordedExpenseJournalPanelProps = {
   journalEntryId: string;
   entryNumber: string;
   entryDate: string;
-  status: "posted" | "draft" | "reversed";
+  status: "posted" | "draft" | "reversed" | "void";
   totalDebit: number;
   totalCredit: number;
   periodName?: string | null;
@@ -15,6 +15,14 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
+const statusLabels: Record<RecordedExpenseJournalPanelProps["status"], string> =
+  {
+    posted: "Posted",
+    draft: "Draft",
+    reversed: "Reversed",
+    void: "VOID",
+  };
+
 const statusClasses: Record<
   RecordedExpenseJournalPanelProps["status"],
   string
@@ -22,6 +30,7 @@ const statusClasses: Record<
   posted: "border-border bg-muted text-foreground",
   draft: "border-border bg-background text-muted-foreground",
   reversed: "border-destructive/40 bg-destructive/10 text-destructive",
+  void: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 
 function formatCurrency(value: number): string {
@@ -71,9 +80,9 @@ export function RecordedExpenseJournalPanel({
           </p>
         </div>
         <span
-          className={`rounded-md border px-2.5 py-1 text-xs font-medium capitalize ${statusClasses[status]}`}
+          className={`rounded-md border px-2.5 py-1 text-xs font-medium ${statusClasses[status]}`}
         >
-          {status}
+          {statusLabels[status]}
         </span>
       </div>
 
@@ -86,7 +95,7 @@ export function RecordedExpenseJournalPanel({
         </div>
         <div>
           <dt className="text-xs font-medium text-muted-foreground">Status</dt>
-          <dd className="mt-1 text-sm capitalize text-foreground">{status}</dd>
+          <dd className="mt-1 text-sm text-foreground">{statusLabels[status]}</dd>
         </div>
         <div>
           <dt className="text-xs font-medium text-muted-foreground">

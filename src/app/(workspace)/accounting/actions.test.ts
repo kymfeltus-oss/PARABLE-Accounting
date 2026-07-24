@@ -14,12 +14,14 @@ const {
   getCurrentOrganizationIdMock,
   createManualJournalMock,
   reverseJournalEntryMock,
+  voidJournalEntryMock,
   revalidatePathMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
   getCurrentOrganizationIdMock: vi.fn(),
   createManualJournalMock: vi.fn(),
   reverseJournalEntryMock: vi.fn(),
+  voidJournalEntryMock: vi.fn(),
   revalidatePathMock: vi.fn(),
 }));
 
@@ -39,6 +41,10 @@ vi.mock("@/lib/data/journal-reversal-repository", () => ({
   reverseJournalEntry: reverseJournalEntryMock,
 }));
 
+vi.mock("@/lib/data/journal-void-repository", () => ({
+  voidJournalEntry: voidJournalEntryMock,
+}));
+
 vi.mock("next/cache", () => ({
   revalidatePath: revalidatePathMock,
 }));
@@ -46,6 +52,7 @@ vi.mock("next/cache", () => ({
 import {
   createManualJournalAction,
   reverseJournalEntryAction,
+  voidJournalEntryAction,
 } from "./actions";
 
 const validInput = {
@@ -508,6 +515,108 @@ describe("reverseJournalEntryAction", () => {
     expect(result).toEqual({
       success: false,
       message: GENERIC_REVERSE_JOURNAL_ERROR,
+    });
+  });
+});
+
+const validVoidInput = {
+  journalEntryId: TEST_JOURNAL_ENTRY_ID,
+  reason: "Duplicate entry",
+};
+
+const GENERIC_VOID_JOURNAL_ERROR =
+  "The journal entry could not be voided. Please try again.";
+
+describe("voidJournalEntryAction", () => {
+  beforeEach(() => {
+    getAuthenticatedUserMock.mockReset();
+    getCurrentOrganizationIdMock.mockReset();
+    voidJournalEntryMock.mockReset();
+    revalidatePathMock.mockReset();
+    getAuthenticatedUserMock.mockResolvedValue({ id: "user-1" });
+    getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
+    voidJournalEntryMock.mockResolvedValue({
+      journalEntryId: TEST_JOURNAL_ENTRY_ID,
+      entryNumber: "MAN-TEST",
+    });
+  });
+
+  it("requires authentication", async () => {
+    getAuthenticatedUserMock.mockResolvedValue(null);
+
+    const result = await voidJournalEntryAction(validVoidInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "You must be signed in to void journal entries.",
+    });
+    expect(voidJournalEntryMock).not.toHaveBeenCalled();
+  });
+
+  it("invokes the repository with normalized inputs", async () => {
+    const result = await voidJournalEntryAction({
+      ...validVoidInput,
+      reason: "  Duplicate entry  ",
+    });
+
+    expect(voidJournalEntryMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID, {
+      journalEntryId: TEST_JOURNAL_ENTRY_ID,
+      reason: "Duplicate entry",
+    });
+    expect(result).toEqual({
+      success: true,
+      journalEntryId: TEST_JOURNAL_ENTRY_ID,
+      entryNumber: "MAN-TEST",
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/accounting/journals");
+    expect(revalidatePathMock).toHaveBeenCalledWith(
+      `/accounting/journals/${TEST_JOURNAL_ENTRY_ID}`,
+    );
+    expect(revalidatePathMock).toHaveBeenCalledWith("/reports");
+  });
+
+  it("rejects a blank reason", async () => {
+    const result = await voidJournalEntryAction({
+      ...validVoidInput,
+      reason: "   ",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      message: "A void reason is required.",
+    });
+    expect(voidJournalEntryMock).not.toHaveBeenCalled();
+  });
+
+  it("maps already-voided errors safely", async () => {
+    voidJournalEntryMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "voidJournalEntry",
+        message: "Journal entry has already been voided",
+      }),
+    );
+
+    const result = await voidJournalEntryAction(validVoidInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: "This journal entry has already been voided.",
+    });
+  });
+
+  it("maps unknown RPC errors generically", async () => {
+    voidJournalEntryMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "voidJournalEntry",
+        message: "relation journal_entries does not exist",
+      }),
+    );
+
+    const result = await voidJournalEntryAction(validVoidInput);
+
+    expect(result).toEqual({
+      success: false,
+      message: GENERIC_VOID_JOURNAL_ERROR,
     });
   });
 });

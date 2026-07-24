@@ -41,6 +41,7 @@ function createJournalRow(
     status: string;
     reverses_journal_entry_id: string | null;
     reversal_reason: string | null;
+    void_reason: string | null;
   }> = {},
 ) {
   return {
@@ -55,6 +56,7 @@ function createJournalRow(
     status: "posted",
     reverses_journal_entry_id: null,
     reversal_reason: null,
+    void_reason: null,
     ...overrides,
   };
 }

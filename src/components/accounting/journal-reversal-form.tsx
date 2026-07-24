@@ -161,7 +161,7 @@ export function JournalReversalForm({
             className="text-sm font-semibold text-foreground"
             id="journal-reversal-form-title"
           >
-            Reverse journal
+            Reverse Journal
           </h3>
           <p className="mt-2 text-sm text-muted-foreground">
             The original journal will remain unchanged. A new posted journal will
@@ -237,7 +237,7 @@ export function JournalReversalForm({
         </p>
 
         <Button disabled={!canSubmit} type="submit">
-          {isPending ? "Reversing…" : "Reverse journal"}
+          {isPending ? "Reversing…" : "Reverse Journal"}
         </Button>
       </fieldset>
     </form>

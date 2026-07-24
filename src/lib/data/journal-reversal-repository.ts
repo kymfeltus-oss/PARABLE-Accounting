@@ -183,6 +183,14 @@ export async function getJournalReversalEligibility(
     };
   }
 
+  if (journal.status === "void") {
+    return {
+      canReverse: false,
+      reason: "This journal entry has already been voided.",
+      periods,
+    };
+  }
+
   if (journal.status !== "posted") {
     return {
       canReverse: false,

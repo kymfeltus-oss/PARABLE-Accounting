@@ -1,4 +1,4 @@
-export type JournalEntryDetailStatus = "draft" | "posted" | "reversed";
+export type JournalEntryDetailStatus = "draft" | "posted" | "reversed" | "void";
 
 export type JournalEntryDetailSource =
   | "expense"
@@ -41,6 +41,7 @@ export type JournalEntryDetailProps = {
   status: JournalEntryDetailStatus;
   lines: JournalEntryLineView[];
   reversal?: JournalEntryDetailReversalInfo | null;
+  voidReason?: string | null;
 };
 
 const sourceLabels: Record<JournalEntryDetailSource, string> = {
@@ -57,12 +58,14 @@ const statusLabels: Record<JournalEntryDetailStatus, string> = {
   draft: "Draft",
   posted: "Posted",
   reversed: "Reversed",
+  void: "VOID",
 };
 
 const statusClasses: Record<JournalEntryDetailStatus, string> = {
   draft: "border-border bg-background text-muted-foreground",
   posted: "border-border bg-muted text-foreground",
   reversed: "border-destructive/40 bg-destructive/10 text-destructive",
+  void: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -135,6 +138,7 @@ export function JournalEntryDetail({
   status,
   lines,
   reversal = null,
+  voidReason = null,
 }: JournalEntryDetailProps): React.ReactElement {
   const sortedLines = [...lines].sort(
     (left, right) => left.lineNumber - right.lineNumber,
@@ -219,6 +223,16 @@ export function JournalEntryDetail({
               </dt>
               <dd className="mt-1 break-words text-sm text-foreground">
                 {sourceReference}
+              </dd>
+            </div>
+          ) : null}
+          {status === "void" && voidReason ? (
+            <div className="min-w-0 sm:col-span-2">
+              <dt className="text-xs font-medium text-muted-foreground">
+                Void reason
+              </dt>
+              <dd className="mt-1 break-words text-sm text-foreground">
+                {voidReason}
               </dd>
             </div>
           ) : null}

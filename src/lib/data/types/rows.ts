@@ -289,6 +289,7 @@ export type JournalEntryRow = {
   source_id?: string | null;
   reverses_journal_entry_id?: string | null;
   reversal_reason?: string | null;
+  void_reason?: string | null;
   created_at: string;
   updated_at: string;
 };
