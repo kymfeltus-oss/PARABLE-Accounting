@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight, BarChart3, HandCoins, Wallet } from "lucide-react";
 
+import { CreateMemberForm } from "@/components/members/create-member-form";
+import { EditMemberForm } from "@/components/members/edit-member-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -164,15 +166,20 @@ export function MembersPageContent({ data }: MembersPageContentProps) {
   return (
     <section aria-labelledby="members-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="members-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {membersNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {membersNav.description}
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1
+              id="members-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {membersNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {membersNav.description}
+            </p>
+          </div>
+          <CreateMemberForm />
+        </div>
       </header>
 
       {!hasMemberActivity(data) ? (
@@ -220,16 +227,21 @@ export function MembersPageContent({ data }: MembersPageContentProps) {
                     key={member.id}
                     className="rounded-lg border border-border p-3 text-sm"
                   >
-                    <p className="font-medium text-foreground">
-                      {formatMemberName(member)}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {member.email ?? "No email recorded"} ·{" "}
-                      {member.phone ?? "No phone recorded"}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {member.status} · Joined {formatDate(member.created_at)}
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground">
+                          {formatMemberName(member)}
+                        </p>
+                        <p className="mt-1 text-muted-foreground">
+                          {member.email ?? "No email recorded"} ·{" "}
+                          {member.phone ?? "No phone recorded"}
+                        </p>
+                        <p className="mt-1 text-muted-foreground">
+                          {member.status} · Joined {formatDate(member.created_at)}
+                        </p>
+                      </div>
+                      <EditMemberForm member={member} />
+                    </div>
                   </li>
                 ))}
               </ul>

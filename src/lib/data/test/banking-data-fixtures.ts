@@ -8,10 +8,13 @@ export function createEmptyBankingData(
     organizationId,
     accounts: [],
     transactions: [],
+    assetAccounts: [],
     counts: {
       accountCount: 0,
       transactionCount: 0,
       unmatchedTransactionCount: 0,
+      matchedTransactionCount: 0,
+      totalLedgerCashBalance: 0,
     },
   };
 }
@@ -31,6 +34,7 @@ export function createPopulatedBankingData(): BankingData {
         status: "active",
         created_at: "2026-07-01T12:00:00.000Z",
         updated_at: "2026-07-01T12:00:00.000Z",
+        ledgerBalance: 12500,
       },
     ],
     transactions: [
@@ -50,10 +54,19 @@ export function createPopulatedBankingData(): BankingData {
         updated_at: "2026-07-10T12:00:00.000Z",
       },
     ],
+    assetAccounts: [
+      {
+        id: "account-1",
+        code: "1000",
+        name: "Operating Checking",
+      },
+    ],
     counts: {
       accountCount: 1,
       transactionCount: 1,
       unmatchedTransactionCount: 1,
+      matchedTransactionCount: 0,
+      totalLedgerCashBalance: 12500,
     },
   };
 }

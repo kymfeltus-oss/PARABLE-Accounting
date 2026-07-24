@@ -3,13 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 const {
   getAuthenticatedUserMock,
   redirectMock,
-  resolveOrganizationContextMock,
+  resolveOrganizationContextForAuthenticatedUserMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
   redirectMock: vi.fn((destination: string) => {
     throw new Error(`NEXT_REDIRECT:${destination}`);
   }),
-  resolveOrganizationContextMock: vi.fn(),
+  resolveOrganizationContextForAuthenticatedUserMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -21,11 +21,22 @@ vi.mock("@/lib/auth/get-authenticated-user", () => ({
 }));
 
 vi.mock("@/lib/data/organization-context", () => ({
-  resolveOrganizationContext: resolveOrganizationContextMock,
+  resolveOrganizationContextForAuthenticatedUser:
+    resolveOrganizationContextForAuthenticatedUserMock,
 }));
 
 vi.mock("@/components/auth/sign-out-button", () => ({
   SignOutButton: () => <button type="button">Sign out</button>,
+}));
+
+vi.mock("@/components/organization/select-organization-form", () => ({
+  SelectOrganizationForm: ({
+    organizations,
+  }: {
+    organizations: Array<{ organizationId: string; name: string }>;
+  }) => (
+    <div data-testid="select-organization-form">{organizations.length}</div>
+  ),
 }));
 
 import SelectOrganizationPage from "./page";
@@ -50,14 +61,16 @@ describe("Select organization page route", () => {
 
   it("redirects users with zero memberships to /no-membership", async () => {
     getAuthenticatedUserMock.mockResolvedValue({ id: "user-1" });
-    resolveOrganizationContextMock.mockResolvedValue({ status: "none" });
+    resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({
+      status: "none",
+    });
 
     await expect(SelectOrganizationPage()).rejects.toThrow("NEXT_REDIRECT:/no-membership");
   });
 
   it("redirects users with one membership to /dashboard", async () => {
     getAuthenticatedUserMock.mockResolvedValue({ id: "user-1" });
-    resolveOrganizationContextMock.mockResolvedValue({
+    resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({
       status: "resolved",
       organizationId: organizations[0].organizationId,
     });
@@ -65,20 +78,18 @@ describe("Select organization page route", () => {
     await expect(SelectOrganizationPage()).rejects.toThrow("NEXT_REDIRECT:/dashboard");
   });
 
-  it("renders the selection-required state for multiple memberships", async () => {
+  it("renders the selection form for multiple memberships", async () => {
     getAuthenticatedUserMock.mockResolvedValue({ id: "user-1" });
-    resolveOrganizationContextMock.mockResolvedValue({
+    resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({
       status: "multiple",
       organizations,
     });
 
     const page = await SelectOrganizationPage();
-    const cardChildren = page.props.children.props.children;
+    const form = page.props.children.props.children;
 
-    expect(cardChildren.props.children[0].props.children).toHaveLength(2);
-    expect(cardChildren.props.children[1].props.children).toContain(
-      "Organization switching is not available yet.",
-    );
+    expect(form.type.name).toBe("SelectOrganizationForm");
+    expect(form.props.organizations).toEqual(organizations);
     expect(page.props.children.props.footer.type.name).toBe("SignOutButton");
   });
 });

@@ -10,9 +10,11 @@ vi.mock("server-only", () => ({}));
 const {
   getAuthenticatedUserMock,
   getUserOrganizationMembershipsMock,
+  getSelectedOrganizationIdMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
   getUserOrganizationMembershipsMock: vi.fn(),
+  getSelectedOrganizationIdMock: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/get-authenticated-user", () => ({
@@ -21,6 +23,10 @@ vi.mock("@/lib/auth/get-authenticated-user", () => ({
 
 vi.mock("./organization-membership-repository", () => ({
   getUserOrganizationMemberships: getUserOrganizationMembershipsMock,
+}));
+
+vi.mock("./organization-selection", () => ({
+  getSelectedOrganizationId: getSelectedOrganizationIdMock,
 }));
 
 import {
@@ -37,6 +43,8 @@ describe("organization context resolution", () => {
   beforeEach(() => {
     getAuthenticatedUserMock.mockReset();
     getUserOrganizationMembershipsMock.mockReset();
+    getSelectedOrganizationIdMock.mockReset();
+    getSelectedOrganizationIdMock.mockResolvedValue(null);
   });
 
   it("returns unauthenticated when no user session exists", async () => {
@@ -87,6 +95,35 @@ describe("organization context resolution", () => {
       status: "multiple",
       organizations,
     });
+  });
+
+  it("returns resolved organization id when preferred selection matches a membership", async () => {
+    getUserOrganizationMembershipsMock.mockResolvedValue([
+      { organizationId: TEST_ORGANIZATION_ID, name: "Alpha Ministry" },
+      { organizationId: OTHER_ORGANIZATION_ID, name: "Zion Fellowship" },
+    ]);
+
+    await expect(
+      resolveOrganizationContext(TEST_USER_ID, OTHER_ORGANIZATION_ID),
+    ).resolves.toEqual({
+      status: "resolved",
+      organizationId: OTHER_ORGANIZATION_ID,
+    });
+  });
+
+  it("resolveOrganizationContextForAuthenticatedUser uses cookie-backed preferred organization", async () => {
+    getAuthenticatedUserMock.mockResolvedValue({ id: TEST_USER_ID });
+    getSelectedOrganizationIdMock.mockResolvedValue(OTHER_ORGANIZATION_ID);
+    getUserOrganizationMembershipsMock.mockResolvedValue([
+      { organizationId: TEST_ORGANIZATION_ID, name: "Alpha Ministry" },
+      { organizationId: OTHER_ORGANIZATION_ID, name: "Zion Fellowship" },
+    ]);
+
+    await expect(resolveOrganizationContextForAuthenticatedUser()).resolves.toEqual({
+      status: "resolved",
+      organizationId: OTHER_ORGANIZATION_ID,
+    });
+    expect(getSelectedOrganizationIdMock).toHaveBeenCalledTimes(1);
   });
 
   it("getCurrentOrganizationId returns the resolved organization id", async () => {

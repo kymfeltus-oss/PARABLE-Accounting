@@ -60,6 +60,9 @@ function createEmptySettingsMockClient(currentUserRole = "owner") {
       { data: [], error: null },
       createCurrentMembershipResponse(currentUserRole),
     ],
+    organization_settings: [{ data: [], error: null }],
+    organization_invites: [{ data: [], error: null }],
+    accounts: [{ data: [], error: null }],
   });
 }
 
@@ -93,6 +96,41 @@ function createPopulatedSettingsMockClient(
         error: null,
       },
       createCurrentMembershipResponse(currentUserRole),
+    ],
+    organization_settings: [
+      {
+        data: [
+          {
+            organization_id: TEST_ORGANIZATION_ID,
+            fiscal_year_start_month: 7,
+            default_cash_account_id: "cash-account-1",
+            default_revenue_account_id: "revenue-account-1",
+            created_at: "2026-01-01T00:00:00.000Z",
+            updated_at: "2026-07-02T00:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+    ],
+    organization_invites: [{ data: [], error: null }],
+    accounts: [
+      {
+        data: [
+          {
+            id: "cash-account-1",
+            organization_id: TEST_ORGANIZATION_ID,
+            parent_account_id: null,
+            code: "1000",
+            name: "Operating Cash",
+            account_type: "asset",
+            is_posting: true,
+            status: "active",
+            created_at: "2026-01-01T00:00:00.000Z",
+            updated_at: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
     ],
   });
 }
@@ -137,10 +175,13 @@ describe("getSettingsData", () => {
 
     await getSettingsData(TEST_ORGANIZATION_ID);
 
-    expect(queryLog).toHaveLength(3);
+    expect(queryLog).toHaveLength(6);
     expect(queryLog[0].table).toBe("organizations");
     expect(queryLog[1].table).toBe("organization_memberships");
     expect(queryLog[2].table).toBe("organization_memberships");
+    expect(queryLog[3].table).toBe("organization_settings");
+    expect(queryLog[4].table).toBe("organization_invites");
+    expect(queryLog[5].table).toBe("accounts");
     expect(
       queryLog[0].filters.some(
         (filter) =>
@@ -184,6 +225,16 @@ describe("getSettingsData", () => {
       updated_at: "2026-02-01T09:00:00.000Z",
     });
     expect(result.currentUserRole).toBe("owner");
+    expect(result.settings).toEqual({
+      organization_id: TEST_ORGANIZATION_ID,
+      fiscal_year_start_month: 7,
+      default_cash_account_id: "cash-account-1",
+      default_revenue_account_id: "revenue-account-1",
+      created_at: "2026-01-01T00:00:00.000Z",
+      updated_at: "2026-07-02T00:00:00.000Z",
+    });
+    expect(result.accounts).toHaveLength(1);
+    expect(result.invites).toEqual([]);
   });
 
   it.each([

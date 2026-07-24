@@ -31,6 +31,22 @@ export type RecordedGivingTransactionRow = GivingTransactionRow & {
   journal_entry_id: string | null;
 };
 
+export type GivingMethod =
+  | "cash"
+  | "check"
+  | "card"
+  | "ach"
+  | "other";
+
+export type CreateGivingTransactionInput = {
+  transactionDate: string;
+  amount: number;
+  givingMethod: GivingMethod;
+  memberId?: string | null;
+  fundId?: string | null;
+  reference?: string | null;
+};
+
 function requireGivingTransactionId(
   givingTransactionId: string,
   operation: string,
@@ -185,6 +201,51 @@ export async function getGivingTransactionById(
     ...transaction,
     fundName,
   };
+}
+
+export async function createGivingTransaction(
+  organizationId: string,
+  input: CreateGivingTransactionInput,
+): Promise<GivingTransactionRow> {
+  const operation = "createGivingTransaction";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("create_giving_transaction", {
+    target_organization_id: scopedOrganizationId,
+    input_transaction_date: input.transactionDate,
+    input_amount: input.amount,
+    input_giving_method: input.givingMethod,
+    input_member_id: input.memberId ?? null,
+    input_fund_id: input.fundId ?? null,
+    input_reference: input.reference ?? null,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[createGivingTransaction RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+        organizationId: scopedOrganizationId,
+        transactionDate: input.transactionDate,
+        givingMethod: input.givingMethod,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Giving transaction creation returned no row",
+    });
+  }
+
+  return result.data as GivingTransactionRow;
 }
 
 export async function recordGiving(

@@ -7,6 +7,9 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { CloseAccountingPeriodButton } from "@/components/accounting/close-accounting-period-button";
+import { CreateAccountForm } from "@/components/accounting/create-account-form";
+import { CreateAccountingPeriodForm } from "@/components/accounting/create-accounting-period-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -125,15 +128,20 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
   return (
     <section aria-labelledby="accounting-title" className="space-y-8">
       <header className="space-y-2">
-        <h1
-          id="accounting-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {accountingNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {accountingNav.description}
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+            <h1
+              id="accounting-title"
+              className="text-3xl font-semibold tracking-tight text-foreground"
+            >
+              {accountingNav.title}
+            </h1>
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+              {accountingNav.description}
+            </p>
+          </div>
+          <CreateAccountForm />
+        </div>
       </header>
 
       {!hasAccountingActivity(data) ? (
@@ -155,9 +163,77 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Account balances and trial balance are unavailable until ledger balance
-        aggregation is implemented.
+        Account balances and trial balance as of {formatDate(data.asOfDate)} from
+        posted journal activity.
       </p>
+
+      <section
+        aria-labelledby="accounting-trial-balance-title"
+        className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+      >
+        <div className="space-y-1">
+          <h2
+            id="accounting-trial-balance-title"
+            className="text-lg font-semibold text-foreground"
+          >
+            Trial Balance
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Posted debit and credit balances by account through{" "}
+            {formatDate(data.asOfDate)}.
+            {data.trialBalance.isBalanced ? " Books are balanced." : " Out of balance."}
+          </p>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          {data.trialBalance.rows.length === 0 ? (
+            <WorkspaceDataEmpty message="No posted account balances yet." />
+          ) : (
+            <table className="w-full min-w-[32rem] border-collapse text-sm">
+              <caption className="sr-only">Trial balance</caption>
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="px-3 py-2 font-medium text-foreground">Account</th>
+                  <th className="px-3 py-2 font-medium text-foreground">Type</th>
+                  <th className="px-3 py-2 font-medium text-foreground">Debit</th>
+                  <th className="px-3 py-2 font-medium text-foreground">Credit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.trialBalance.rows.map((row) => (
+                  <tr key={row.id} className="border-b border-border/70">
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {row.code} · {row.name}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {formatAccountType(row.accountType)}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {row.debitBalance > 0 ? formatCurrency(row.debitBalance) : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {row.creditBalance > 0 ? formatCurrency(row.creditBalance) : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border font-medium text-foreground">
+                  <td className="px-3 py-2" colSpan={2}>
+                    Totals
+                  </td>
+                  <td className="px-3 py-2">
+                    {formatCurrency(data.trialBalance.totalDebits)}
+                  </td>
+                  <td className="px-3 py-2">
+                    {formatCurrency(data.trialBalance.totalCredits)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          )}
+        </div>
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <section
@@ -194,6 +270,8 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
                       {account.parent_account_id
                         ? " · Sub-account"
                         : " · Top-level"}
+                      {" · Balance "}
+                      {formatCurrency(account.balance)}
                     </p>
                   </li>
                 ))}
@@ -206,16 +284,19 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
           aria-labelledby="accounting-periods-title"
           className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
         >
-          <div className="space-y-1">
-            <h2
-              id="accounting-periods-title"
-              className="text-lg font-semibold text-foreground"
-            >
-              Accounting Periods
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Period names, date ranges, and status.
-            </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <h2
+                id="accounting-periods-title"
+                className="text-lg font-semibold text-foreground"
+              >
+                Accounting Periods
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Period names, date ranges, and status.
+              </p>
+            </div>
+            <CreateAccountingPeriodForm />
           </div>
 
           <div className="mt-6">
@@ -233,6 +314,7 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
                       {formatDateRange(period)} · {period.status}
                       {period.isCurrent ? " · Current period" : ""}
                     </p>
+                    <CloseAccountingPeriodButton period={period} />
                   </li>
                 ))}
               </ul>

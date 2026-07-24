@@ -7,6 +7,8 @@ import {
   Receipt,
 } from "lucide-react";
 
+import { CreateBankTransactionForm } from "@/components/banking/create-bank-transaction-form";
+import { MatchBankTransactionForm } from "@/components/transactions/match-bank-transaction-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -163,16 +165,20 @@ export function TransactionsPageContent({ data }: TransactionsPageContentProps) 
 
   return (
     <section aria-labelledby="transactions-title" className="space-y-8">
-      <header className="space-y-2">
-        <h1
-          id="transactions-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {transactionsNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {transactionsNav.description}
-        </p>
+      <header className="space-y-4">
+        <div className="space-y-2">
+          <h1
+            id="transactions-title"
+            className="text-3xl font-semibold tracking-tight text-foreground"
+          >
+            {transactionsNav.title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            {transactionsNav.description}
+          </p>
+        </div>
+
+        <CreateBankTransactionForm bankAccounts={data.bankAccounts} />
       </header>
 
       {!hasTransactionActivity(data) ? (
@@ -227,6 +233,12 @@ export function TransactionsPageContent({ data }: TransactionsPageContentProps) 
                       {formatDate(transaction.transaction_date)} ·{" "}
                       {transaction.source_type} · {transaction.status}
                     </p>
+                    {transaction.status === "unmatched" ? (
+                      <MatchBankTransactionForm
+                        bankTransactionId={transaction.id}
+                        transactionLabel={transaction.description}
+                      />
+                    ) : null}
                   </li>
                 ))}
               </ul>

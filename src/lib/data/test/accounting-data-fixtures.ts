@@ -1,6 +1,10 @@
 import type { AccountingData } from "@/lib/data/accounting-repository";
 import { TEST_ORGANIZATION_ID } from "@/lib/data/test/mock-supabase-client";
 
+import { createEmptyFinancialReports } from "./financial-reports-fixtures";
+
+const emptyTrialBalance = createEmptyFinancialReports().trialBalance;
+
 export function createEmptyAccountingData(
   organizationId: string = TEST_ORGANIZATION_ID,
 ): AccountingData {
@@ -9,6 +13,8 @@ export function createEmptyAccountingData(
     accounts: [],
     periods: [],
     journalEntries: [],
+    trialBalance: emptyTrialBalance,
+    asOfDate: "2026-07-24",
     counts: {
       totalAccounts: 0,
       activeAccounts: 0,
@@ -35,6 +41,7 @@ export function createPopulatedAccountingData(): AccountingData {
         status: "active",
         created_at: "2026-01-01T12:00:00.000Z",
         updated_at: "2026-01-01T12:00:00.000Z",
+        balance: 150,
       },
       {
         id: "account-2",
@@ -47,6 +54,7 @@ export function createPopulatedAccountingData(): AccountingData {
         status: "inactive",
         created_at: "2026-01-02T12:00:00.000Z",
         updated_at: "2026-01-02T12:00:00.000Z",
+        balance: 0,
       },
     ],
     periods: [
@@ -107,6 +115,23 @@ export function createPopulatedAccountingData(): AccountingData {
         isBalanced: false,
       },
     ],
+    trialBalance: {
+      asOfDate: "2026-07-24",
+      rows: [
+        {
+          id: "account-1",
+          code: "1000",
+          name: "Operating Cash",
+          accountType: "asset",
+          debitBalance: 150,
+          creditBalance: 0,
+        },
+      ],
+      totalDebits: 150,
+      totalCredits: 150,
+      isBalanced: true,
+    },
+    asOfDate: "2026-07-24",
     counts: {
       totalAccounts: 2,
       activeAccounts: 1,

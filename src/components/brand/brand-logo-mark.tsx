@@ -17,7 +17,7 @@ export function BrandLogoMark({
       height={51}
       priority={priority}
       src="/parable-logo-mark.png"
-      style={{ width: "auto" }}
+      style={{ width: "auto", height: "auto" }}
       unoptimized
       width={42}
     />

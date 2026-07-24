@@ -20,6 +20,9 @@ export function createEmptySettingsData(
     },
     currentUserRole,
     memberships: [],
+    settings: null,
+    invites: [],
+    accounts: [],
     counts: {
       totalMemberships: 0,
     },
@@ -58,6 +61,16 @@ export function createPopulatedSettingsData(
         updated_at: "2026-06-20T08:15:00.000Z",
       },
     ],
+    settings: {
+      organization_id: TEST_ORGANIZATION_ID,
+      fiscal_year_start_month: 1,
+      default_cash_account_id: null,
+      default_revenue_account_id: null,
+      created_at: "2026-01-15T10:00:00.000Z",
+      updated_at: "2026-07-01T12:00:00.000Z",
+    },
+    invites: [],
+    accounts: [],
     counts: {
       totalMemberships: 2,
     },

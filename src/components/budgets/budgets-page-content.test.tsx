@@ -73,21 +73,20 @@ describe("BudgetsPageContent", () => {
     ).toContain("$0.00");
   });
 
-  it("states actual-to-budget comparison is unavailable", () => {
+  it("renders budget vs actual when an active budget report is available", () => {
     render(<BudgetsPageContent data={createPopulatedBudgetsData()} />);
 
-    expect(
-      screen.getByText(/Actual-to-budget comparison unavailable with the current allocation model/i),
-    ).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Budget vs Actual" })).toBeTruthy();
+    expect(screen.getByText(/5100 · Office Expense/)).toBeTruthy();
+    expect(screen.getByText(/\$1,500\.00/)).toBeTruthy();
   });
 
-  it("does not fabricate variance, percent used, or remaining budget values", () => {
-    render(<BudgetsPageContent data={createPopulatedBudgetsData()} />);
+  it("shows guidance when budget vs actual is unavailable", () => {
+    render(<BudgetsPageContent data={createEmptyBudgetsData()} />);
 
-    expect(screen.queryByText(/variance/i)).toBeNull();
-    expect(screen.queryByText(/percent used/i)).toBeNull();
-    expect(screen.queryByText(/remaining budget/i)).toBeNull();
-    expect(screen.queryByText(/overspend/i)).toBeNull();
+    expect(
+      screen.getByText(/Budget vs actual comparison appears when an active budget with lines covers the current date/i),
+    ).toBeTruthy();
   });
 
   it("renders related workspace navigation links", () => {

@@ -1,6 +1,11 @@
 import type { ReportsData } from "@/lib/data/reports-repository";
 import { TEST_ORGANIZATION_ID } from "@/lib/data/test/mock-supabase-client";
 
+import {
+  createEmptyFinancialReports,
+  createPopulatedFinancialReports,
+} from "./financial-reports-fixtures";
+
 const EMPTY_SNAPSHOTS = {
   recordedGivingTotal: 0,
   nonVoidExpenseTotal: 0,
@@ -92,39 +97,42 @@ export function createEmptyReportsData(
         name: "Accounting Activity Summary",
         description: "Journal entry counts and posted debit/credit totals.",
       },
-    ],
-    unavailableReports: [
       {
         id: "trial-balance",
         name: "Trial Balance",
-        reason: "Requires ledger balance aggregation across all accounts.",
+        description: "Posted ledger debit and credit balances by account.",
       },
       {
         id: "balance-sheet",
         name: "Balance Sheet / Statement of Financial Position",
-        reason: "Requires account balance aggregation not yet implemented.",
+        description: "Assets, liabilities, and net assets through the as-of date.",
       },
       {
         id: "income-statement",
         name: "Income Statement / Statement of Activities",
-        reason: "Requires revenue and expense balance aggregation.",
+        description: "Revenue and expense activity for the selected period.",
       },
+      {
+        id: "fund-balance",
+        name: "Fund Balance Report",
+        description: "Net credit balance by designated fund from posted activity.",
+      },
+      {
+        id: "budget-vs-actual",
+        name: "Budget vs Actual",
+        description:
+          "Compare active budget line amounts to posted ledger activity for the budget period.",
+      },
+    ],
+    unavailableReports: [
       {
         id: "cash-flow",
         name: "Cash Flow Statement",
         reason: "Requires cash position and activity classification.",
       },
-      {
-        id: "fund-balance",
-        name: "Fund Balance Report",
-        reason: "Requires fund balance aggregation not yet implemented.",
-      },
-      {
-        id: "budget-vs-actual",
-        name: "Budget vs Actual",
-        reason: "Requires actual-to-budget variance logic not yet implemented.",
-      },
     ],
+    financialReports: createEmptyFinancialReports(),
+    budgetVsActual: null,
   };
 }
 
@@ -182,5 +190,28 @@ export function createPopulatedReportsData(): ReportsData {
     },
     availableReports: createEmptyReportsData().availableReports,
     unavailableReports: createEmptyReportsData().unavailableReports,
+    financialReports: createPopulatedFinancialReports(),
+    budgetVsActual: {
+      budgetId: "budget-1",
+      budgetName: "FY 2026 Operating Budget",
+      startDate: "2026-01-01",
+      endDate: "2026-12-31",
+      rows: [
+        {
+          accountId: "account-expense",
+          accountCode: "5100",
+          accountName: "Utilities",
+          accountType: "expense",
+          fundId: null,
+          fundName: null,
+          budgetedAmount: 7500,
+          actualAmount: 150,
+          variance: 7350,
+        },
+      ],
+      totalBudgeted: 7500,
+      totalActual: 150,
+      totalVariance: 7350,
+    },
   };
 }

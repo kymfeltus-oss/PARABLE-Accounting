@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createEmptyMembersData,
@@ -7,6 +7,11 @@ import {
 } from "@/lib/data/test/members-data-fixtures";
 
 import { MembersPageContent } from "./members-page-content";
+
+vi.mock("@/app/(workspace)/members/actions", () => ({
+  createMemberAction: vi.fn(),
+  updateMemberAction: vi.fn(),
+}));
 
 vi.mock("next/link", () => ({
   default: ({
@@ -20,8 +25,19 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+beforeEach(() => {
+  vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+});
+
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
 });
 
 describe("MembersPageContent", () => {
@@ -31,6 +47,18 @@ describe("MembersPageContent", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Members" }),
     ).toBeTruthy();
+  });
+
+  it("renders the Add Member control", () => {
+    render(<MembersPageContent data={createEmptyMembersData()} />);
+
+    expect(screen.getByRole("button", { name: "Add Member" })).toBeTruthy();
+  });
+
+  it("renders Edit controls for populated members", () => {
+    render(<MembersPageContent data={createPopulatedMembersData()} />);
+
+    expect(screen.getAllByRole("button", { name: "Edit" }).length).toBeGreaterThan(0);
   });
 
   it("does not render Development Preview or demo labels", () => {

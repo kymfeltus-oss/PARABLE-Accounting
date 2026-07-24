@@ -276,7 +276,8 @@ describe("Phase 4 Step 9B static security enforcement", () => {
     }
 
     expect(resolveForUserBody).toContain("getAuthenticatedUser()");
-    expect(resolveForUserBody).toContain("resolveOrganizationContext(user.id)");
+    expect(resolveForUserBody).toContain("getSelectedOrganizationId()");
+    expect(resolveForUserBody).toContain("resolveOrganizationContext(user.id");
     expect(getCurrentOrgBody).toContain("resolveOrganizationContextForAuthenticatedUser()");
     expect(organizationContext).not.toMatch(/searchParams|headers\(|cookies\(/);
   });

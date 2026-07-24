@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createEmptyAccountingData,
@@ -7,6 +7,12 @@ import {
 } from "@/lib/data/test/accounting-data-fixtures";
 
 import { AccountingPageContent } from "./accounting-page-content";
+
+vi.mock("@/app/(workspace)/accounting/actions", () => ({
+  createAccountAction: vi.fn(),
+  createAccountingPeriodAction: vi.fn(),
+  closeAccountingPeriodAction: vi.fn(),
+}));
 
 vi.mock("next/link", () => ({
   default: ({
@@ -20,8 +26,19 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+beforeEach(() => {
+  vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+});
+
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
 });
 
 describe("AccountingPageContent", () => {
@@ -31,6 +48,24 @@ describe("AccountingPageContent", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "Accounting" }),
     ).toBeTruthy();
+  });
+
+  it("renders the Add Account control", () => {
+    render(<AccountingPageContent data={createEmptyAccountingData()} />);
+
+    expect(screen.getByRole("button", { name: "Add Account" })).toBeTruthy();
+  });
+
+  it("renders the Add Period control", () => {
+    render(<AccountingPageContent data={createEmptyAccountingData()} />);
+
+    expect(screen.getByRole("button", { name: "Add Period" })).toBeTruthy();
+  });
+
+  it("renders Close Period controls for open periods", () => {
+    render(<AccountingPageContent data={createPopulatedAccountingData()} />);
+
+    expect(screen.getByRole("button", { name: "Close Period" })).toBeTruthy();
   });
 
   it("does not render Development Preview or demo labels", () => {
@@ -54,7 +89,7 @@ describe("AccountingPageContent", () => {
   it("renders live accounting props", () => {
     render(<AccountingPageContent data={createPopulatedAccountingData()} />);
 
-    expect(screen.getByText(/1000 · Operating Cash/)).toBeTruthy();
+    expect(screen.getAllByText(/1000 · Operating Cash/).length).toBeGreaterThan(0);
     expect(screen.getByText(/JE-1001/)).toBeTruthy();
     expect(screen.getByText("July 2026")).toBeTruthy();
     expect(
@@ -76,24 +111,21 @@ describe("AccountingPageContent", () => {
     ).toContain("0");
   });
 
-  it("states account balances and trial balance are unavailable", () => {
+  it("renders trial balance and account balances from posted activity", () => {
     render(<AccountingPageContent data={createPopulatedAccountingData()} />);
 
-    expect(
-      screen.getByText(/Account balances and trial balance are unavailable until ledger balance aggregation is implemented/i),
-    ).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Trial Balance" })).toBeTruthy();
+    expect(screen.getAllByText(/Balance \$150\.00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/1000 · Operating Cash/).length).toBeGreaterThan(0);
   });
 
-  it("does not fabricate account balance or trial balance totals", () => {
+  it("does not fabricate export functionality", () => {
     const { container } = render(
       <AccountingPageContent data={createPopulatedAccountingData()} />,
     );
     const text = container.textContent ?? "";
 
-    expect(text).not.toMatch(/retained earnings/i);
-    expect(text).not.toMatch(/net income/i);
-    expect(text).not.toMatch(/trial balance total/i);
-    expect(text).not.toMatch(/account balance:/i);
+    expect(text).not.toMatch(/export|download|pdf|csv/i);
   });
 
   it("renders unbalanced journal entries honestly", () => {

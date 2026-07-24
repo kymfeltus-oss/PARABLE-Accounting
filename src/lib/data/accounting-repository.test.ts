@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAccessError } from "./data-access-error";
-import { getAccountingData } from "./accounting-repository";
+import {
+  closeAccountingPeriod,
+  createAccount,
+  createAccountingPeriod,
+  getAccountingData,
+  updateAccount,
+} from "./accounting-repository";
 import {
   createBackendError,
   createMockSupabaseClient,
@@ -11,11 +17,15 @@ import {
 
 vi.mock("server-only", () => ({}));
 
-const { createAdminSupabaseClientMock, createServerSupabaseClientMock } =
-  vi.hoisted(() => ({
-    createAdminSupabaseClientMock: vi.fn(),
-    createServerSupabaseClientMock: vi.fn(),
-  }));
+const {
+  createAdminSupabaseClientMock,
+  createServerSupabaseClientMock,
+  loadLedgerBalanceContextMock,
+} = vi.hoisted(() => ({
+  createAdminSupabaseClientMock: vi.fn(),
+  createServerSupabaseClientMock: vi.fn(),
+  loadLedgerBalanceContextMock: vi.fn(),
+}));
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminSupabaseClient: createAdminSupabaseClientMock,
@@ -24,6 +34,22 @@ vi.mock("@/lib/supabase/admin", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   createServerSupabaseClient: createServerSupabaseClientMock,
 }));
+
+vi.mock("./ledger-balances-repository", () => ({
+  loadLedgerBalanceContext: loadLedgerBalanceContextMock,
+}));
+
+function mockLedgerContext() {
+  loadLedgerBalanceContextMock.mockResolvedValue({
+    organizationId: TEST_ORGANIZATION_ID,
+    asOfDate: "2026-07-24",
+    periodStartDate: "2026-01-01",
+    periodEndDate: "2026-07-24",
+    lines: [],
+    accounts: [],
+    funds: [],
+  });
+}
 
 function createEmptyAccountingMockClient() {
   return createMockSupabaseClient({
@@ -37,6 +63,8 @@ describe("getAccountingData", () => {
   beforeEach(() => {
     createAdminSupabaseClientMock.mockReset();
     createServerSupabaseClientMock.mockReset();
+    loadLedgerBalanceContextMock.mockReset();
+    mockLedgerContext();
     vi.useRealTimers();
   });
 
@@ -319,7 +347,53 @@ describe("getAccountingData", () => {
     expect(result.counts.draftJournalEntries).toBe(1);
   });
 
-  it("does not expose account balances or trial balance totals", async () => {
+  it("exposes account balances and trial balance from posted ledger activity", async () => {
+    loadLedgerBalanceContextMock.mockResolvedValue({
+      organizationId: TEST_ORGANIZATION_ID,
+      asOfDate: "2026-07-24",
+      periodStartDate: "2026-01-01",
+      periodEndDate: "2026-07-24",
+      lines: [
+        {
+          journalEntryId: "journal-posted",
+          entryDate: "2026-07-01",
+          accountId: "account-1",
+          accountType: "asset",
+          accountCode: "1000",
+          accountName: "Cash",
+          fundId: null,
+          debitAmount: 250,
+          creditAmount: 0,
+        },
+        {
+          journalEntryId: "journal-posted",
+          entryDate: "2026-07-01",
+          accountId: "account-2",
+          accountType: "revenue",
+          accountCode: "4000",
+          accountName: "Donations",
+          fundId: null,
+          debitAmount: 0,
+          creditAmount: 250,
+        },
+      ],
+      accounts: [
+        {
+          id: "account-1",
+          code: "1000",
+          name: "Cash",
+          accountType: "asset",
+        },
+        {
+          id: "account-2",
+          code: "4000",
+          name: "Donations",
+          accountType: "revenue",
+        },
+      ],
+      funds: [],
+    });
+
     const { client } = createMockSupabaseClient({
       accounts: [
         {
@@ -347,9 +421,11 @@ describe("getAccountingData", () => {
 
     const result = await getAccountingData(TEST_ORGANIZATION_ID);
 
-    expect(result).not.toHaveProperty("accountBalances");
-    expect(result).not.toHaveProperty("trialBalance");
-    expect(result.accounts[0]).not.toHaveProperty("balance");
+    expect(result.accounts[0]?.balance).toBe(250);
+    expect(result.trialBalance.totalDebits).toBe(250);
+    expect(result.trialBalance.totalCredits).toBe(250);
+    expect(result.trialBalance.isBalanced).toBe(true);
+    expect(result.asOfDate).toBe("2026-07-24");
   });
 
   it("throws DataAccessError when a query fails", async () => {
@@ -363,5 +439,169 @@ describe("getAccountingData", () => {
     await expect(getAccountingData(TEST_ORGANIZATION_ID)).rejects.toBeInstanceOf(
       DataAccessError,
     );
+  });
+});
+
+function createAccountingRpcMockClient(rpcResponse: {
+  data: unknown;
+  error: ReturnType<typeof createBackendError> | null;
+}) {
+  const { client: tableClient } = createEmptyAccountingMockClient();
+  const rpcMock = vi.fn().mockResolvedValue(rpcResponse);
+  const fromMock = vi.spyOn(tableClient, "from");
+
+  return {
+    client: {
+      ...tableClient,
+      rpc: rpcMock,
+    },
+    rpcMock,
+    fromMock,
+  };
+}
+
+function createCreatedAccountRow() {
+  return {
+    id: "77777777-7777-7777-8777-777777777777",
+    organization_id: TEST_ORGANIZATION_ID,
+    parent_account_id: null,
+    code: "1000",
+    name: "Operating Cash",
+    account_type: "asset",
+    is_posting: true,
+    status: "active",
+    created_at: "2026-07-24T12:00:00.000Z",
+    updated_at: "2026-07-24T12:00:00.000Z",
+  };
+}
+
+function createCreatedPeriodRow(overrides: Partial<{ status: string }> = {}) {
+  return {
+    id: "88888888-8888-8888-8888-888888888888",
+    organization_id: TEST_ORGANIZATION_ID,
+    name: "July 2026",
+    start_date: "2026-07-01",
+    end_date: "2026-07-31",
+    status: "open",
+    created_at: "2026-07-01T12:00:00.000Z",
+    updated_at: "2026-07-01T12:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("createAccount", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("calls the create_account RPC with exact argument names", async () => {
+    const { client, rpcMock } = createAccountingRpcMockClient({
+      data: createCreatedAccountRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await createAccount(TEST_ORGANIZATION_ID, {
+      code: "1000",
+      name: "Operating Cash",
+      accountType: "asset",
+      isPosting: true,
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("create_account", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+      account_code: "1000",
+      account_name: "Operating Cash",
+      account_type: "asset",
+      is_posting: true,
+    });
+  });
+});
+
+describe("updateAccount", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("calls the update_account RPC with exact argument names", async () => {
+    const { client, rpcMock } = createAccountingRpcMockClient({
+      data: createCreatedAccountRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await updateAccount(TEST_ORGANIZATION_ID, {
+      accountId: "77777777-7777-7777-8777-777777777777",
+      code: "1000",
+      name: "Operating Cash",
+      accountType: "asset",
+      isPosting: true,
+      status: "inactive",
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("update_account", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+      target_account_id: "77777777-7777-7777-8777-777777777777",
+      account_code: "1000",
+      account_name: "Operating Cash",
+      account_type: "asset",
+      is_posting: true,
+      account_status: "inactive",
+    });
+  });
+});
+
+describe("createAccountingPeriod", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("calls the create_accounting_period RPC with exact argument names", async () => {
+    const { client, rpcMock } = createAccountingRpcMockClient({
+      data: createCreatedPeriodRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await createAccountingPeriod(TEST_ORGANIZATION_ID, {
+      name: "July 2026",
+      startDate: "2026-07-01",
+      endDate: "2026-07-31",
+    });
+
+    expect(rpcMock).toHaveBeenCalledWith("create_accounting_period", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+      period_name: "July 2026",
+      period_start_date: "2026-07-01",
+      period_end_date: "2026-07-31",
+    });
+  });
+});
+
+describe("closeAccountingPeriod", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("calls the close_accounting_period RPC with exact argument names", async () => {
+    const { client, rpcMock } = createAccountingRpcMockClient({
+      data: createCreatedPeriodRow({ status: "closed" }),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await closeAccountingPeriod(
+      TEST_ORGANIZATION_ID,
+      "88888888-8888-8888-8888-888888888888",
+    );
+
+    expect(rpcMock).toHaveBeenCalledWith("close_accounting_period", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+      target_period_id: "88888888-8888-8888-8888-888888888888",
+    });
   });
 });

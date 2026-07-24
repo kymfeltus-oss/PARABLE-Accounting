@@ -145,6 +145,9 @@ vi.mock("@/lib/data/budgets-repository", () => ({
   getBudgetsData: vi.fn(async () => ({
     organizationId: "22222222-2222-4222-8222-222222222222",
     budgets: [],
+    accounts: [],
+    funds: [],
+    budgetVsActual: null,
     counts: {
       total: 0,
       withLines: 0,
@@ -224,6 +227,41 @@ vi.mock("@/lib/data/reports-repository", () => ({
     },
     availableReports: [],
     unavailableReports: [],
+    financialReports: {
+      asOfDate: "2026-07-24",
+      periodStartDate: "2026-01-01",
+      periodEndDate: "2026-07-24",
+      trialBalance: {
+        asOfDate: "2026-07-24",
+        rows: [],
+        totalDebits: 0,
+        totalCredits: 0,
+        isBalanced: true,
+      },
+      balanceSheet: {
+        asOfDate: "2026-07-24",
+        sections: [],
+        totalAssets: 0,
+        totalLiabilities: 0,
+        totalNetAssets: 0,
+        totalLiabilitiesAndNetAssets: 0,
+      },
+      incomeStatement: {
+        startDate: "2026-01-01",
+        endDate: "2026-07-24",
+        revenue: [],
+        expenses: [],
+        totalRevenue: 0,
+        totalExpenses: 0,
+        netIncome: 0,
+      },
+      fundBalance: {
+        asOfDate: "2026-07-24",
+        rows: [],
+        totalBalance: 0,
+      },
+    },
+    budgetVsActual: null,
   })),
 }));
 
@@ -303,6 +341,9 @@ vi.mock("@/lib/data/settings-repository", () => ({
     },
     currentUserRole: "owner",
     memberships: [],
+    settings: null,
+    invites: [],
+    accounts: [],
     counts: {
       totalMemberships: 0,
     },

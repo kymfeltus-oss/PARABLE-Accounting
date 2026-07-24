@@ -6,11 +6,13 @@ import {
   BookOpen,
 } from "lucide-react";
 
+import { CreateBankAccountForm } from "@/components/banking/create-bank-account-form";
+import { CreateBankTransactionForm } from "@/components/banking/create-bank-transaction-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
-import type { BankingData } from "@/lib/data/banking-repository";
-import type { BankAccountRow, BankTransactionRow } from "@/lib/data/types/rows";
+import type { BankingData, BankAccountRecord } from "@/lib/data/banking-repository";
+import type { BankTransactionRow } from "@/lib/data/types/rows";
 
 const summaryLabels = [
   "Total Bank Balance",
@@ -81,14 +83,27 @@ function countUnmatchedForAccount(
   ).length;
 }
 
+function formatReconciliationProgress(data: BankingData): string {
+  if (data.counts.transactionCount === 0) {
+    return "No transactions yet";
+  }
+
+  const matchedPercent = Math.round(
+    (data.counts.matchedTransactionCount / data.counts.transactionCount) * 100,
+  );
+
+  return `${matchedPercent}% matched`;
+}
+
 function formatSummaryValue(
   label: (typeof summaryLabels)[number],
   data: BankingData,
 ): string {
   switch (label) {
     case "Total Bank Balance":
+      return formatCurrency(data.counts.totalLedgerCashBalance);
     case "Reconciliation Progress":
-      return "Unavailable";
+      return formatReconciliationProgress(data);
     case "Connected Accounts":
       return String(data.counts.accountCount);
     case "Unmatched Transactions":
@@ -98,7 +113,7 @@ function formatSummaryValue(
   }
 }
 
-function formatAccountDetails(account: BankAccountRow): string {
+function formatAccountDetails(account: BankAccountRecord): string {
   const institution = account.institution_name ?? "Institution not recorded";
   const lastFour = account.last_four ? ` · ****${account.last_four}` : "";
 
@@ -106,7 +121,7 @@ function formatAccountDetails(account: BankAccountRow): string {
 }
 
 function formatReconciliationStatus(
-  account: BankAccountRow,
+  account: BankAccountRecord,
   transactions: BankTransactionRow[],
 ): string {
   const unmatchedCount = countUnmatchedForAccount(account.id, transactions);
@@ -155,16 +170,28 @@ export function BankingPageContent({ data }: BankingPageContentProps) {
 
   return (
     <section aria-labelledby="banking-title" className="space-y-8">
-      <header className="space-y-2">
-        <h1
-          id="banking-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
-        >
-          {bankingNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {bankingNav.description}
-        </p>
+      <header className="space-y-4">
+        <div className="space-y-2">
+          <h1
+            id="banking-title"
+            className="text-3xl font-semibold tracking-tight text-foreground"
+          >
+            {bankingNav.title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            {bankingNav.description}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <CreateBankAccountForm assetAccounts={data.assetAccounts} />
+          <CreateBankTransactionForm
+            bankAccounts={data.accounts.map((account) => ({
+              id: account.id,
+              name: account.name,
+            }))}
+          />
+        </div>
       </header>
 
       {!hasBankingActivity(data) ? (
@@ -217,7 +244,7 @@ export function BankingPageContent({ data }: BankingPageContentProps) {
                       {formatAccountDetails(account)}
                     </p>
                     <p className="mt-1 text-muted-foreground">
-                      Balance unavailable
+                      Ledger balance: {formatCurrency(account.ledgerBalance)}
                     </p>
                   </li>
                 ))}

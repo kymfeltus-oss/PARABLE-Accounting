@@ -72,24 +72,31 @@ describe("ReportsPageContent", () => {
     ).toContain("$0.00");
   });
 
-  it("clearly marks unsupported formal statements unavailable", () => {
+  it("renders financial statement tables for available reports", () => {
     render(<ReportsPageContent data={createPopulatedReportsData()} />);
 
-    expect(
-      screen.getByText(/Formal financial statements are unavailable until ledger balance aggregation/i),
-    ).toBeTruthy();
-    expect(screen.getByText(/Trial Balance/)).toBeTruthy();
-    expect(screen.getAllByText(/Unavailable —/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Trial Balance/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/1000 · Operating Cash/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Net income: \$850\.00/)).toBeTruthy();
+    expect(screen.getAllByText(/General Fund/).length).toBeGreaterThan(0);
   });
 
-  it("does not fabricate balances or export functionality", () => {
+  it("marks only cash flow unavailable", () => {
+    render(<ReportsPageContent data={createPopulatedReportsData()} />);
+
+    expect(screen.getByText(/Cash Flow Statement/)).toBeTruthy();
+    expect(screen.getByText(/Budget vs Actual/)).toBeTruthy();
+    expect(screen.queryByText(/Budget vs Actual.*Unavailable/i)).toBeNull();
+    expect(screen.queryByText(/Trial Balance.*Unavailable/i)).toBeNull();
+  });
+
+  it("does not fabricate export functionality", () => {
     const { container } = render(
       <ReportsPageContent data={createPopulatedReportsData()} />,
     );
     const text = container.textContent ?? "";
 
     expect(text).not.toMatch(/export|download|pdf|csv/i);
-    expect(text).not.toMatch(/net income|retained earnings|fund balance total/i);
   });
 
   it("renders related workspace navigation links", () => {

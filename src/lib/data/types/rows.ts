@@ -33,11 +33,35 @@ export type OrganizationRow = {
   updated_at: string;
 };
 
+export type OrganizationSettingsRow = {
+  organization_id: string;
+  fiscal_year_start_month: number;
+  default_cash_account_id: string | null;
+  default_revenue_account_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type OrganizationMembershipRow = {
   id: string;
   organization_id: string;
   user_id: string;
   role: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OrganizationInviteRow = {
+  id: string;
+  organization_id: string;
+  email: string | null;
+  role: string;
+  token_hash: string;
+  status: string;
+  invited_by_user_id: string;
+  expires_at: string;
+  accepted_by_user_id: string | null;
+  accepted_at: string | null;
   created_at: string;
   updated_at: string;
 };

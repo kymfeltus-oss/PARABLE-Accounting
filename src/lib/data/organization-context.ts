@@ -7,6 +7,7 @@ import {
   getUserOrganizationMemberships,
   type UserOrganizationSummary,
 } from "./organization-membership-repository";
+import { getSelectedOrganizationId } from "./organization-selection";
 
 const PARABLE_ORGANIZATION_ID_ENV = "PARABLE_ORGANIZATION_ID";
 
@@ -30,6 +31,7 @@ export function getConfiguredOrganizationId(): string {
 
 export async function resolveOrganizationContext(
   userId: string,
+  preferredOrganizationId?: string | null,
 ): Promise<Exclude<OrganizationResolution, { status: "unauthenticated" }>> {
   const memberships = await getUserOrganizationMemberships(userId);
 
@@ -41,6 +43,18 @@ export async function resolveOrganizationContext(
     return {
       status: "resolved",
       organizationId: memberships[0].organizationId,
+    };
+  }
+
+  const preferred = preferredOrganizationId?.trim() ?? null;
+
+  if (
+    preferred &&
+    memberships.some((membership) => membership.organizationId === preferred)
+  ) {
+    return {
+      status: "resolved",
+      organizationId: preferred,
     };
   }
 
@@ -57,7 +71,8 @@ export async function resolveOrganizationContextForAuthenticatedUser(): Promise<
     return { status: "unauthenticated" };
   }
 
-  return resolveOrganizationContext(user.id);
+  const preferredOrganizationId = await getSelectedOrganizationId();
+  return resolveOrganizationContext(user.id, preferredOrganizationId);
 }
 
 export async function getCurrentOrganizationId(): Promise<string> {

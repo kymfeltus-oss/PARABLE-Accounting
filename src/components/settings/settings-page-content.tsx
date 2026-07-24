@@ -5,7 +5,11 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
+import { CreateInviteForm } from "@/components/settings/create-invite-form";
+import { OrganizationInvitesTable } from "@/components/settings/organization-invites-table";
 import { OrganizationMembershipsTable } from "@/components/settings/organization-memberships-table";
+import { OrganizationProfileForm } from "@/components/settings/organization-profile-form";
+import { OrganizationSettingsForm } from "@/components/settings/organization-settings-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -47,7 +51,6 @@ const navigationLinks = [
 const unavailableConfigurationAreas = [
   "Application preferences",
   "Notification settings",
-  "Accounting defaults",
   "Close preferences",
   "Report preferences",
   "Branding controls",
@@ -96,8 +99,14 @@ function formatSummaryValue(
   }
 }
 
+function canEditAccountingDefaults(role: OrganizationMembershipRole): boolean {
+  return role === "owner" || role === "accountant";
+}
+
 export function SettingsPageContent({ data }: SettingsPageContentProps) {
   const settingsNav = getNavItemByPathname("/settings");
+  const isOwner = data.currentUserRole === "owner";
+  const showAccountingDefaults = canEditAccountingDefaults(data.currentUserRole);
 
   if (!settingsNav) {
     throw new Error("Settings navigation item is not configured.");
@@ -143,47 +152,90 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
             Organization Profile
           </h2>
           <p className="text-sm text-muted-foreground">
-            Recorded organization identity from the current system of record.
+            {isOwner
+              ? "Update the organization name shown across the workspace."
+              : "Recorded organization identity from the current system of record."}
           </p>
         </div>
 
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-sm font-medium text-muted-foreground">Name</dt>
-            <dd className="mt-1 text-sm text-foreground">{data.organization.name}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-muted-foreground">Slug</dt>
-            <dd className="mt-1 text-sm text-foreground">{data.organization.slug}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-muted-foreground">
-              Organization ID
-            </dt>
-            <dd className="mt-1 text-sm text-foreground">{data.organization.id}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-muted-foreground">Status</dt>
-            <dd className="mt-1 text-sm text-foreground">
-              {formatLabel(data.organization.status)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-muted-foreground">Created</dt>
-            <dd className="mt-1 text-sm text-foreground">
-              {formatDateTime(data.organization.created_at)}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-muted-foreground">
-              Last Updated
-            </dt>
-            <dd className="mt-1 text-sm text-foreground">
-              {formatDateTime(data.organization.updated_at)}
-            </dd>
-          </div>
-        </dl>
+        <div className="mt-6">
+          {isOwner ? (
+            <OrganizationProfileForm organization={data.organization} />
+          ) : (
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Name</dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {data.organization.name}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">
+                  Ministry web name
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {data.organization.slug}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">
+                  Workspace ID
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {data.organization.id}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Status</dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {formatLabel(data.organization.status)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">Created</dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {formatDateTime(data.organization.created_at)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-muted-foreground">
+                  Last Updated
+                </dt>
+                <dd className="mt-1 text-sm text-foreground">
+                  {formatDateTime(data.organization.updated_at)}
+                </dd>
+              </div>
+            </dl>
+          )}
+        </div>
       </section>
+
+      {showAccountingDefaults ? (
+        <section
+          aria-labelledby="settings-accounting-defaults-title"
+          className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        >
+          <div className="space-y-1">
+            <h2
+              id="settings-accounting-defaults-title"
+              className="text-lg font-semibold text-foreground"
+            >
+              Accounting Defaults
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Configure fiscal year timing and default posting accounts for the
+              organization.
+            </p>
+          </div>
+
+          <div className="mt-6">
+            <OrganizationSettingsForm
+              accounts={data.accounts}
+              settings={data.settings}
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section
         aria-labelledby="settings-access-membership-title"
@@ -219,6 +271,30 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
         </div>
       </section>
 
+      {isOwner ? (
+        <section
+          aria-labelledby="settings-organization-invites-title"
+          className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        >
+          <div className="space-y-1">
+            <h2
+              id="settings-organization-invites-title"
+              className="text-lg font-semibold text-foreground"
+            >
+              Team Invites
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Create invite codes so teammates can join your ministry workspace.
+            </p>
+          </div>
+
+          <div className="mt-6 space-y-6">
+            <CreateInviteForm />
+            <OrganizationInvitesTable invites={data.invites} />
+          </div>
+        </section>
+      ) : null}
+
       <section
         aria-labelledby="settings-configuration-availability-title"
         className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
@@ -231,9 +307,9 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
             Configuration Availability
           </h2>
           <p className="text-sm text-muted-foreground">
-            Organization profile and membership information are shown from the
-            current system of record. Configurable application preferences are
-            not yet persisted in the current schema.
+            Organization profile, membership, and accounting defaults are
+            persisted in the current schema. Other application preferences are
+            not yet available.
           </p>
         </div>
 

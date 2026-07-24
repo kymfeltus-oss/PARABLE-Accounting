@@ -29,6 +29,7 @@ function createEmptyTransactionsMockClient() {
   return createMockSupabaseClient({
     bank_transactions: [{ data: [], error: null }],
     bank_transaction_matches: [{ data: [], error: null }],
+    bank_accounts: [{ data: [], error: null }],
   });
 }
 
@@ -62,7 +63,7 @@ describe("getTransactionsData", () => {
 
     await getTransactionsData(TEST_ORGANIZATION_ID);
 
-    expect(queryLog).toHaveLength(2);
+    expect(queryLog).toHaveLength(3);
     for (const query of queryLog) {
       expect(hasOrganizationFilter(query, TEST_ORGANIZATION_ID)).toBe(true);
     }
@@ -76,6 +77,7 @@ describe("getTransactionsData", () => {
 
     expect(result.transactions).toEqual([]);
     expect(result.matches).toEqual([]);
+    expect(result.bankAccounts).toEqual([]);
     expect(result.counts).toEqual({
       total: 0,
       unmatched: 0,
@@ -93,6 +95,7 @@ describe("getTransactionsData", () => {
         },
       ],
       bank_transaction_matches: [{ data: [], error: null }],
+      bank_accounts: [{ data: [], error: null }],
     });
     createServerSupabaseClientMock.mockResolvedValue(client);
 

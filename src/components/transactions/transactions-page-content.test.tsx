@@ -20,6 +20,14 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/components/banking/create-bank-transaction-form", () => ({
+  CreateBankTransactionForm: () => <div>Add Transaction Form</div>,
+}));
+
+vi.mock("@/components/transactions/match-bank-transaction-form", () => ({
+  MatchBankTransactionForm: () => <div>Match Form</div>,
+}));
+
 afterEach(() => {
   cleanup();
 });
