@@ -131,6 +131,7 @@ export type GivingTransactionRow = {
   giving_method: string;
   reference: string | null;
   status: string;
+  journal_entry_id?: string | null;
   created_at: string;
   updated_at: string;
 };

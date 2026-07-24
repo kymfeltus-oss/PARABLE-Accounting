@@ -1,10 +1,12 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+import { DataAccessError } from "./data-access-error";
 import { requireOrganizationId } from "./organization-id";
 import {
   getMonthDateRange,
   getYearToDateRange,
   sumAmounts,
+  toDataAccessError,
   unwrapRows,
 } from "./query-helpers";
 import type {
@@ -24,6 +26,26 @@ export type GivingData = {
     activeGiverCount: number;
   };
 };
+
+export type RecordedGivingTransactionRow = GivingTransactionRow & {
+  journal_entry_id: string | null;
+};
+
+function requireGivingTransactionId(
+  givingTransactionId: string,
+  operation: string,
+): string {
+  const trimmed = givingTransactionId.trim();
+
+  if (!trimmed) {
+    throw new DataAccessError({
+      operation,
+      message: "givingTransactionId is required and must be a non-empty string",
+    });
+  }
+
+  return trimmed;
+}
 
 export async function getGivingData(
   organizationId: string,
@@ -112,4 +134,70 @@ export async function getGivingData(
       activeGiverCount,
     },
   };
+}
+
+export async function recordGiving(
+  organizationId: string,
+  givingTransactionId: string,
+  debitAccountId: string,
+  creditAccountId: string,
+): Promise<RecordedGivingTransactionRow> {
+  const operation = "recordGiving";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const scopedGivingTransactionId = requireGivingTransactionId(
+    givingTransactionId,
+    operation,
+  );
+  const scopedDebitAccountId = debitAccountId.trim();
+  const scopedCreditAccountId = creditAccountId.trim();
+
+  if (!scopedDebitAccountId) {
+    throw new DataAccessError({
+      operation,
+      message: "debitAccountId is required and must be a non-empty string",
+    });
+  }
+
+  if (!scopedCreditAccountId) {
+    throw new DataAccessError({
+      operation,
+      message: "creditAccountId is required and must be a non-empty string",
+    });
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase.rpc("record_giving", {
+    target_organization_id: scopedOrganizationId,
+    target_giving_transaction_id: scopedGivingTransactionId,
+    input_debit_account_id: scopedDebitAccountId,
+    input_credit_account_id: scopedCreditAccountId,
+  });
+
+  if (result.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[recordGiving RPC diagnostic]", {
+        operation,
+        code: result.error.code,
+        message: result.error.message,
+        details: result.error.details,
+        hint: result.error.hint,
+        organizationId: scopedOrganizationId,
+        givingTransactionId: scopedGivingTransactionId,
+        debitAccountId: scopedDebitAccountId,
+        creditAccountId: scopedCreditAccountId,
+      });
+    }
+
+    throw toDataAccessError(operation, result.error);
+  }
+
+  if (!result.data) {
+    throw new DataAccessError({
+      operation,
+      message: "Giving recording returned no row",
+    });
+  }
+
+  return result.data as RecordedGivingTransactionRow;
 }

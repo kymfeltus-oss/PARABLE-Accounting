@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DataAccessError } from "./data-access-error";
-import { getGivingData } from "./giving-repository";
+import { getGivingData, recordGiving } from "./giving-repository";
 import {
   createBackendError,
   createMockSupabaseClient,
@@ -99,5 +99,177 @@ describe("getGivingData", () => {
     await expect(getGivingData(TEST_ORGANIZATION_ID)).rejects.toBeInstanceOf(
       DataAccessError,
     );
+  });
+});
+
+const TEST_GIVING_TRANSACTION_ID = "55555555-5555-4555-8555-555555555555";
+const TEST_DEBIT_ACCOUNT_ID = "77777777-7777-4777-8777-777777777771";
+const TEST_CREDIT_ACCOUNT_ID = "99999999-9999-4999-8999-999999999999";
+const TEST_JOURNAL_ENTRY_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+function createRecordedGivingRow() {
+  return {
+    id: TEST_GIVING_TRANSACTION_ID,
+    organization_id: TEST_ORGANIZATION_ID,
+    member_id: null,
+    fund_id: null,
+    transaction_date: "2026-07-20",
+    amount: 250,
+    giving_method: "cash",
+    reference: "GIV-2001",
+    status: "recorded",
+    journal_entry_id: TEST_JOURNAL_ENTRY_ID,
+    created_at: "2026-07-20T12:00:00.000Z",
+    updated_at: "2026-07-20T12:00:00.000Z",
+  };
+}
+
+function createRecordGivingRpcMockClient(rpcResponse: {
+  data: unknown;
+  error: ReturnType<typeof createBackendError> | null;
+}) {
+  const { client: tableClient } = createEmptyGivingMockClient();
+  const rpcMock = vi.fn().mockResolvedValue(rpcResponse);
+  const fromMock = vi.spyOn(tableClient, "from");
+
+  return {
+    client: {
+      ...tableClient,
+      rpc: rpcMock,
+    },
+    rpcMock,
+    fromMock,
+  };
+}
+
+describe("recordGiving", () => {
+  beforeEach(() => {
+    createAdminSupabaseClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
+  });
+
+  it("requires organizationId", async () => {
+    await expect(
+      recordGiving(
+        "",
+        TEST_GIVING_TRANSACTION_ID,
+        TEST_DEBIT_ACCOUNT_ID,
+        TEST_CREDIT_ACCOUNT_ID,
+      ),
+    ).rejects.toBeInstanceOf(DataAccessError);
+    expect(createAdminSupabaseClientMock).not.toHaveBeenCalled();
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("uses createServerSupabaseClient and does not use createAdminSupabaseClient", async () => {
+    const { client } = createRecordGivingRpcMockClient({
+      data: createRecordedGivingRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordGiving(
+      TEST_ORGANIZATION_ID,
+      TEST_GIVING_TRANSACTION_ID,
+      TEST_DEBIT_ACCOUNT_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(createServerSupabaseClientMock).toHaveBeenCalledTimes(1);
+    expect(createAdminSupabaseClientMock).not.toHaveBeenCalled();
+  });
+
+  it("calls the record_giving RPC with exact argument names", async () => {
+    const { client, rpcMock } = createRecordGivingRpcMockClient({
+      data: createRecordedGivingRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordGiving(
+      TEST_ORGANIZATION_ID,
+      TEST_GIVING_TRANSACTION_ID,
+      TEST_DEBIT_ACCOUNT_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(rpcMock).toHaveBeenCalledTimes(1);
+    expect(rpcMock).toHaveBeenCalledWith("record_giving", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+      target_giving_transaction_id: TEST_GIVING_TRANSACTION_ID,
+      input_debit_account_id: TEST_DEBIT_ACCOUNT_ID,
+      input_credit_account_id: TEST_CREDIT_ACCOUNT_ID,
+    });
+  });
+
+  it("returns the recorded giving row from the RPC", async () => {
+    const recordedRow = createRecordedGivingRow();
+    const { client } = createRecordGivingRpcMockClient({
+      data: recordedRow,
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    const result = await recordGiving(
+      TEST_ORGANIZATION_ID,
+      TEST_GIVING_TRANSACTION_ID,
+      TEST_DEBIT_ACCOUNT_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(result).toEqual(recordedRow);
+  });
+
+  it("throws DataAccessError when the RPC fails", async () => {
+    const { client } = createRecordGivingRpcMockClient({
+      data: null,
+      error: createBackendError(
+        "Giving transaction is not in recorded status",
+      ),
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      recordGiving(
+        TEST_ORGANIZATION_ID,
+        TEST_GIVING_TRANSACTION_ID,
+        TEST_DEBIT_ACCOUNT_ID,
+        TEST_CREDIT_ACCOUNT_ID,
+      ),
+    ).rejects.toBeInstanceOf(DataAccessError);
+  });
+
+  it("does not perform a direct table query or id-only lookup", async () => {
+    const { client, fromMock } = createRecordGivingRpcMockClient({
+      data: createRecordedGivingRow(),
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await recordGiving(
+      TEST_ORGANIZATION_ID,
+      TEST_GIVING_TRANSACTION_ID,
+      TEST_DEBIT_ACCOUNT_ID,
+      TEST_CREDIT_ACCOUNT_ID,
+    );
+
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("throws DataAccessError when the RPC returns no row", async () => {
+    const { client } = createRecordGivingRpcMockClient({
+      data: null,
+      error: null,
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await expect(
+      recordGiving(
+        TEST_ORGANIZATION_ID,
+        TEST_GIVING_TRANSACTION_ID,
+        TEST_DEBIT_ACCOUNT_ID,
+        TEST_CREDIT_ACCOUNT_ID,
+      ),
+    ).rejects.toBeInstanceOf(DataAccessError);
   });
 });
