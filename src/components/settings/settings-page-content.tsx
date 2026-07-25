@@ -48,15 +48,6 @@ const navigationLinks = [
   },
 ] as const;
 
-const unavailableConfigurationAreas = [
-  "Application preferences",
-  "Notification settings",
-  "Close preferences",
-  "Report preferences",
-  "Branding controls",
-  "Security policy settings",
-] as const;
-
 type SettingsPageContentProps = {
   data: SettingsData;
 };
@@ -300,31 +291,6 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
           </div>
         </section>
       ) : null}
-
-      <section
-        aria-labelledby="settings-configuration-availability-title"
-        className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
-      >
-        <div className="space-y-1">
-          <h2
-            id="settings-configuration-availability-title"
-            className="text-lg font-semibold text-foreground"
-          >
-            Configuration Availability
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Organization profile, membership, and accounting defaults are
-            persisted in the current schema. Other application preferences are
-            not yet available.
-          </p>
-        </div>
-
-        <ul className="mt-6 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-          {unavailableConfigurationAreas.map((area) => (
-            <li key={area}>{area} — not persisted</li>
-          ))}
-        </ul>
-      </section>
 
       <section
         aria-labelledby="settings-related-workspaces-title"

@@ -51,6 +51,9 @@ export function createPopulatedSettingsData(
         role: "owner",
         created_at: "2026-02-01T09:00:00.000Z",
         updated_at: "2026-02-01T09:00:00.000Z",
+        displayName: "You (owner@example.com)",
+        email: "owner@example.com",
+        isCurrentUser: true,
       },
       {
         id: "membership-2",
@@ -59,6 +62,9 @@ export function createPopulatedSettingsData(
         role: "staff",
         created_at: "2026-03-10T14:30:00.000Z",
         updated_at: "2026-06-20T08:15:00.000Z",
+        displayName: "staff@example.com",
+        email: "staff@example.com",
+        isCurrentUser: false,
       },
     ],
     settings: {

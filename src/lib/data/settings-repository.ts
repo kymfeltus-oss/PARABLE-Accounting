@@ -41,11 +41,17 @@ function requireMembershipRole(
   return role as OrganizationMembershipRole;
 }
 
+export type SettingsMembership = OrganizationMembershipRow & {
+  displayName: string;
+  email: string | null;
+  isCurrentUser: boolean;
+};
+
 export type SettingsData = {
   organizationId: string;
   organization: OrganizationRow;
   currentUserRole: OrganizationMembershipRole;
-  memberships: OrganizationMembershipRow[];
+  memberships: SettingsMembership[];
   settings: OrganizationSettingsRow | null;
   invites: OrganizationInviteRow[];
   accounts: AccountRow[];
@@ -53,6 +59,52 @@ export type SettingsData = {
     totalMemberships: number;
   };
 };
+
+function shortenUserId(userId: string): string {
+  if (userId.length <= 12) {
+    return userId;
+  }
+
+  return `${userId.slice(0, 8)}…${userId.slice(-4)}`;
+}
+
+function enrichMemberships(
+  memberships: OrganizationMembershipRow[],
+  invites: OrganizationInviteRow[],
+  currentUserId: string,
+  currentUserEmail: string | null | undefined,
+): SettingsMembership[] {
+  const emailByAcceptedUserId = new Map<string, string>();
+
+  for (const invite of invites) {
+    if (
+      invite.accepted_by_user_id &&
+      invite.email &&
+      invite.email.trim() !== ""
+    ) {
+      emailByAcceptedUserId.set(invite.accepted_by_user_id, invite.email.trim());
+    }
+  }
+
+  return memberships.map((membership) => {
+    const isCurrentUser = membership.user_id === currentUserId;
+    const email = isCurrentUser
+      ? (currentUserEmail?.trim() || null)
+      : (emailByAcceptedUserId.get(membership.user_id) ?? null);
+    const displayName = isCurrentUser
+      ? email
+        ? `You (${email})`
+        : "You"
+      : (email ?? shortenUserId(membership.user_id));
+
+    return {
+      ...membership,
+      displayName,
+      email,
+      isCurrentUser,
+    };
+  });
+}
 
 export async function getSettingsData(
   organizationId: string,
@@ -175,7 +227,12 @@ export async function getSettingsData(
     organizationId: scopedOrganizationId,
     organization: organizationRows[0],
     currentUserRole,
-    memberships,
+    memberships: enrichMemberships(
+      memberships,
+      invites,
+      user.id,
+      user.email,
+    ),
     settings: settingsRows[0] ?? null,
     invites,
     accounts,
