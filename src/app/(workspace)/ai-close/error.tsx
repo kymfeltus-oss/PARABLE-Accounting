@@ -18,12 +18,12 @@ export default function AICloseError({ reset }: AICloseErrorProps) {
           id="ai-close-error-title"
           className="text-2xl font-semibold tracking-tight text-foreground"
         >
-          AI Close data could not be loaded
+          Period Close data could not be loaded
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-          The AI Close workspace could not retrieve live close session data right
-          now. Please try again. If the problem continues, verify the server
-          configuration for this workspace.
+          The Period Close workspace could not retrieve live close session data
+          right now. Please try again. If the problem continues, verify the
+          server configuration for this workspace.
         </p>
       </div>
 

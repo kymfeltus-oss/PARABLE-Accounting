@@ -3,14 +3,18 @@
 import { useState } from "react";
 
 import { AppHeader } from "./app-header";
-import { AppSidebar } from "./app-sidebar";
+import {
+  AppSidebar,
+  type WorkspaceShellIdentity,
+} from "./app-sidebar";
 import { MobileNav } from "./mobile-nav";
 
 type AppShellProps = {
   children: React.ReactNode;
+  identity: WorkspaceShellIdentity;
 };
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, identity }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -21,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
       >
         Skip to main content
       </a>
-      <AppSidebar />
+      <AppSidebar identity={identity} />
       <div className="flex min-h-svh min-w-0 flex-1 flex-col overflow-x-clip">
         <AppHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <main
@@ -31,7 +35,11 @@ export function AppShell({ children }: AppShellProps) {
           {children}
         </main>
       </div>
-      <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
+      <MobileNav
+        identity={identity}
+        open={mobileNavOpen}
+        onOpenChange={setMobileNavOpen}
+      />
     </div>
   );
 }

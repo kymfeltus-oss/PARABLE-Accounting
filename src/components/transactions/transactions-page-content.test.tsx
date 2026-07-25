@@ -83,7 +83,8 @@ describe("TransactionsPageContent", () => {
   it("does not fabricate unsupported attention metrics", () => {
     render(<TransactionsPageContent data={createPopulatedTransactionsData()} />);
 
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.queryByText("High-value unmatched")).toBeNull();
+    expect(screen.queryByText("Duplicate-looking transactions")).toBeNull();
     expect(screen.queryByText(/AI match/i)).toBeNull();
   });
 

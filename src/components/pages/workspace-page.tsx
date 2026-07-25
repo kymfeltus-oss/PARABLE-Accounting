@@ -15,7 +15,6 @@ export function WorkspacePage({ navId }: WorkspacePageProps) {
   return (
     <section aria-labelledby={`${navId}-title`} className="space-y-6">
       <div className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Phase 1A</p>
         <h1
           id={`${navId}-title`}
           className="text-3xl font-semibold text-foreground"

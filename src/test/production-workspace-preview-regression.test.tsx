@@ -155,7 +155,7 @@ describe("production workspace preview regression", () => {
     expect(container.textContent).not.toContain("Development Preview");
   });
 
-  it("AI Close does not render Development Preview", () => {
+  it("Period Close does not render Development Preview", () => {
     const { container } = render(
       <AiClosePageContent data={createEmptyAiCloseData()} />,
     );

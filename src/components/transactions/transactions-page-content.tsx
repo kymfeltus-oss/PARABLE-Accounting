@@ -32,13 +32,6 @@ const matchReviewLabels = [
   "Unmatched amount",
 ] as const;
 
-const attentionLabels = [
-  "High-value unmatched",
-  "Duplicate-looking transactions",
-  "Stale unmatched items",
-  "Reconciliation-impacting items",
-] as const;
-
 const navigationLinks = [
   {
     id: "banking",
@@ -134,10 +127,6 @@ function formatMatchReviewValue(
     default:
       return "Unavailable";
   }
-}
-
-function formatAttentionValue(): string {
-  return "Unavailable";
 }
 
 function formatTransactionLabel(transaction: BankTransactionRow): string {
@@ -292,23 +281,20 @@ export function TransactionsPageContent({ data }: TransactionsPageContentProps) 
                 Attention
               </h2>
               <p className="text-sm text-muted-foreground">
-                Items that may need review before reconciliation close.
+                Unmatched bank transactions that still need review.
               </p>
             </div>
 
-            <ul className="mt-6 space-y-4">
-              {attentionLabels.map((title) => (
-                <li
-                  key={title}
-                  className="rounded-lg border border-border/70 bg-muted/20 p-4"
-                >
-                  <p className="text-sm font-medium text-foreground">{title}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {formatAttentionValue()}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-6 rounded-lg border border-border/70 bg-muted/20 p-4">
+              <p className="text-sm font-medium text-foreground">
+                Unmatched transactions
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {data.counts.unmatched > 0
+                  ? `${data.counts.unmatched} transaction${data.counts.unmatched === 1 ? "" : "s"}`
+                  : "No unmatched transactions."}
+              </p>
+            </div>
           </section>
         </div>
       </div>

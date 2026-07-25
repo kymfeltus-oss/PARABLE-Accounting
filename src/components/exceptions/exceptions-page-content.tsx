@@ -56,7 +56,7 @@ const navigationLinks = [
   },
   {
     id: "ai-close",
-    label: "AI Close",
+    label: "Period Close",
     href: "/ai-close",
     description: "Open close validation tasks",
     icon: Sparkles,

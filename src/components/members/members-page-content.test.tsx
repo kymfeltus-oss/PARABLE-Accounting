@@ -103,7 +103,9 @@ describe("MembersPageContent", () => {
   it("does not fabricate unsupported metrics", () => {
     render(<MembersPageContent data={createPopulatedMembersData()} />);
 
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Members With Giving History")).toBeNull();
+    expect(screen.queryByText("Active Givers")).toBeNull();
+    expect(screen.queryByText("Retention percentage")).toBeNull();
     expect(screen.queryByText(/%\s*retention/i)).toBeNull();
   });
 

@@ -3,7 +3,6 @@
 import { navGroups } from "@/config/navigation";
 import { BrandLogoMark } from "@/components/brand/brand-logo-mark";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -14,14 +13,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+import type { WorkspaceShellIdentity } from "./app-sidebar";
 import { NavSection } from "./nav-section";
 
 type MobileNavProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  identity: WorkspaceShellIdentity;
 };
 
-export function MobileNav({ open, onOpenChange }: MobileNavProps) {
+export function MobileNav({ open, onOpenChange, identity }: MobileNavProps) {
   const handleNavigate = () => {
     onOpenChange(false);
   };
@@ -46,12 +47,9 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
             </span>
             <BrandWordmark compact />
           </div>
-          <Badge
-            variant="secondary"
-            className="brand-workspace-badge w-fit text-[0.65rem] tracking-[0.08em] uppercase"
-          >
-            Development Workspace
-          </Badge>
+          <p className="truncate text-sm font-medium text-[#F7FAFF]">
+            {identity.organizationName}
+          </p>
         </div>
 
         <ScrollArea className="flex-1">
@@ -67,7 +65,14 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
 
         <div className="border-t border-sidebar-border px-4 py-4">
           <div className="brand-surface rounded-md px-3 py-2.5">
-            <p className="brand-label text-muted-foreground">Phase 1A</p>
+            <p className="truncate text-sm font-medium text-foreground">
+              {identity.userDisplayName}
+            </p>
+            {identity.userEmail ? (
+              <p className="mt-1 truncate text-xs text-muted-foreground">
+                {identity.userEmail}
+              </p>
+            ) : null}
           </div>
         </div>
       </SheetContent>

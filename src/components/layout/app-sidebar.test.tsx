@@ -1,6 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { navItems } from "@/config/navigation";
+
 import { AppSidebar, sidebarItems } from "./app-sidebar";
 
 const usePathnameMock = vi.fn();
@@ -10,41 +12,65 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: React.ComponentProps<"a"> & { href: string }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: React.ComponentProps<"a"> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
+
+const identity = {
+  organizationName: "Grace Community Church",
+  userDisplayName: "Taylor Reed",
+  userEmail: "taylor@example.org",
+};
 
 afterEach(cleanup);
 
 describe("AppSidebar", () => {
-  it("renders the approved navigation in exact order", () => {
+  it("renders every navigation link from centralized config", () => {
     usePathnameMock.mockReturnValue("/dashboard");
-    render(<AppSidebar />);
-    expect(screen.getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
-      "Overview", "Giving", "Expenses", "Vendors", "Banking",
-      "Accounting", "Reports", "Compliance", "Members", "Settings",
-    ]);
+    render(<AppSidebar identity={identity} />);
+
+    expect(screen.getAllByRole("link")).toHaveLength(navItems.length);
+    expect(sidebarItems).toEqual(navItems);
   });
 
-  it("uses the configured hrefs and marks Overview active", () => {
+  it("uses the configured hrefs and marks Dashboard active", () => {
     usePathnameMock.mockReturnValue("/dashboard");
-    render(<AppSidebar />);
+    render(<AppSidebar identity={identity} />);
+
     for (const item of sidebarItems) {
-      expect(screen.getByRole("link", { name: item.label })).toHaveAttribute("href", item.href);
+      expect(screen.getByRole("link", { name: item.label })).toHaveAttribute(
+        "href",
+        item.href,
+      );
     }
-    expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
-  it("renders the approved brand, organization, profile, and status content", () => {
+  it("renders brand and live workspace identity without fake status claims", () => {
     usePathnameMock.mockReturnValue("/dashboard");
-    render(<AppSidebar />);
+    render(<AppSidebar identity={identity} />);
+
     expect(screen.getByText("PARABLE")).toBeVisible();
     expect(screen.getByText("Ministry Finance OS")).toBeVisible();
-    expect(screen.getByText("Parable Accounting")).toBeVisible();
-    expect(screen.getByText("Development")).toBeVisible();
-    expect(screen.getByText("Kym Feltus")).toBeVisible();
-    expect(screen.getByText("Owner")).toBeVisible();
-    expect(screen.getByText("All systems operational")).toBeVisible();
+    expect(screen.getByText("Grace Community Church")).toBeVisible();
+    expect(screen.getByText("Organization")).toBeVisible();
+    expect(screen.getByText("Taylor Reed")).toBeVisible();
+    expect(screen.getByText("taylor@example.org")).toBeVisible();
+    expect(screen.queryByText("Development")).not.toBeInTheDocument();
+    expect(screen.queryByText("Kym Feltus")).not.toBeInTheDocument();
+    expect(screen.queryByText("Owner")).not.toBeInTheDocument();
+    expect(screen.queryByText("All systems operational")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Last synced/i)).not.toBeInTheDocument();
   });
 });

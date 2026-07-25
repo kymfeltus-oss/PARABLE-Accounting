@@ -247,22 +247,6 @@
     box-shadow: 0 1px 0 rgb(247 250 255 / 2%) inset;
   }
 
-  .dashboard-ai-insight::after {
-    content: "";
-    position: absolute;
-    inset: 1rem 0 auto auto;
-    width: 42%;
-    height: 42%;
-    pointer-events: none;
-    opacity: 0.42;
-    background:
-      radial-gradient(circle at 76% 35%, #13c6ff 0 1.5px, transparent 2px),
-      radial-gradient(circle at 42% 62%, #1677ff 0 1px, transparent 1.7px),
-      radial-gradient(circle at 88% 75%, #1677ff 0 1px, transparent 1.7px),
-      repeating-linear-gradient(155deg, transparent 0 13px, rgb(102 116 255 / 42%) 13px 14px);
-    mask-image: linear-gradient(to bottom left, black, transparent 76%);
-  }
-
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

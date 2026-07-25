@@ -39,9 +39,9 @@ describe("WorkspacePage", () => {
     expect(screen.getByText(giving.description)).toBeTruthy();
   });
 
-  it("renders configured titles for AI Close and Audit Vault", () => {
+  it("renders configured titles for Period Close and Audit Vault", () => {
     render(<WorkspacePage navId="ai-close" />);
-    expect(screen.getByRole("heading", { level: 1, name: "AI Close" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Period Close" })).toBeTruthy();
 
     cleanup();
 
@@ -49,7 +49,7 @@ describe("WorkspacePage", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Audit Vault" })).toBeTruthy();
   });
 
-  it("renders the approved empty state and development phase label", () => {
+  it("renders the approved empty state without a development phase label", () => {
     render(<WorkspacePage navId="dashboard" />);
 
     expect(
@@ -57,7 +57,7 @@ describe("WorkspacePage", () => {
         "This workspace section is not yet configured. Live ministry financial data and workflows will appear here in a future implementation phase.",
       ),
     ).toBeTruthy();
-    expect(screen.getByText("Phase 1A")).toBeTruthy();
+    expect(screen.queryByText("Phase 1A")).toBeNull();
   });
 
   it("renders exactly one level-one heading", () => {

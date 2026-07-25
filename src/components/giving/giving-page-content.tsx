@@ -23,8 +23,6 @@ const summaryLabels = [
 
 const insightLabels = [
   "Top giving fund",
-  "Recurring giving percentage",
-  "New givers this month",
   "Largest gift this month",
 ] as const;
 
@@ -33,7 +31,7 @@ const navigationLinks = [
     id: "members",
     label: "Members",
     href: "/members",
-    description: "Review member profiles and giving history",
+    description: "Review member profiles",
     icon: Wallet,
   },
   {
@@ -47,7 +45,7 @@ const navigationLinks = [
     id: "reports",
     label: "Reports",
     href: "/reports",
-    description: "Open giving and stewardship reports",
+    description: "Open financial reports",
     icon: BarChart3,
   },
 ] as const;
@@ -190,13 +188,10 @@ function formatInsightValue(
   switch (label) {
     case "Top giving fund":
       return getTopGivingFundLabel(fundBreakdown);
-    case "Recurring giving percentage":
-    case "New givers this month":
-      return "Unavailable";
     case "Largest gift this month":
       return getLargestGiftThisMonth(monthTransactions);
     default:
-      return "Unavailable";
+      return "No data available yet.";
   }
 }
 

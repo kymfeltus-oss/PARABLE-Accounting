@@ -19,11 +19,11 @@ describe("AICloseError", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "AI Close data could not be loaded",
+        name: "Period Close data could not be loaded",
       }),
     ).toBeTruthy();
     expect(
-      screen.getByText(/The AI Close workspace could not retrieve live close session data/i),
+      screen.getByText(/The Period Close workspace could not retrieve live close session data/i),
     ).toBeTruthy();
     expect(screen.queryByText(/SUPABASE_SERVICE_ROLE_KEY/i)).toBeNull();
   });

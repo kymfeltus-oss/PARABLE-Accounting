@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { getAuthenticatedUser } from "@/lib/auth/get-authenticated-user";
+import { getUserDisplayName } from "@/lib/auth/user-display-name";
 import { resolveOrganizationContextForAuthenticatedUser } from "@/lib/data/organization-context";
+import { getUserOrganizationMemberships } from "@/lib/data/organization-membership-repository";
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode;
@@ -29,5 +31,21 @@ export default async function WorkspaceLayout({ children }: WorkspaceLayoutProps
     redirect("/select-organization");
   }
 
-  return <AppShell>{children}</AppShell>;
+  const memberships = await getUserOrganizationMemberships(user.id);
+  const organizationName =
+    memberships.find(
+      (membership) => membership.organizationId === resolution.organizationId,
+    )?.name ?? "Organization";
+
+  return (
+    <AppShell
+      identity={{
+        organizationName,
+        userDisplayName: getUserDisplayName(user),
+        userEmail: user.email ?? null,
+      }}
+    >
+      {children}
+    </AppShell>
+  );
 }

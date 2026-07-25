@@ -7,10 +7,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   getAuthenticatedUserMock,
+  getUserOrganizationMembershipsMock,
   redirectMock,
   resolveOrganizationContextForAuthenticatedUserMock,
 } = vi.hoisted(() => ({
   getAuthenticatedUserMock: vi.fn(),
+  getUserOrganizationMembershipsMock: vi.fn(),
   redirectMock: vi.fn((destination: string) => {
     throw new Error(`NEXT_REDIRECT:${destination}`);
   }),
@@ -30,9 +32,25 @@ vi.mock("@/lib/data/organization-context", () => ({
     resolveOrganizationContextForAuthenticatedUserMock,
 }));
 
+vi.mock("@/lib/data/organization-membership-repository", () => ({
+  getUserOrganizationMemberships: getUserOrganizationMembershipsMock,
+}));
+
 vi.mock("@/components/layout/app-shell", () => ({
-  AppShell: ({ children }: { children: ReactNode }) => (
+  AppShell: ({
+    children,
+    identity,
+  }: {
+    children: ReactNode;
+    identity: {
+      organizationName: string;
+      userDisplayName: string;
+      userEmail?: string | null;
+    };
+  }) => (
     <section aria-label="Mock app shell" data-testid="mock-app-shell">
+      <p>{identity.organizationName}</p>
+      <p>{identity.userDisplayName}</p>
       {children}
     </section>
   ),
@@ -52,11 +70,18 @@ describe("WorkspaceLayout auth gate", () => {
     getAuthenticatedUserMock.mockResolvedValue({
       id: "user-1",
       email: "treasurer@example.org",
+      user_metadata: { full_name: "Casey Treasurer" },
     });
     resolveOrganizationContextForAuthenticatedUserMock.mockResolvedValue({
       status: "resolved",
       organizationId: "22222222-2222-4222-8222-222222222222",
     });
+    getUserOrganizationMembershipsMock.mockResolvedValue([
+      {
+        organizationId: "22222222-2222-4222-8222-222222222222",
+        name: "Grace Community Church",
+      },
+    ]);
   });
 
   it("calls getAuthenticatedUser()", async () => {
@@ -116,6 +141,8 @@ describe("WorkspaceLayout auth gate", () => {
 
     expect(shell).toBeTruthy();
     expect(within(shell).getByText("Workspace child content")).toBeTruthy();
+    expect(within(shell).getByText("Grace Community Church")).toBeTruthy();
+    expect(within(shell).getByText("Casey Treasurer")).toBeTruthy();
   });
 
   it("source safety: resolves organization context without admin client access in layout", () => {
@@ -123,6 +150,7 @@ describe("WorkspaceLayout auth gate", () => {
 
     expect(contents).toContain("getAuthenticatedUser");
     expect(contents).toContain("resolveOrganizationContextForAuthenticatedUser");
+    expect(contents).toContain("getUserOrganizationMemberships");
     expect(contents).not.toMatch(/PARABLE_ORGANIZATION_ID|getConfiguredOrganizationId/);
     expect(contents).not.toContain("@/lib/supabase/admin");
     expect(contents).not.toMatch(/organization_memberships/);

@@ -42,7 +42,7 @@ describe("AppHeader", () => {
     ).toBeVisible();
   });
 
-  it("displays AI Close for /ai-close", () => {
+  it("displays Period Close for /ai-close", () => {
     usePathnameMock.mockReturnValue("/ai-close");
 
     render(<AppHeader onOpenMobileNav={vi.fn()} />);
@@ -52,7 +52,7 @@ describe("AppHeader", () => {
         level: 1,
         name: getNavItemByPathname("/ai-close")!.title,
       }),
-    ).toHaveTextContent("AI Close");
+    ).toHaveTextContent("Period Close");
   });
 
   it("displays Audit Vault for /audit-vault", () => {
@@ -78,12 +78,12 @@ describe("AppHeader", () => {
     ).toBeVisible();
   });
 
-  it("renders the Development Workspace badge", () => {
+  it("does not render a Development Workspace badge", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
     render(<AppHeader onOpenMobileNav={vi.fn()} />);
 
-    expect(screen.getByText("Development Workspace")).toBeVisible();
+    expect(screen.queryByText("Development Workspace")).not.toBeInTheDocument();
   });
 
   it("renders the mobile menu button with an accessible name", () => {

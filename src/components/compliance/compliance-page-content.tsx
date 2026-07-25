@@ -35,7 +35,7 @@ type StatusFilterId = (typeof statusFilters)[number]["id"];
 const navigationLinks = [
   {
     id: "ai-close",
-    label: "AI Close",
+    label: "Period Close",
     href: "/ai-close",
     description: "Review close sessions and validation tasks",
     icon: Sparkles,

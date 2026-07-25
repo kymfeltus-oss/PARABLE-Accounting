@@ -153,7 +153,7 @@ export function CreateExpenseDraftForm({
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetTrigger asChild>
           <Button type="button" className={triggerClassName}>
-            {triggerLabel === "Record Transaction" ? (
+            {triggerLabel === "Record expense" ? (
               <Plus aria-hidden className="size-4" />
             ) : null}
             {triggerLabel}

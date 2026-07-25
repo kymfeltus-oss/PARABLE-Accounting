@@ -63,13 +63,13 @@ function getTextContent(node: ReactNode): string {
 }
 
 describe("RootLayout", () => {
-  it("exports the Phase 1A application metadata", () => {
+  it("exports the application metadata", () => {
     expect(metadata.title).toEqual({
       default: "Parable Accounting",
       template: "%s | Parable Accounting",
     });
     expect(metadata.description).toBe(
-      "Ministry Finance OS — AI-driven accounting and financial stewardship for churches and ministries.",
+      "Ministry Finance OS — accounting and financial stewardship for churches and ministries.",
     );
   });
 

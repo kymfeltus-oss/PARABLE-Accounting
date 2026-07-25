@@ -29,7 +29,7 @@ describe("AiClosePageContent", () => {
     render(<AiClosePageContent data={createEmptyAiCloseData()} />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "AI Close" }),
+      screen.getByRole("heading", { level: 1, name: "Period Close" }),
     ).toBeTruthy();
   });
 
@@ -51,7 +51,7 @@ describe("AiClosePageContent", () => {
     expect(screen.getByText("No close sessions yet.")).toBeTruthy();
     expect(screen.getByText("No open close tasks.")).toBeTruthy();
     expect(
-      screen.getByText(/AI confidence scores.*are not available yet/i),
+      screen.getByText(/Automated AI close.*are not available yet/i),
     ).toBeTruthy();
     expect(
       screen.getByRole("link", { name: "Open accounting" }),
@@ -95,7 +95,7 @@ describe("AiClosePageContent", () => {
     render(<AiClosePageContent data={createPopulatedAiCloseData()} />);
 
     expect(
-      screen.getByText(/AI confidence scores.*are not available yet/i),
+      screen.getByText(/Automated AI close.*are not available yet/i),
     ).toBeTruthy();
   });
 

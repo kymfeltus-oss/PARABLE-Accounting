@@ -110,7 +110,7 @@ export function AiClosePageContent({ data }: AiClosePageContentProps) {
   const [taskSearch, setTaskSearch] = useState("");
 
   if (!aiCloseNav) {
-    throw new Error("AI Close navigation item is not configured.");
+    throw new Error("Period Close navigation item is not configured.");
   }
 
   const filteredSessions = useMemo(() => {
@@ -158,9 +158,9 @@ export function AiClosePageContent({ data }: AiClosePageContentProps) {
 
       <div className="space-y-3 rounded-lg border border-dashed border-border bg-muted/20 p-6">
         <p className="text-sm leading-6 text-muted-foreground">
-          AI confidence scores, automated reconciliation, and suggested close
-          actions are not available yet. This page shows live close sessions and
-          tasks only. Close an accounting period from Accounting.
+          Automated AI close, confidence scores, and suggested close actions are
+          not available yet. This page shows live close sessions and tasks only.
+          Close an accounting period from Accounting.
         </p>
         <Button asChild type="button" variant="outline">
           <Link href="/accounting">Open accounting</Link>
