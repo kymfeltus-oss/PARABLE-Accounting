@@ -44,95 +44,115 @@ function createCurrentMembershipResponse(role: string) {
   return { data: [{ role }], error: null };
 }
 
+function withMembershipsRpc(
+  mock: ReturnType<typeof createMockSupabaseClient>,
+  membershipsResponse: {
+    data: unknown;
+    error: ReturnType<typeof createBackendError> | null;
+  },
+) {
+  const rpcMock = vi.fn().mockResolvedValue(membershipsResponse);
+
+  return {
+    ...mock,
+    client: {
+      ...mock.client,
+      rpc: rpcMock,
+    },
+    rpcMock,
+  };
+}
+
 function createEmptySettingsMockClient(currentUserRole = "owner") {
-  return createMockSupabaseClient({
-    organizations: [
-      createOrganizationResponse({
-        id: TEST_ORGANIZATION_ID,
-        name: "Parable Community Church",
-        slug: "parable-community-church",
-        status: "active",
-        created_at: "2026-01-15T10:00:00.000Z",
-        updated_at: "2026-07-01T12:00:00.000Z",
-      }),
-    ],
-    organization_memberships: [
-      { data: [], error: null },
-      createCurrentMembershipResponse(currentUserRole),
-    ],
-    organization_settings: [{ data: [], error: null }],
-    organization_invites: [{ data: [], error: null }],
-    accounts: [{ data: [], error: null }],
-  });
+  return withMembershipsRpc(
+    createMockSupabaseClient({
+      organizations: [
+        createOrganizationResponse({
+          id: TEST_ORGANIZATION_ID,
+          name: "Parable Community Church",
+          slug: "parable-community-church",
+          status: "active",
+          created_at: "2026-01-15T10:00:00.000Z",
+          updated_at: "2026-07-01T12:00:00.000Z",
+        }),
+      ],
+      organization_memberships: [createCurrentMembershipResponse(currentUserRole)],
+      organization_settings: [{ data: [], error: null }],
+      organization_invites: [{ data: [], error: null }],
+      accounts: [{ data: [], error: null }],
+    }),
+    { data: [], error: null },
+  );
 }
 
 function createPopulatedSettingsMockClient(
   currentUserRole = "owner",
   membershipRole = "owner",
 ) {
-  return createMockSupabaseClient({
-    organizations: [
-      createOrganizationResponse({
-        id: TEST_ORGANIZATION_ID,
-        name: "Northside Ministry",
-        slug: "northside-ministry",
-        status: "inactive",
-        created_at: "2026-01-01T00:00:00.000Z",
-        updated_at: "2026-07-02T00:00:00.000Z",
-      }),
-    ],
-    organization_memberships: [
-      {
-        data: [
-          {
-            id: "membership-1",
-            organization_id: TEST_ORGANIZATION_ID,
-            user_id: TEST_USER_ID,
-            role: membershipRole,
-            created_at: "2026-02-01T09:00:00.000Z",
-            updated_at: "2026-02-01T09:00:00.000Z",
-          },
-        ],
-        error: null,
-      },
-      createCurrentMembershipResponse(currentUserRole),
-    ],
-    organization_settings: [
-      {
-        data: [
-          {
-            organization_id: TEST_ORGANIZATION_ID,
-            fiscal_year_start_month: 7,
-            default_cash_account_id: "cash-account-1",
-            default_revenue_account_id: "revenue-account-1",
-            created_at: "2026-01-01T00:00:00.000Z",
-            updated_at: "2026-07-02T00:00:00.000Z",
-          },
-        ],
-        error: null,
-      },
-    ],
-    organization_invites: [{ data: [], error: null }],
-    accounts: [
-      {
-        data: [
-          {
-            id: "cash-account-1",
-            organization_id: TEST_ORGANIZATION_ID,
-            parent_account_id: null,
-            code: "1000",
-            name: "Operating Cash",
-            account_type: "asset",
-            is_posting: true,
-            status: "active",
-            created_at: "2026-01-01T00:00:00.000Z",
-            updated_at: "2026-01-01T00:00:00.000Z",
-          },
-        ],
-        error: null,
-      },
-    ],
-  });
+  return withMembershipsRpc(
+    createMockSupabaseClient({
+      organizations: [
+        createOrganizationResponse({
+          id: TEST_ORGANIZATION_ID,
+          name: "Northside Ministry",
+          slug: "northside-ministry",
+          status: "inactive",
+          created_at: "2026-01-01T00:00:00.000Z",
+          updated_at: "2026-07-02T00:00:00.000Z",
+        }),
+      ],
+      organization_memberships: [createCurrentMembershipResponse(currentUserRole)],
+      organization_settings: [
+        {
+          data: [
+            {
+              organization_id: TEST_ORGANIZATION_ID,
+              fiscal_year_start_month: 7,
+              default_cash_account_id: "cash-account-1",
+              default_revenue_account_id: "revenue-account-1",
+              created_at: "2026-01-01T00:00:00.000Z",
+              updated_at: "2026-07-02T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        },
+      ],
+      organization_invites: [{ data: [], error: null }],
+      accounts: [
+        {
+          data: [
+            {
+              id: "cash-account-1",
+              organization_id: TEST_ORGANIZATION_ID,
+              parent_account_id: null,
+              code: "1000",
+              name: "Operating Cash",
+              account_type: "asset",
+              is_posting: true,
+              status: "active",
+              created_at: "2026-01-01T00:00:00.000Z",
+              updated_at: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+          error: null,
+        },
+      ],
+    }),
+    {
+      data: [
+        {
+          id: "membership-1",
+          organization_id: TEST_ORGANIZATION_ID,
+          user_id: TEST_USER_ID,
+          role: membershipRole,
+          created_at: "2026-02-01T09:00:00.000Z",
+          updated_at: "2026-02-01T09:00:00.000Z",
+          email: "owner@example.com",
+        },
+      ],
+      error: null,
+    },
+  );
 }
 
 describe("getSettingsData", () => {
@@ -173,18 +193,20 @@ describe("getSettingsData", () => {
   });
 
   it("filters organization-scoped queries by organization_id", async () => {
-    const { client, queryLog } = createEmptySettingsMockClient();
+    const { client, queryLog, rpcMock } = createEmptySettingsMockClient();
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     await getSettingsData(TEST_ORGANIZATION_ID);
 
-    expect(queryLog).toHaveLength(6);
+    expect(rpcMock).toHaveBeenCalledWith("list_organization_memberships", {
+      target_organization_id: TEST_ORGANIZATION_ID,
+    });
+    expect(queryLog).toHaveLength(5);
     expect(queryLog[0].table).toBe("organizations");
     expect(queryLog[1].table).toBe("organization_memberships");
-    expect(queryLog[2].table).toBe("organization_memberships");
-    expect(queryLog[3].table).toBe("organization_settings");
-    expect(queryLog[4].table).toBe("organization_invites");
-    expect(queryLog[5].table).toBe("accounts");
+    expect(queryLog[2].table).toBe("organization_settings");
+    expect(queryLog[3].table).toBe("organization_invites");
+    expect(queryLog[4].table).toBe("accounts");
     expect(
       queryLog[0].filters.some(
         (filter) =>
@@ -194,9 +216,8 @@ describe("getSettingsData", () => {
       ),
     ).toBe(true);
     expect(hasOrganizationFilter(queryLog[1], TEST_ORGANIZATION_ID)).toBe(true);
-    expect(hasOrganizationFilter(queryLog[2], TEST_ORGANIZATION_ID)).toBe(true);
     expect(
-      queryLog[2].filters.some(
+      queryLog[1].filters.some(
         (filter) =>
           filter.method === "eq" &&
           filter.args[0] === "user_id" &&
@@ -261,42 +282,47 @@ describe("getSettingsData", () => {
   );
 
   it("counts total memberships using membership row count", async () => {
-    const { client } = createMockSupabaseClient({
-      organizations: [
-        createOrganizationResponse({
-          id: TEST_ORGANIZATION_ID,
-          name: "Parable Community Church",
-          slug: "parable-community-church",
-          status: "active",
-          created_at: "2026-01-15T10:00:00.000Z",
-          updated_at: "2026-07-01T12:00:00.000Z",
-        }),
-      ],
-      organization_memberships: [
-        {
-          data: [
-            {
-              id: "membership-1",
-              organization_id: TEST_ORGANIZATION_ID,
-              user_id: TEST_USER_ID,
-              role: "owner",
-              created_at: "2026-02-01T09:00:00.000Z",
-              updated_at: "2026-02-01T09:00:00.000Z",
-            },
-            {
-              id: "membership-2",
-              organization_id: TEST_ORGANIZATION_ID,
-              user_id: "22222222-2222-4222-8222-222222222222",
-              role: "staff",
-              created_at: "2026-03-01T09:00:00.000Z",
-              updated_at: "2026-03-01T09:00:00.000Z",
-            },
-          ],
-          error: null,
-        },
-        createCurrentMembershipResponse("owner"),
-      ],
-    });
+    const { client } = withMembershipsRpc(
+      createMockSupabaseClient({
+        organizations: [
+          createOrganizationResponse({
+            id: TEST_ORGANIZATION_ID,
+            name: "Parable Community Church",
+            slug: "parable-community-church",
+            status: "active",
+            created_at: "2026-01-15T10:00:00.000Z",
+            updated_at: "2026-07-01T12:00:00.000Z",
+          }),
+        ],
+        organization_memberships: [createCurrentMembershipResponse("owner")],
+        organization_settings: [{ data: [], error: null }],
+        organization_invites: [{ data: [], error: null }],
+        accounts: [{ data: [], error: null }],
+      }),
+      {
+        data: [
+          {
+            id: "membership-1",
+            organization_id: TEST_ORGANIZATION_ID,
+            user_id: TEST_USER_ID,
+            role: "owner",
+            created_at: "2026-02-01T09:00:00.000Z",
+            updated_at: "2026-02-01T09:00:00.000Z",
+            email: "owner@example.com",
+          },
+          {
+            id: "membership-2",
+            organization_id: TEST_ORGANIZATION_ID,
+            user_id: "22222222-2222-4222-8222-222222222222",
+            role: "staff",
+            created_at: "2026-03-01T09:00:00.000Z",
+            updated_at: "2026-03-01T09:00:00.000Z",
+            email: "staff@example.com",
+          },
+        ],
+        error: null,
+      },
+    );
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     const result = await getSettingsData(TEST_ORGANIZATION_ID);
@@ -304,6 +330,7 @@ describe("getSettingsData", () => {
     expect(result.counts).toEqual({
       totalMemberships: 2,
     });
+    expect(result.memberships[1]?.displayName).toBe("staff@example.com");
   });
 
   it("does not expose fabricated preference or configuration values", async () => {
@@ -330,13 +357,18 @@ describe("getSettingsData", () => {
   });
 
   it("throws DataAccessError when the organization query fails", async () => {
-    const { client } = createMockSupabaseClient({
-      organizations: [{ data: null, error: createBackendError("organizations failed") }],
-      organization_memberships: [
-        { data: [], error: null },
-        createCurrentMembershipResponse("owner"),
-      ],
-    });
+    const { client } = withMembershipsRpc(
+      createMockSupabaseClient({
+        organizations: [
+          { data: null, error: createBackendError("organizations failed") },
+        ],
+        organization_memberships: [createCurrentMembershipResponse("owner")],
+        organization_settings: [{ data: [], error: null }],
+        organization_invites: [{ data: [], error: null }],
+        accounts: [{ data: [], error: null }],
+      }),
+      { data: [], error: null },
+    );
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     await expect(getSettingsData(TEST_ORGANIZATION_ID)).rejects.toBeInstanceOf(
@@ -345,13 +377,16 @@ describe("getSettingsData", () => {
   });
 
   it("throws DataAccessError when the organization record is missing", async () => {
-    const { client } = createMockSupabaseClient({
-      organizations: [{ data: [], error: null }],
-      organization_memberships: [
-        { data: [], error: null },
-        createCurrentMembershipResponse("owner"),
-      ],
-    });
+    const { client } = withMembershipsRpc(
+      createMockSupabaseClient({
+        organizations: [{ data: [], error: null }],
+        organization_memberships: [createCurrentMembershipResponse("owner")],
+        organization_settings: [{ data: [], error: null }],
+        organization_invites: [{ data: [], error: null }],
+        accounts: [{ data: [], error: null }],
+      }),
+      { data: [], error: null },
+    );
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     await expect(getSettingsData(TEST_ORGANIZATION_ID)).rejects.toBeInstanceOf(
@@ -360,22 +395,25 @@ describe("getSettingsData", () => {
   });
 
   it("throws DataAccessError when the memberships query fails", async () => {
-    const { client } = createMockSupabaseClient({
-      organizations: [
-        createOrganizationResponse({
-          id: TEST_ORGANIZATION_ID,
-          name: "Parable Community Church",
-          slug: "parable-community-church",
-          status: "active",
-          created_at: "2026-01-15T10:00:00.000Z",
-          updated_at: "2026-07-01T12:00:00.000Z",
-        }),
-      ],
-      organization_memberships: [
-        { data: null, error: createBackendError("memberships failed") },
-        createCurrentMembershipResponse("owner"),
-      ],
-    });
+    const { client } = withMembershipsRpc(
+      createMockSupabaseClient({
+        organizations: [
+          createOrganizationResponse({
+            id: TEST_ORGANIZATION_ID,
+            name: "Parable Community Church",
+            slug: "parable-community-church",
+            status: "active",
+            created_at: "2026-01-15T10:00:00.000Z",
+            updated_at: "2026-07-01T12:00:00.000Z",
+          }),
+        ],
+        organization_memberships: [createCurrentMembershipResponse("owner")],
+        organization_settings: [{ data: [], error: null }],
+        organization_invites: [{ data: [], error: null }],
+        accounts: [{ data: [], error: null }],
+      }),
+      { data: null, error: createBackendError("memberships failed") },
+    );
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     await expect(getSettingsData(TEST_ORGANIZATION_ID)).rejects.toBeInstanceOf(
@@ -384,22 +422,25 @@ describe("getSettingsData", () => {
   });
 
   it("throws DataAccessError when the authenticated user's membership is missing", async () => {
-    const { client } = createMockSupabaseClient({
-      organizations: [
-        createOrganizationResponse({
-          id: TEST_ORGANIZATION_ID,
-          name: "Parable Community Church",
-          slug: "parable-community-church",
-          status: "active",
-          created_at: "2026-01-15T10:00:00.000Z",
-          updated_at: "2026-07-01T12:00:00.000Z",
-        }),
-      ],
-      organization_memberships: [
-        { data: [], error: null },
-        { data: [], error: null },
-      ],
-    });
+    const { client } = withMembershipsRpc(
+      createMockSupabaseClient({
+        organizations: [
+          createOrganizationResponse({
+            id: TEST_ORGANIZATION_ID,
+            name: "Parable Community Church",
+            slug: "parable-community-church",
+            status: "active",
+            created_at: "2026-01-15T10:00:00.000Z",
+            updated_at: "2026-07-01T12:00:00.000Z",
+          }),
+        ],
+        organization_memberships: [{ data: [], error: null }],
+        organization_settings: [{ data: [], error: null }],
+        organization_invites: [{ data: [], error: null }],
+        accounts: [{ data: [], error: null }],
+      }),
+      { data: [], error: null },
+    );
     createServerSupabaseClientMock.mockResolvedValue(client);
 
     await expect(getSettingsData(TEST_ORGANIZATION_ID)).rejects.toBeInstanceOf(
