@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 
 import { createBillAction } from "@/app/(workspace)/bills/actions";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -140,6 +141,8 @@ export function CreateBillForm({
     });
   }
 
+  const hasVendors = vendorOptions.length > 0;
+
   return (
     <div className="space-y-2">
       {successMessage ? (
@@ -164,6 +167,17 @@ export function CreateBillForm({
             </SheetDescription>
           </SheetHeader>
 
+          {!hasVendors ? (
+            <div className="mt-6 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Bills need a vendor. Create a vendor first, then come back to
+                enter the payable.
+              </p>
+              <Button asChild type="button">
+                <Link href="/vendors">Create vendor</Link>
+              </Button>
+            </div>
+          ) : (
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="text-sm font-medium" htmlFor="bill-vendor">
@@ -322,6 +336,7 @@ export function CreateBillForm({
               {isPending ? "Saving…" : "Save bill"}
             </Button>
           </form>
+          )}
         </SheetContent>
       </Sheet>
     </div>

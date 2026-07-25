@@ -136,6 +136,7 @@ export function BillsPageContent({
   const activeBills = data.bills.filter((bill) => bill.status !== "void");
   const overdueBills = activeBills.filter((bill) => isOverdueBill(bill));
   const recentBills = activeBills.slice(0, 10);
+  const hasVendors = vendorOptions.length > 0;
 
   return (
     <section aria-labelledby="bills-title" className="space-y-8">
@@ -152,16 +153,34 @@ export function BillsPageContent({
               {billsNav.description}
             </p>
           </div>
-          <CreateBillForm
-            expenseAccountOptions={expenseAccountOptions}
-            fundOptions={fundOptions}
-            vendorOptions={vendorOptions}
-          />
+          {hasVendors ? (
+            <CreateBillForm
+              expenseAccountOptions={expenseAccountOptions}
+              fundOptions={fundOptions}
+              vendorOptions={vendorOptions}
+            />
+          ) : (
+            <Button asChild type="button">
+              <Link href="/vendors">Add a vendor first</Link>
+            </Button>
+          )}
         </div>
       </header>
 
       {!hasBillActivity(data) ? (
-        <WorkspaceDataEmpty message="No bills yet." />
+        hasVendors ? (
+          <WorkspaceDataEmpty message="No bills yet. Use New Bill to create your first payable." />
+        ) : (
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 space-y-3">
+            <p className="text-sm leading-6 text-muted-foreground">
+              No bills yet. Add a vendor first, then come back to create
+              payables.
+            </p>
+            <Button asChild type="button" variant="outline">
+              <Link href="/vendors">Go to Vendors</Link>
+            </Button>
+          </div>
+        )
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -203,7 +222,16 @@ export function BillsPageContent({
 
           <div className="mt-6">
             {activeBills.length === 0 ? (
-              <WorkspaceDataEmpty message="No bills yet." />
+              hasVendors ? (
+                <WorkspaceDataEmpty message="No bills yet. Use New Bill to create your first payable." />
+              ) : (
+                <div className="space-y-3">
+                  <WorkspaceDataEmpty message="No bills yet. Add a vendor before creating payables." />
+                  <Button asChild size="sm" type="button" variant="outline">
+                    <Link href="/vendors">Go to Vendors</Link>
+                  </Button>
+                </div>
+              )
             ) : (
               <ul className="space-y-3">
                 {recentBills.map((bill) => (
