@@ -203,6 +203,7 @@ export async function updateOrganizationSettingsAction(
       ),
     });
     revalidatePath("/settings");
+    revalidatePath("/settings/accounting-defaults");
     return { ok: true };
   } catch (error) {
     if (error instanceof DataAccessError) {
