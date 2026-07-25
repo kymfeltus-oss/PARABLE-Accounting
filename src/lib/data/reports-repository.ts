@@ -350,8 +350,15 @@ function buildReportBudgetVsActual(
   );
 }
 
+export type GetReportsDataOptions = {
+  asOfDate?: string;
+  periodStartDate?: string;
+  periodEndDate?: string;
+};
+
 export async function getReportsData(
   organizationId: string,
+  options?: GetReportsDataOptions,
 ): Promise<ReportsData> {
   const scopedOrganizationId = requireOrganizationId(
     organizationId,
@@ -361,6 +368,11 @@ export async function getReportsData(
   const today = getTodayDateString();
   const { startDate: monthStart, endDate: monthEnd } = getMonthDateRange();
   const { startDate: yearStart, endDate: yearEnd } = getYearToDateRange();
+  const reportAsOfDate = options?.asOfDate ?? today;
+  const { startDate: defaultYearStart, endDate: defaultYearEnd } =
+    getYearToDateRange(new Date(`${reportAsOfDate}T12:00:00.000Z`));
+  const reportPeriodStartDate = options?.periodStartDate ?? defaultYearStart;
+  const reportPeriodEndDate = options?.periodEndDate ?? defaultYearEnd;
 
   const [
     givingTransactionsResult,
@@ -536,9 +548,9 @@ export async function getReportsData(
   );
 
   const ledgerContext = await loadLedgerBalanceContext(scopedOrganizationId, {
-    asOfDate: today,
-    periodStartDate: yearStart,
-    periodEndDate: yearEnd,
+    asOfDate: reportAsOfDate,
+    periodStartDate: reportPeriodStartDate,
+    periodEndDate: reportPeriodEndDate,
   });
   const financialReports = buildFinancialReportsFromContext(ledgerContext);
   const budgetVsActual = buildReportBudgetVsActual(
@@ -547,7 +559,7 @@ export async function getReportsData(
     accounts,
     funds,
     ledgerContext.lines,
-    today,
+    reportAsOfDate,
   );
 
   return {

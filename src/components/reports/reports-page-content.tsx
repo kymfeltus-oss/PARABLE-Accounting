@@ -190,16 +190,63 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
 
   return (
     <section aria-labelledby="reports-title" className="space-y-8">
-      <header className="space-y-2">
-        <h1
-          id="reports-title"
-          className="text-3xl font-semibold tracking-tight text-foreground"
+      <header className="space-y-4">
+        <div className="space-y-2">
+          <h1
+            id="reports-title"
+            className="text-3xl font-semibold tracking-tight text-foreground"
+          >
+            {reportsNav.title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            {reportsNav.description}
+          </p>
+        </div>
+
+        <form
+          method="get"
+          action="/reports"
+          className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm sm:flex-row sm:flex-wrap sm:items-end"
+          aria-label="Report date controls"
         >
-          {reportsNav.title}
-        </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          {reportsNav.description}
-        </p>
+          <label className="grid min-w-[10rem] flex-1 gap-1 text-sm">
+            <span className="font-medium text-foreground">As of date</span>
+            <span className="text-xs text-muted-foreground">
+              Trial Balance, Balance Sheet, Fund Balance
+            </span>
+            <input
+              type="date"
+              name="asOf"
+              defaultValue={data.financialReports.asOfDate}
+              className="h-10 rounded-md border border-border bg-background px-3 text-foreground"
+            />
+          </label>
+          <label className="grid min-w-[10rem] flex-1 gap-1 text-sm">
+            <span className="font-medium text-foreground">Period start</span>
+            <span className="text-xs text-muted-foreground">Income Statement</span>
+            <input
+              type="date"
+              name="periodStart"
+              defaultValue={data.financialReports.periodStartDate}
+              className="h-10 rounded-md border border-border bg-background px-3 text-foreground"
+            />
+          </label>
+          <label className="grid min-w-[10rem] flex-1 gap-1 text-sm">
+            <span className="font-medium text-foreground">Period end</span>
+            <span className="text-xs text-muted-foreground">
+              Income Statement (capped at as-of)
+            </span>
+            <input
+              type="date"
+              name="periodEnd"
+              defaultValue={data.financialReports.periodEndDate}
+              className="h-10 rounded-md border border-border bg-background px-3 text-foreground"
+            />
+          </label>
+          <Button type="submit" className="h-10 shrink-0">
+            Update reports
+          </Button>
+        </form>
       </header>
 
       {!hasReportActivity(data) ? (

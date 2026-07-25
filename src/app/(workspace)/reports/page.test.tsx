@@ -23,15 +23,25 @@ import ReportsPage from "./page";
 import { ReportsPageContent } from "@/components/reports/reports-page-content";
 
 describe("Reports page wiring", () => {
-  it("uses getCurrentOrganizationId and passes the resolved id to getReportsData", async () => {
+  it("uses getCurrentOrganizationId and passes resolved dates to getReportsData", async () => {
     const reportsData = createEmptyReportsData(TEST_ORGANIZATION_ID);
     getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
     getReportsDataMock.mockResolvedValue(reportsData);
 
-    await ReportsPage();
+    await ReportsPage({
+      searchParams: Promise.resolve({
+        asOf: "2026-06-30",
+        periodStart: "2026-04-01",
+        periodEnd: "2026-06-30",
+      }),
+    });
 
     expect(getCurrentOrganizationIdMock).toHaveBeenCalledTimes(1);
-    expect(getReportsDataMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID);
+    expect(getReportsDataMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID, {
+      asOfDate: "2026-06-30",
+      periodStartDate: "2026-04-01",
+      periodEndDate: "2026-06-30",
+    });
   });
 
   it("passes returned reports data to ReportsPageContent", async () => {
@@ -39,7 +49,9 @@ describe("Reports page wiring", () => {
     getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
     getReportsDataMock.mockResolvedValue(reportsData);
 
-    const page = await ReportsPage();
+    const page = await ReportsPage({
+      searchParams: Promise.resolve({}),
+    });
 
     expect(page.type).toBe(ReportsPageContent);
     expect(page.props.data).toEqual(reportsData);
