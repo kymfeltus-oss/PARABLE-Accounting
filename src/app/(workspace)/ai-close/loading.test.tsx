@@ -8,11 +8,11 @@ afterEach(() => {
 });
 
 describe("AICloseLoading", () => {
-  it("renders the expected AI Close loading structure", () => {
+  it("renders the expected Period Close loading structure", () => {
     render(<AICloseLoading />);
 
     expect(
-      screen.getByRole("region", { name: "Loading AI Close" }),
+      screen.getByRole("region", { name: "Loading Period Close" }),
     ).toHaveAttribute("aria-busy", "true");
     expect(document.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });

@@ -109,7 +109,7 @@ describe("CompliancePageContent", () => {
   it("renders related workspace navigation links", () => {
     render(<CompliancePageContent data={createEmptyComplianceData()} />);
 
-    expect(screen.getByRole("link", { name: /AI Close/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Period Close/i })).toHaveAttribute(
       "href",
       "/ai-close",
     );

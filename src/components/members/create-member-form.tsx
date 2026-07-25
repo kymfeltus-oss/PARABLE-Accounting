@@ -84,7 +84,7 @@ export function CreateMemberForm() {
           <SheetHeader>
             <SheetTitle>Add Member</SheetTitle>
             <SheetDescription id="create-member-description">
-              Create a member profile for stewardship and giving records.
+              Create a member profile for your ministry directory.
             </SheetDescription>
           </SheetHeader>
 

@@ -111,7 +111,8 @@ describe("GivingPageContent", () => {
   it("does not fabricate unsupported insight metrics", () => {
     render(<GivingPageContent data={createPopulatedGivingData()} {...emptyFormProps} />);
 
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Recurring giving percentage")).toBeNull();
+    expect(screen.queryByText("New givers this month")).toBeNull();
     expect(screen.queryByText(/%\s*recurring/i)).toBeNull();
   });
 

@@ -98,8 +98,8 @@ export function CreateBankAccountForm({
           <SheetHeader>
             <SheetTitle>Add Bank Account</SheetTitle>
             <SheetDescription id="create-bank-account-description">
-              Link a ministry bank account to an active posting asset account
-              from the chart.
+              Register a ministry bank account against an active chart asset
+              account.
             </SheetDescription>
           </SheetHeader>
 

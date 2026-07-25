@@ -2,7 +2,7 @@ export default function AICloseLoading() {
   return (
     <section
       aria-busy="true"
-      aria-label="Loading AI Close"
+      aria-label="Loading Period Close"
       className="space-y-8"
     >
       <header className="space-y-2">

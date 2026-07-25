@@ -14,22 +14,12 @@ const summaryLabels = [
   "Total Members",
   "Active Members",
   "New This Month",
-  "Members With Giving History",
-] as const;
-
-const segmentLabels = [
-  "Active Givers",
-  "New Members",
   "Inactive Members",
-  "No Recent Giving",
 ] as const;
 
-const insightLabels = [
-  "Retention percentage",
-  "Members giving this month",
-  "Average lifetime giving",
-  "Newest member",
-] as const;
+const segmentLabels = ["New Members", "Inactive Members"] as const;
+
+const insightLabels = ["Newest member"] as const;
 
 const navigationLinks = [
   {
@@ -50,7 +40,7 @@ const navigationLinks = [
     id: "reports",
     label: "Reports",
     href: "/reports",
-    description: "Open member and stewardship reports",
+    description: "Open financial reports",
     icon: BarChart3,
   },
 ] as const;
@@ -101,10 +91,10 @@ function formatSummaryValue(
       return String(data.counts.active);
     case "New This Month":
       return String(newThisMonthCount);
-    case "Members With Giving History":
-      return "Unavailable";
+    case "Inactive Members":
+      return String(data.counts.inactive);
     default:
-      return "Unavailable";
+      return "0";
   }
 }
 
@@ -114,9 +104,6 @@ function formatSegmentValue(
   newThisMonthCount: number,
 ): string {
   switch (label) {
-    case "Active Givers":
-    case "No Recent Giving":
-      return "Unavailable";
     case "New Members":
       return newThisMonthCount > 0
         ? `${newThisMonthCount} member${newThisMonthCount === 1 ? "" : "s"}`
@@ -126,7 +113,7 @@ function formatSegmentValue(
         ? `${data.counts.inactive} member${data.counts.inactive === 1 ? "" : "s"}`
         : "No members in this segment yet.";
     default:
-      return "Unavailable";
+      return "No members in this segment yet.";
   }
 }
 
@@ -135,10 +122,6 @@ function formatInsightValue(
   members: MemberRow[],
 ): string {
   switch (label) {
-    case "Retention percentage":
-    case "Members giving this month":
-    case "Average lifetime giving":
-      return "Unavailable";
     case "Newest member": {
       const newestMember = getNewestMember(members);
       return newestMember
@@ -146,7 +129,7 @@ function formatInsightValue(
         : "No data available yet.";
     }
     default:
-      return "Unavailable";
+      return "No data available yet.";
   }
 }
 
@@ -213,7 +196,7 @@ export function MembersPageContent({ data }: MembersPageContentProps) {
               Member Directory
             </h2>
             <p className="text-sm text-muted-foreground">
-              Recent member profiles with giving activity summary.
+              Member contact profiles currently on record.
             </p>
           </div>
 
@@ -262,7 +245,7 @@ export function MembersPageContent({ data }: MembersPageContentProps) {
                 Member Segments
               </h2>
               <p className="text-sm text-muted-foreground">
-                Groupings for stewardship follow-up and engagement review.
+                Simple segments based on membership status and join date.
               </p>
             </div>
 

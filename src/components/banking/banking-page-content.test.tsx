@@ -64,14 +64,14 @@ describe("BankingPageContent", () => {
     expect(screen.getAllByText("Operating Account").length).toBeGreaterThan(0);
     expect(screen.getByText(/Deposit from offering/)).toBeTruthy();
     expect(
-      screen.getByText("Connected Accounts").closest("article")?.textContent,
+      screen.getAllByText("Bank Accounts")[0]?.closest("article")?.textContent,
     ).toContain("1");
     expect(
       screen.getByText("Unmatched Transactions").closest("article")?.textContent,
     ).toContain("1");
     expect(screen.getByText(/Ledger balance: \$12,500\.00/)).toBeTruthy();
     expect(
-      screen.getByText("Total Bank Balance").closest("article")?.textContent,
+      screen.getByText("Total Ledger Cash").closest("article")?.textContent,
     ).toContain("$12,500.00");
   });
 
@@ -79,7 +79,7 @@ describe("BankingPageContent", () => {
     render(<BankingPageContent data={createEmptyBankingData()} />);
 
     expect(
-      screen.getByText("Connected Accounts").closest("article")?.textContent,
+      screen.getAllByText("Bank Accounts")[0]?.closest("article")?.textContent,
     ).toContain("0");
     expect(
       screen.getByText("Unmatched Transactions").closest("article")?.textContent,
@@ -89,7 +89,8 @@ describe("BankingPageContent", () => {
   it("does not fabricate unsupported banking attention metrics", () => {
     render(<BankingPageContent data={createPopulatedBankingData()} />);
 
-    expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Stale reconciliation")).toBeNull();
+    expect(screen.queryByText("Balance discrepancy")).toBeNull();
     expect(screen.queryByText(/%\s*reconciled/i)).toBeNull();
   });
 

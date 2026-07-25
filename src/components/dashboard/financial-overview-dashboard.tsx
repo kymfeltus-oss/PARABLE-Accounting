@@ -37,16 +37,12 @@ export function FinancialOverviewDashboard({
     { id: "expenses", label: "Operating Expenses", value: data.summary.expensesThisMonth, supportingText: "Current month spending", accent: "amber" },
     {
       id: "funds",
-      label: "Available by Fund",
+      label: "Fund Equity (Ledger)",
       value: (fundsData?.funds ?? []).reduce(
-        (total, fund) =>
-          total +
-          fund.givingTotalAmount -
-          fund.expenseAllocationTotal -
-          fund.billAllocationTotal,
+        (total, fund) => total + fund.ledgerBalance,
         0,
       ),
-      supportingText: `Across ${fundsData?.funds.length ?? 0} active funds`,
+      supportingText: `Across ${fundsData?.funds.length ?? 0} funds from posted ledger`,
       accent: "violet",
     },
   ];
@@ -56,27 +52,40 @@ export function FinancialOverviewDashboard({
     data.openExceptions.length + openCompliance.length + data.openBills.length;
   const fundRows = (fundsData?.funds ?? []).slice(0, 6).map((fund) => ({
     ...fund,
-    balance:
-      fund.givingTotalAmount -
-      fund.expenseAllocationTotal -
-      fund.billAllocationTotal,
+    balance: fund.ledgerBalance,
   }));
   const maxFundBalance = Math.max(
     ...fundRows.map((fund) => Math.abs(fund.balance)),
     1,
   );
   const recentExpenses = (expensesData?.expenses ?? []).slice(0, 5);
-  const insightRecommendations =
+  const insightRecommendations = (
     data.closeTasks.length > 0
-      ? data.closeTasks.slice(0, 2).map((task) => task.title)
+      ? data.closeTasks.slice(0, 2).map((task) => ({
+          label: task.title,
+          href: "/accounting" as const,
+        }))
       : [
           data.summary.unreconciledTransactionCount > 0
-            ? `Review ${data.summary.unreconciledTransactionCount} unreconciled transactions`
-            : "Review current reconciliation status",
+            ? {
+                label: `Review ${data.summary.unreconciledTransactionCount} unreconciled transactions`,
+                href: "/banking" as const,
+              }
+            : {
+                label: "Review current reconciliation status",
+                href: "/banking" as const,
+              },
           data.openExceptions.length > 0
-            ? `Resolve ${data.openExceptions.length} open exceptions`
-            : "Prepare the month-end close checklist",
-        ];
+            ? {
+                label: `Resolve ${data.openExceptions.length} open exceptions`,
+                href: "/exceptions" as const,
+              }
+            : {
+                label: "Prepare the month-end close checklist",
+                href: "/accounting" as const,
+              },
+        ]
+  );
   const vendorOptions = Array.from(
     new Map(
       (expensesData?.expenses ?? [])
@@ -153,7 +162,7 @@ export function FinancialOverviewDashboard({
 
         <section aria-labelledby="fund-health-title" className="dashboard-command-card min-h-[19.5rem] p-4">
           <div className="flex items-center justify-between">
-            <h2 id="fund-health-title" className="text-sm font-semibold tracking-[0.04em] text-[#F7FAFF] uppercase">Fund Health</h2>
+            <h2 id="fund-health-title" className="text-sm font-semibold tracking-[0.04em] text-[#F7FAFF] uppercase">Fund Equity</h2>
             <Link href="/funds" className="text-xs text-[#1677FF]">View all funds</Link>
           </div>
           <div className="mt-5 space-y-3">
@@ -212,10 +221,10 @@ export function FinancialOverviewDashboard({
           </div>
         </section>
         <section
-          className="dashboard-command-card dashboard-ai-insight overflow-hidden p-4"
+          className="dashboard-command-card overflow-hidden p-4"
           aria-labelledby="close-title"
         >
-          <div className="relative z-10 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <BookOpen aria-hidden className="size-4 text-[#6674FF]" />
             <h2
               id="close-title"
@@ -224,7 +233,7 @@ export function FinancialOverviewDashboard({
               Month-end focus
             </h2>
           </div>
-          <p className="relative z-10 mt-4 max-w-[18rem] text-[0.7rem] leading-5 text-[#D6DEEB]">
+          <p className="mt-4 max-w-[18rem] text-[0.7rem] leading-5 text-[#D6DEEB]">
             Giving totals{" "}
             <span className="text-[#13C6FF]">
               {formatCurrency(data.summary.givingThisMonth)}
@@ -234,30 +243,34 @@ export function FinancialOverviewDashboard({
             operating position is{" "}
             {formatCurrency(data.summary.netOperatingPosition)}.
           </p>
-          <p className="relative z-10 mt-4 text-[0.6rem] font-medium tracking-[0.06em] text-[#1677FF] uppercase">
+          <p className="mt-4 text-[0.6rem] font-medium tracking-[0.06em] text-[#1677FF] uppercase">
             Next steps
           </p>
-          <ul className="relative z-10 mt-2 space-y-2">
+          <ul className="mt-2 space-y-2">
             {insightRecommendations.map((recommendation) => (
-              <li
-                key={recommendation}
-                className="flex items-center gap-2 text-[0.68rem] text-[#D6DEEB]"
-              >
-                <CircleCheck
-                  aria-hidden
-                  className="size-3.5 shrink-0 text-[#13C6FF]"
-                />
-                <span className="min-w-0 flex-1 truncate">{recommendation}</span>
-                <ChevronRight
-                  aria-hidden
-                  className="size-3.5 shrink-0 text-[#AEB9CE]"
-                />
+              <li key={`${recommendation.href}-${recommendation.label}`}>
+                <Link
+                  href={recommendation.href}
+                  className="flex items-center gap-2 text-[0.68rem] text-[#D6DEEB] transition hover:text-white"
+                >
+                  <CircleCheck
+                    aria-hidden
+                    className="size-3.5 shrink-0 text-[#13C6FF]"
+                  />
+                  <span className="min-w-0 flex-1 truncate">
+                    {recommendation.label}
+                  </span>
+                  <ChevronRight
+                    aria-hidden
+                    className="size-3.5 shrink-0 text-[#AEB9CE]"
+                  />
+                </Link>
               </li>
             ))}
           </ul>
           <Button
             asChild
-            className="relative z-10 mt-4 h-8 w-full border border-[#1677FF]/35 bg-[#0B3577] text-[0.68rem] text-[#6FADFF] shadow-none hover:bg-[#104493]"
+            className="mt-4 h-8 w-full border border-[#1677FF]/35 bg-[#0B3577] text-[0.68rem] text-[#6FADFF] shadow-none hover:bg-[#104493]"
           >
             <Link href="/accounting">
               <BookOpen aria-hidden className="size-3.5" />

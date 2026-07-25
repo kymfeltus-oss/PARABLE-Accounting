@@ -15,17 +15,10 @@ import type { BankingData, BankAccountRecord } from "@/lib/data/banking-reposito
 import type { BankTransactionRow } from "@/lib/data/types/rows";
 
 const summaryLabels = [
-  "Total Bank Balance",
-  "Connected Accounts",
+  "Total Ledger Cash",
+  "Bank Accounts",
   "Unmatched Transactions",
   "Reconciliation Progress",
-] as const;
-
-const attentionLabels = [
-  "Unmatched transactions",
-  "Stale reconciliation",
-  "Excluded transactions",
-  "Balance discrepancy",
 ] as const;
 
 const navigationIcons = {
@@ -51,7 +44,7 @@ const navigationLinks = [
     id: "reports",
     label: "Reports",
     href: "/reports",
-    description: "Open cash and reconciliation reports",
+    description: "Open financial reports",
   },
 ] as const;
 
@@ -100,16 +93,16 @@ function formatSummaryValue(
   data: BankingData,
 ): string {
   switch (label) {
-    case "Total Bank Balance":
+    case "Total Ledger Cash":
       return formatCurrency(data.counts.totalLedgerCashBalance);
     case "Reconciliation Progress":
       return formatReconciliationProgress(data);
-    case "Connected Accounts":
+    case "Bank Accounts":
       return String(data.counts.accountCount);
     case "Unmatched Transactions":
       return String(data.counts.unmatchedTransactionCount);
     default:
-      return "Unavailable";
+      return "0";
   }
 }
 
@@ -131,24 +124,6 @@ function formatReconciliationStatus(
   }
 
   return "No unmatched transactions.";
-}
-
-function formatAttentionValue(
-  label: (typeof attentionLabels)[number],
-  data: BankingData,
-): string {
-  switch (label) {
-    case "Unmatched transactions":
-      return data.counts.unmatchedTransactionCount > 0
-        ? `${data.counts.unmatchedTransactionCount} transaction${data.counts.unmatchedTransactionCount === 1 ? "" : "s"}`
-        : "No items yet.";
-    case "Stale reconciliation":
-    case "Excluded transactions":
-    case "Balance discrepancy":
-      return "Unavailable";
-    default:
-      return "Unavailable";
-  }
 }
 
 function formatTransactionLabel(transaction: BankTransactionRow): string {
@@ -225,7 +200,7 @@ export function BankingPageContent({ data }: BankingPageContentProps) {
               Bank Accounts
             </h2>
             <p className="text-sm text-muted-foreground">
-              Connected ministry accounts and current balances.
+              Recorded ministry bank accounts and linked ledger cash balances.
             </p>
           </div>
 
@@ -303,23 +278,20 @@ export function BankingPageContent({ data }: BankingPageContentProps) {
                 Banking Attention
               </h2>
               <p className="text-sm text-muted-foreground">
-                Items that may need review before close.
+                Unmatched bank transactions that still need review.
               </p>
             </div>
 
-            <ul className="mt-6 space-y-4">
-              {attentionLabels.map((title) => (
-                <li
-                  key={title}
-                  className="rounded-lg border border-border/70 bg-muted/20 p-4"
-                >
-                  <p className="text-sm font-medium text-foreground">{title}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {formatAttentionValue(title, data)}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-6 rounded-lg border border-border/70 bg-muted/20 p-4">
+              <p className="text-sm font-medium text-foreground">
+                Unmatched transactions
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {data.counts.unmatchedTransactionCount > 0
+                  ? `${data.counts.unmatchedTransactionCount} transaction${data.counts.unmatchedTransactionCount === 1 ? "" : "s"}`
+                  : "No unmatched transactions."}
+              </p>
+            </div>
           </section>
         </div>
       </div>
@@ -336,7 +308,7 @@ export function BankingPageContent({ data }: BankingPageContentProps) {
             Recent Bank Activity
           </h2>
           <p className="text-sm text-muted-foreground">
-            Latest transactions across connected accounts.
+            Latest recorded bank transactions.
           </p>
         </div>
 

@@ -44,7 +44,7 @@ describe("MobileNav", () => {
   it("does not show drawer content when closed", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={false} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={false} onOpenChange={vi.fn()} />);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
@@ -55,7 +55,7 @@ describe("MobileNav", () => {
   it("shows the drawer when open", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(screen.getByRole("dialog")).toBeVisible();
   });
@@ -63,7 +63,7 @@ describe("MobileNav", () => {
   it("renders the accessible sheet title", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(
       screen.getByRole("heading", { name: "Parable Accounting navigation" }),
@@ -73,7 +73,7 @@ describe("MobileNav", () => {
   it("renders the accessible sheet description", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(
       screen.getByText(
@@ -85,7 +85,7 @@ describe("MobileNav", () => {
   it("renders PARABLE in the brand area", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(screen.getByText("PARABLE")).toBeVisible();
   });
@@ -93,7 +93,7 @@ describe("MobileNav", () => {
   it("renders Accounting in the brand area using a scoped query", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     const brandName = screen.getByText("PARABLE");
     const brandBlock = brandName.parentElement;
@@ -102,18 +102,19 @@ describe("MobileNav", () => {
     expect(within(brandBlock!).getByText("Accounting")).toBeInTheDocument();
   });
 
-  it("renders the Development Workspace badge", () => {
+  it("renders the live organization name instead of a Development Workspace badge", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
-    expect(screen.getByText("Development Workspace")).toBeVisible();
+    expect(screen.getByText("Grace Community Church")).toBeVisible();
+    expect(screen.queryByText("Development Workspace")).not.toBeInTheDocument();
   });
 
   it("renders every approved navigation group heading", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     for (const group of navGroups) {
       expect(
@@ -125,7 +126,7 @@ describe("MobileNav", () => {
   it("renders all 17 navigation links", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(screen.getAllByRole("link")).toHaveLength(17);
   });
@@ -133,7 +134,7 @@ describe("MobileNav", () => {
   it("renders every link with the configured href", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     for (const item of navItems) {
       expect(screen.getByRole("link", { name: item.label })).toHaveAttribute(
@@ -146,7 +147,7 @@ describe("MobileNav", () => {
   it("marks the active route with aria-current=\"page\"", () => {
     usePathnameMock.mockReturnValue("/members");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(screen.getByRole("link", { name: "Members" })).toHaveAttribute(
       "aria-current",
@@ -159,25 +160,27 @@ describe("MobileNav", () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
 
-    render(<MobileNav open={true} onOpenChange={onOpenChange} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={onOpenChange} />);
 
     await user.click(screen.getByRole("link", { name: "Giving" }));
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("renders the Phase 1A footer label", () => {
+  it("renders the signed-in user in the footer instead of a phase label", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
-    expect(screen.getByText("Phase 1A")).toBeVisible();
+    expect(screen.getByText("Taylor Reed")).toBeVisible();
+    expect(screen.getByText("taylor@example.org")).toBeVisible();
+    expect(screen.queryByText("Phase 1A")).not.toBeInTheDocument();
   });
 
   it("does not render login, user menu, or fake financial values", () => {
     usePathnameMock.mockReturnValue("/dashboard");
 
-    render(<MobileNav open={true} onOpenChange={vi.fn()} />);
+    render(<MobileNav identity={{ organizationName: "Grace Community Church", userDisplayName: "Taylor Reed", userEmail: "taylor@example.org" }} open={true} onOpenChange={vi.fn()} />);
 
     expect(screen.queryByText(/sign in/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/log in/i)).not.toBeInTheDocument();

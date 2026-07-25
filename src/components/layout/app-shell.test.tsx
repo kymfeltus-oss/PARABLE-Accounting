@@ -7,6 +7,12 @@ import { sidebarItems } from "./app-sidebar";
 
 import { AppShell } from "./app-shell";
 
+const shellIdentity = {
+  organizationName: "Grace Community Church",
+  userDisplayName: "Taylor Reed",
+  userEmail: "taylor@example.org",
+};
+
 const usePathnameMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -48,7 +54,7 @@ describe("AppShell", () => {
 
   it("renders the desktop sidebar", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -59,7 +65,7 @@ describe("AppShell", () => {
 
   it("renders the application header", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -69,7 +75,7 @@ describe("AppShell", () => {
 
   it("renders a semantic main landmark", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -79,7 +85,7 @@ describe("AppShell", () => {
 
   it("assigns id main-content to the main region", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -89,7 +95,7 @@ describe("AppShell", () => {
 
   it("renders a skip link before the primary shell content", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -110,7 +116,7 @@ describe("AppShell", () => {
 
   it("renders supplied child content inside main", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -122,7 +128,7 @@ describe("AppShell", () => {
 
   it("keeps the mobile drawer closed initially", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -134,7 +140,7 @@ describe("AppShell", () => {
     const user = userEvent.setup();
 
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -148,7 +154,7 @@ describe("AppShell", () => {
     const user = userEvent.setup();
 
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -163,7 +169,7 @@ describe("AppShell", () => {
     const user = userEvent.setup();
 
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -176,7 +182,7 @@ describe("AppShell", () => {
 
   it("renders only one main landmark", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -186,7 +192,7 @@ describe("AppShell", () => {
 
   it("does not render login, user profile, or fake financial values", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -201,7 +207,7 @@ describe("AppShell", () => {
 
   it("does not render navigation links inside the main content region", () => {
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );
@@ -215,7 +221,7 @@ describe("AppShell", () => {
     const user = userEvent.setup();
 
     render(
-      <AppShell>
+      <AppShell identity={shellIdentity}>
         <p>Workspace child</p>
       </AppShell>,
     );

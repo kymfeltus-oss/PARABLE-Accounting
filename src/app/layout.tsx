@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s | Parable Accounting",
   },
   description:
-    "Ministry Finance OS — AI-driven accounting and financial stewardship for churches and ministries.",
+    "Ministry Finance OS — accounting and financial stewardship for churches and ministries.",
 };
 
 export const viewport: Viewport = {
