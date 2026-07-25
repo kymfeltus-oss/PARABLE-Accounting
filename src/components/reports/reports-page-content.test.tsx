@@ -46,8 +46,18 @@ describe("ReportsPageContent", () => {
     render(<ReportsPageContent data={createEmptyReportsData()} />);
 
     expect(
-      screen.getAllByText("No report-ready activity yet.").length,
-    ).toBeGreaterThan(0);
+      screen.getByText(/No report-ready activity yet/i),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Record giving" })).toHaveAttribute(
+      "href",
+      "/giving",
+    );
+    expect(
+      screen.getByRole("link", { name: "Record an expense" }),
+    ).toHaveAttribute("href", "/expenses");
+    expect(
+      screen.getByRole("link", { name: "Create journal entry" }),
+    ).toHaveAttribute("href", "/accounting/journals/new");
   });
 
   it("renders live report summaries", () => {
@@ -102,21 +112,17 @@ describe("ReportsPageContent", () => {
   it("renders related workspace navigation links", () => {
     render(<ReportsPageContent data={createEmptyReportsData()} />);
 
-    expect(screen.getByRole("link", { name: /Accounting/i })).toHaveAttribute(
-      "href",
-      "/accounting",
-    );
-    expect(screen.getByRole("link", { name: /Budgets/i })).toHaveAttribute(
-      "href",
-      "/budgets",
-    );
-    expect(screen.getByRole("link", { name: /Funds/i })).toHaveAttribute(
-      "href",
-      "/funds",
-    );
-    expect(screen.getByRole("link", { name: /Giving/i })).toHaveAttribute(
-      "href",
-      "/giving",
-    );
+    expect(
+      screen.getByRole("link", { name: /Accounting.*Review ledger/i }),
+    ).toHaveAttribute("href", "/accounting");
+    expect(
+      screen.getByRole("link", { name: /Budgets.*Inspect budget/i }),
+    ).toHaveAttribute("href", "/budgets");
+    expect(
+      screen.getByRole("link", { name: /Funds.*Review designated/i }),
+    ).toHaveAttribute("href", "/funds");
+    expect(
+      screen.getByRole("link", { name: /Giving.*Open recorded/i }),
+    ).toHaveAttribute("href", "/giving");
   });
 });
