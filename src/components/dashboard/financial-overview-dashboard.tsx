@@ -198,6 +198,24 @@ export function FinancialOverviewDashboard({
             {attentionIsEmpty ? <WorkspaceDataEmpty message="No items yet." /> : null}
             {data.openExceptions.slice(0, 2).map((item) => <div key={item.id} className="dashboard-row flex items-center gap-2 rounded-md border p-3 text-xs"><AlertTriangle aria-hidden className="size-4 shrink-0 text-[#FFB547]" /><div className="min-w-0"><p className="truncate text-[#F7FAFF]">{item.title}</p><p className="mt-1 text-[#7E8AA8]">{item.severity} · {item.category}</p></div></div>)}
             {openCompliance.slice(0, 2).map((item) => <div key={item.id} className="dashboard-row flex items-center gap-2 rounded-md border p-3 text-xs"><BookOpenCheck aria-hidden className="size-4 shrink-0 text-[#13C6FF]" /><div className="min-w-0"><p className="truncate text-[#F7FAFF]">{item.name}</p><p className="mt-1 text-[#7E8AA8]">{item.due_date ? `Due ${item.due_date}` : "No due date recorded"}</p></div></div>)}
+            {data.openBills.slice(0, 2).map((bill) => (
+              <Link
+                key={bill.id}
+                href="/bills"
+                className="dashboard-row flex items-center gap-2 rounded-md border p-3 text-xs transition hover:bg-white/[0.04]"
+              >
+                <FileText aria-hidden className="size-4 shrink-0 text-[#1677FF]" />
+                <div className="min-w-0">
+                  <p className="truncate text-[#F7FAFF]">
+                    {bill.bill_number ?? bill.description ?? "Open bill"} ·{" "}
+                    {formatCurrency(Number(bill.total_amount))}
+                  </p>
+                  <p className="mt-1 text-[#7E8AA8]">
+                    {bill.due_date ? `Due ${bill.due_date}` : "No due date recorded"}
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
         <section className="dashboard-command-card min-w-0 overflow-hidden" aria-labelledby="recent-title">
@@ -249,15 +267,46 @@ export function FinancialOverviewDashboard({
 
       <section aria-label="Accounting status" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Open Bills", value: String(data.summary.openBillCount), icon: FileText },
-          { label: "Unreconciled Transactions", value: String(data.summary.unreconciledTransactionCount), icon: RefreshCw },
-          { label: "Giving This Month", value: formatCurrency(data.summary.givingThisMonth), icon: HandCoins },
-          { label: "Net Operating Position", value: formatCurrency(data.summary.netOperatingPosition), icon: TrendingUp },
+          {
+            label: "Open Bills",
+            value: String(data.summary.openBillCount),
+            icon: FileText,
+            href: "/bills",
+          },
+          {
+            label: "Unreconciled Transactions",
+            value: String(data.summary.unreconciledTransactionCount),
+            icon: RefreshCw,
+            href: "/banking",
+          },
+          {
+            label: "Giving This Month",
+            value: formatCurrency(data.summary.givingThisMonth),
+            icon: HandCoins,
+            href: "/giving",
+          },
+          {
+            label: "Net Operating Position",
+            value: formatCurrency(data.summary.netOperatingPosition),
+            icon: TrendingUp,
+            href: "/reports",
+          },
         ].map((item) => (
-          <article key={item.label} className="dashboard-status-strip-item flex min-h-20 items-center gap-3 px-4 py-3">
-            <span className="grid size-10 place-items-center rounded-full border border-[#1677FF]/25 text-[#1677FF]"><item.icon aria-hidden className="size-5" /></span>
-            <div><p className="brand-label text-[#7E8AA8]">{item.label}</p><p className="mt-1 font-heading text-base text-[#F7FAFF] tabular-nums">{item.value}</p></div>
-          </article>
+          <Link
+            key={item.label}
+            href={item.href}
+            className="dashboard-status-strip-item flex min-h-20 items-center gap-3 px-4 py-3 transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF]/50"
+          >
+            <span className="grid size-10 place-items-center rounded-full border border-[#1677FF]/25 text-[#1677FF]">
+              <item.icon aria-hidden className="size-5" />
+            </span>
+            <div>
+              <p className="brand-label text-[#7E8AA8]">{item.label}</p>
+              <p className="mt-1 font-heading text-base text-[#F7FAFF] tabular-nums">
+                {item.value}
+              </p>
+            </div>
+          </Link>
         ))}
       </section>
     </section>
