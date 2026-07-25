@@ -121,6 +121,7 @@ export type CreateGivingTransactionActionResult =
       success: true;
       givingTransactionId: string;
       journalEntryId: string | null;
+      ledgerError?: string;
     }
   | {
       success: false;
@@ -316,6 +317,8 @@ export async function createGivingTransactionAction(
 
     let journalEntryId: string | null = null;
 
+    let ledgerError: string | undefined;
+
     if (validatedInput.debitAccountId && validatedInput.creditAccountId) {
       try {
         const recorded = await recordGiving(
@@ -326,17 +329,10 @@ export async function createGivingTransactionAction(
         );
         journalEntryId = recorded.journal_entry_id ?? null;
       } catch (error) {
-        if (error instanceof DataAccessError) {
-          return {
-            success: false,
-            message: mapRecordGivingError(error),
-          };
-        }
-
-        return {
-          success: false,
-          message: GENERIC_RECORD_GIVING_ERROR,
-        };
+        ledgerError =
+          error instanceof DataAccessError
+            ? mapRecordGivingError(error)
+            : GENERIC_RECORD_GIVING_ERROR;
       }
     }
 
@@ -347,6 +343,7 @@ export async function createGivingTransactionAction(
       success: true,
       givingTransactionId: givingTransaction.id,
       journalEntryId,
+      ...(ledgerError ? { ledgerError } : {}),
     };
   } catch (error) {
     if (error instanceof DataAccessError) {

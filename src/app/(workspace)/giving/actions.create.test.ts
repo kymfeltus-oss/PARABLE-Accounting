@@ -98,7 +98,7 @@ describe("createGivingTransactionAction", () => {
     );
   });
 
-  it("surfaces ledger recording failures after a successful create", async () => {
+  it("keeps the created gift and returns a ledger warning when recording fails", async () => {
     const { DataAccessError } = await import("@/lib/data/data-access-error");
 
     recordGivingMock.mockRejectedValue(
@@ -115,10 +115,14 @@ describe("createGivingTransactionAction", () => {
     });
 
     expect(result).toEqual({
-      success: false,
-      message:
+      success: true,
+      givingTransactionId: "gift-1",
+      journalEntryId: null,
+      ledgerError:
         "This giving transaction cannot be recorded because its accounting period is closed.",
     });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/giving");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/giving/gift-1");
   });
 });
 

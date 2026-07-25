@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import {
   createGivingTransactionAction,
@@ -104,6 +106,7 @@ export function CreateGivingTransactionForm({
   revenueAccountOptions = [],
   triggerLabel = "Record Giving",
 }: CreateGivingTransactionFormProps) {
+  const router = useRouter();
   const scrollBodyRef = useRef<HTMLDivElement>(null);
   const saveButtonRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -118,6 +121,7 @@ export function CreateGivingTransactionForm({
   const [recordImmediately, setRecordImmediately] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [recoveryGivingId, setRecoveryGivingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const eligibleDebitAccounts = useMemo(() => {
@@ -173,6 +177,7 @@ export function CreateGivingTransactionForm({
     event.preventDefault();
     setError(null);
     setSuccessMessage(null);
+    setRecoveryGivingId(null);
 
     const trimmedDate = transactionDate.trim();
     const parsedAmount = parseAmount(amount);
@@ -210,22 +215,40 @@ export function CreateGivingTransactionForm({
         return;
       }
 
+      resetFormFields();
+      setOpen(false);
+      router.refresh();
+
+      if (result.ledgerError) {
+        setRecoveryGivingId(result.givingTransactionId);
+        setSuccessMessage(
+          `Giving was saved, but ledger posting failed: ${result.ledgerError}`,
+        );
+        return;
+      }
+
+      setRecoveryGivingId(null);
       setSuccessMessage(
         result.journalEntryId
           ? "Giving recorded and posted to the ledger."
           : "Giving transaction created.",
       );
-      resetFormFields();
-      setOpen(false);
     });
   }
 
   return (
     <div className="space-y-2">
       {successMessage ? (
-        <p aria-live="polite" className="text-sm text-foreground" role="status">
-          {successMessage}
-        </p>
+        <div aria-live="polite" className="space-y-2" role="status">
+          <p className="text-sm text-foreground">{successMessage}</p>
+          {recoveryGivingId ? (
+            <Button asChild size="sm" type="button" variant="outline">
+              <Link href={`/giving/${recoveryGivingId}`}>
+                Open gift to retry ledger posting
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       <Sheet open={open} onOpenChange={handleOpenChange}>

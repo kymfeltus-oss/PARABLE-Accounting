@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { closeAccountingPeriodAction } from "@/app/(workspace)/accounting/actions";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ type CloseAccountingPeriodButtonProps = {
 export function CloseAccountingPeriodButton({
   period,
 }: CloseAccountingPeriodButtonProps) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -33,24 +36,58 @@ export function CloseAccountingPeriodButton({
 
       if (!result.ok) {
         setError(result.error);
+        setConfirming(false);
         return;
       }
 
       setSuccessMessage(`Accounting period "${result.period.name}" closed.`);
+      setConfirming(false);
+      router.refresh();
     });
   }
 
   return (
     <div className="mt-3 space-y-2">
-      <Button
-        disabled={isPending}
-        size="sm"
-        type="button"
-        variant="outline"
-        onClick={handleClose}
-      >
-        {isPending ? "Closing..." : "Close Period"}
-      </Button>
+      {confirming ? (
+        <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+          <p className="text-xs text-muted-foreground">
+            Close <span className="font-medium text-foreground">{period.name}</span>
+            ? New journals cannot post to a closed period.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              disabled={isPending}
+              size="sm"
+              type="button"
+              onClick={handleClose}
+            >
+              {isPending ? "Closing..." : "Yes, close period"}
+            </Button>
+            <Button
+              disabled={isPending}
+              size="sm"
+              type="button"
+              variant="outline"
+              onClick={() => setConfirming(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          disabled={isPending}
+          size="sm"
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setError(null);
+            setConfirming(true);
+          }}
+        >
+          Close Period
+        </Button>
+      )}
       {successMessage ? (
         <p aria-live="polite" className="text-xs text-foreground" role="status">
           {successMessage}
