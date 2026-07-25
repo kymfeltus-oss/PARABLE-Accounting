@@ -339,7 +339,15 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
               {report.id === "balance-sheet" ? (
                 <>
                   <p className="mt-2 text-muted-foreground">
-                    As of {formatReportDate(data.financialReports.asOfDate)}
+                    As of {formatReportDate(data.financialReports.asOfDate)} ·
+                    Equation balanced:{" "}
+                    {data.financialReports.balanceSheet.isEquationBalanced
+                      ? "Yes"
+                      : "No"}
+                    {data.financialReports.balanceSheet
+                      .unclosedChangeInNetAssets !== 0
+                      ? ` · Unclosed change in net assets: ${formatCurrency(data.financialReports.balanceSheet.unclosedChangeInNetAssets)} (not yet closed into net asset accounts)`
+                      : null}
                   </p>
                   <FinancialReportTable
                     caption="Balance sheet"
@@ -354,9 +362,11 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
                     )}
                     footer={[
                       "Totals",
-                      `Assets ${formatCurrency(data.financialReports.balanceSheet.totalAssets)} · Liabilities ${formatCurrency(data.financialReports.balanceSheet.totalLiabilities)} · Net assets ${formatCurrency(data.financialReports.balanceSheet.totalNetAssets)}`,
+                      `Assets ${formatCurrency(data.financialReports.balanceSheet.totalAssets)} · Liabilities ${formatCurrency(data.financialReports.balanceSheet.totalLiabilities)} · Net assets ${formatCurrency(data.financialReports.balanceSheet.totalNetAssets)} · Unclosed ${formatCurrency(data.financialReports.balanceSheet.unclosedChangeInNetAssets)}`,
                       formatCurrency(
-                        data.financialReports.balanceSheet.totalLiabilitiesAndNetAssets,
+                        data.financialReports.balanceSheet.totalLiabilitiesAndNetAssets +
+                          data.financialReports.balanceSheet
+                            .unclosedChangeInNetAssets,
                       ),
                     ]}
                   />

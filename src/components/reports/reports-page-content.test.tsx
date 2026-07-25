@@ -90,6 +90,7 @@ describe("ReportsPageContent", () => {
     expect(screen.getAllByText(/1000 · Operating Cash/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Net income: \$850\.00/)).toBeTruthy();
     expect(screen.getAllByText(/General Fund/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Equation balanced: Yes/i)).toBeTruthy();
   });
 
   it("marks only cash flow unavailable", () => {
