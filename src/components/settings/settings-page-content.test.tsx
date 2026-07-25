@@ -183,9 +183,24 @@ describe("SettingsPageContent", () => {
   it("does not render editable owner controls for staff", () => {
     render(<SettingsPageContent data={createPopulatedSettingsData("staff")} />);
 
+    expect(screen.getByRole("heading", { name: "Accounting Defaults" })).toBeTruthy();
+    expect(
+      screen.getByText(/Only owners and accountants can edit accounting defaults/i),
+    ).toBeTruthy();
     expect(screen.queryByText("Organization profile form")).toBeNull();
     expect(screen.queryByText("Organization settings form")).toBeNull();
     expect(screen.queryByText("Create invite form")).toBeNull();
+  });
+
+  it("puts Accounting Defaults near the top with a jump link", () => {
+    render(<SettingsPageContent data={createEmptySettingsData()} />);
+
+    expect(
+      screen.getByRole("link", { name: "Accounting Defaults" }),
+    ).toHaveAttribute("href", "#accounting-defaults");
+    expect(
+      screen.getByRole("heading", { name: "Accounting Defaults" }),
+    ).toBeTruthy();
   });
 
   it("renders related workspace navigation links", () => {
