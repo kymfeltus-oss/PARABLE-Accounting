@@ -7,6 +7,10 @@ import {
   mapExpenseAccountOptions,
   mapExpenseFundOptions,
 } from "@/lib/data/expense-allocation-options";
+import {
+  resolveDefaultExpenseAccountId,
+  resolveDefaultExpenseCreditAccountId,
+} from "@/lib/data/expense-account-defaults";
 import { getExpenseCreditAccountOptions } from "@/lib/data/expense-credit-account-options";
 import {
   getExpenseJournalLinkage,
@@ -18,6 +22,7 @@ import {
 } from "@/lib/data/expenses-repository";
 import { getFundsData } from "@/lib/data/funds-repository";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
+import { getOrganizationSettings } from "@/lib/data/organization-settings-repository";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -65,26 +70,43 @@ export default async function ExpenseDetailPage({
     notFound();
   }
 
-  const [lines, accountingData, fundsData, creditAccountOptions, journalLinkage] =
-    await Promise.all([
-      getExpenseLines(organizationId, id),
-      getAccountingData(organizationId),
-      getFundsData(organizationId),
-      expense.status === "draft"
-        ? getExpenseCreditAccountOptions(
-            organizationId,
-            expense.payment_source,
-          )
-        : Promise.resolve([]),
-      expense.status === "recorded"
-        ? getExpenseJournalLinkage(organizationId, id)
-        : Promise.resolve(null),
-    ]);
+  const [
+    lines,
+    accountingData,
+    fundsData,
+    creditAccountOptions,
+    journalLinkage,
+    organizationSettings,
+  ] = await Promise.all([
+    getExpenseLines(organizationId, id),
+    getAccountingData(organizationId),
+    getFundsData(organizationId),
+    expense.status === "draft"
+      ? getExpenseCreditAccountOptions(
+          organizationId,
+          expense.payment_source,
+        )
+      : Promise.resolve([]),
+    expense.status === "recorded"
+      ? getExpenseJournalLinkage(organizationId, id)
+      : Promise.resolve(null),
+    expense.status === "draft"
+      ? getOrganizationSettings(organizationId)
+      : Promise.resolve(null),
+  ]);
+
+  const accountOptions = mapExpenseAccountOptions(accountingData.accounts);
 
   return (
     <ExpenseDetailPageView
-      accountOptions={mapExpenseAccountOptions(accountingData.accounts)}
+      accountOptions={accountOptions}
       creditAccountOptions={creditAccountOptions}
+      defaultCreditAccountId={resolveDefaultExpenseCreditAccountId(
+        creditAccountOptions,
+        expense.payment_source,
+        organizationSettings?.default_cash_account_id ?? null,
+      )}
+      defaultExpenseAccountId={resolveDefaultExpenseAccountId(accountOptions)}
       expense={expense}
       fundOptions={mapExpenseFundOptions(fundsData.funds)}
       journalLinkage={journalLinkage}

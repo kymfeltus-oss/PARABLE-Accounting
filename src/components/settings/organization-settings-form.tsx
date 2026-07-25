@@ -132,8 +132,8 @@ export function OrganizationSettingsForm({
   return (
     <form className="space-y-4" noValidate onSubmit={handleSubmit}>
       <p className="text-sm text-muted-foreground">
-        These defaults prefill debit and revenue accounts when you record giving
-        to the ledger. Choose accounts below, then click{" "}
+        These defaults prefill giving ledger accounts and cash/bank expense
+        payment accounts. Choose accounts below, then click{" "}
         <span className="font-medium text-foreground">
           Save accounting defaults
         </span>

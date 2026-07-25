@@ -1,5 +1,6 @@
 import { ExpensesPageContent } from "@/components/expenses/expenses-page-content";
 import { getAccountingData } from "@/lib/data/accounting-repository";
+import { resolveDefaultExpenseAccountId } from "@/lib/data/expense-account-defaults";
 import {
   mapExpenseAccountOptions,
   mapExpenseFundOptions,
@@ -18,6 +19,8 @@ export default async function ExpensesPage() {
     getFundsData(organizationId),
   ]);
 
+  const accountOptions = mapExpenseAccountOptions(accountingData.accounts);
+
   return (
     <ExpensesPageContent
       data={data}
@@ -25,7 +28,8 @@ export default async function ExpensesPage() {
         id: vendor.id,
         name: vendor.name,
       }))}
-      accountOptions={mapExpenseAccountOptions(accountingData.accounts)}
+      accountOptions={accountOptions}
+      defaultExpenseAccountId={resolveDefaultExpenseAccountId(accountOptions)}
       fundOptions={mapExpenseFundOptions(fundsData.funds)}
     />
   );

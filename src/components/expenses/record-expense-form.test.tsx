@@ -72,6 +72,18 @@ afterEach(() => {
 });
 
 describe("RecordExpenseForm", () => {
+  it("prefills the payment account from the org default when eligible", () => {
+    render(
+      <RecordExpenseForm
+        {...createProps({ defaultCreditAccountId: "account-cash" })}
+      />,
+    );
+
+    expect(
+      screen.getByLabelText("Payment / credit account"),
+    ).toHaveValue("account-cash");
+  });
+
   it("renders the expense details", () => {
     render(<RecordExpenseForm {...createProps()} />);
 

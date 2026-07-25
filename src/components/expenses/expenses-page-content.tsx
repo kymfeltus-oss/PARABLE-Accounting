@@ -68,6 +68,7 @@ type ExpensesPageContentProps = {
   vendorOptions: ExpenseVendorOption[];
   accountOptions: ExpenseAccountOption[];
   fundOptions: ExpenseFundOption[];
+  defaultExpenseAccountId?: string | null;
 };
 
 function formatCurrency(amount: number): string {
@@ -132,6 +133,7 @@ function renderDraftAllocationControls(
   expense: ExpenseRecord,
   accountOptions: ExpenseAccountOption[],
   fundOptions: ExpenseFundOption[],
+  defaultExpenseAccountId: string | null,
 ) {
   if (expense.status !== "draft") {
     return null;
@@ -140,6 +142,7 @@ function renderDraftAllocationControls(
   return (
     <ExpenseAllocationEditor
       accountOptions={accountOptions}
+      defaultExpenseAccountId={defaultExpenseAccountId}
       expense={toAllocationEditorExpense(expense)}
       fundOptions={fundOptions}
     />
@@ -150,10 +153,12 @@ function ExpenseListItem({
   expense,
   accountOptions,
   fundOptions,
+  defaultExpenseAccountId,
 }: {
   expense: ExpenseRecord;
   accountOptions: ExpenseAccountOption[];
   fundOptions: ExpenseFundOption[];
+  defaultExpenseAccountId: string | null;
 }) {
   return (
     <li className="rounded-lg border border-border p-4 text-sm">
@@ -203,6 +208,7 @@ function ExpenseListItem({
               expense,
               accountOptions,
               fundOptions,
+              defaultExpenseAccountId,
             )
           : null}
       </div>
@@ -302,6 +308,7 @@ export function ExpensesPageContent({
   vendorOptions,
   accountOptions,
   fundOptions,
+  defaultExpenseAccountId = null,
 }: ExpensesPageContentProps) {
   const expensesNav = getNavItemByPathname("/expenses");
   const [statusFilter, setStatusFilter] = useState<ExpenseStatusFilterId>("all");
@@ -415,6 +422,7 @@ export function ExpensesPageContent({
                   <ExpenseListItem
                     key={expense.id}
                     accountOptions={accountOptions}
+                    defaultExpenseAccountId={defaultExpenseAccountId}
                     expense={expense}
                     fundOptions={fundOptions}
                   />

@@ -42,6 +42,7 @@ export type RecordExpenseFormProps = {
   paymentSource: string | null;
   allocationComplete: boolean;
   creditAccounts: CreditAccountOption[];
+  defaultCreditAccountId?: string | null;
   onRecord: (input: {
     expenseId: string;
     creditAccountId: string;
@@ -51,6 +52,20 @@ export type RecordExpenseFormProps = {
     journalEntryId: string | null;
   }) => void;
 };
+
+function resolveInitialCreditAccountId(
+  creditAccounts: CreditAccountOption[],
+  defaultCreditAccountId: string | null | undefined,
+): string {
+  if (
+    defaultCreditAccountId &&
+    creditAccounts.some((account) => account.id === defaultCreditAccountId)
+  ) {
+    return defaultCreditAccountId;
+  }
+
+  return "";
+}
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -66,10 +81,13 @@ export function RecordExpenseForm({
   paymentSource,
   allocationComplete,
   creditAccounts,
+  defaultCreditAccountId = null,
   onRecord,
   onRecorded,
 }: RecordExpenseFormProps) {
-  const [creditAccountId, setCreditAccountId] = useState("");
+  const [creditAccountId, setCreditAccountId] = useState(() =>
+    resolveInitialCreditAccountId(creditAccounts, defaultCreditAccountId),
+  );
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [accountError, setAccountError] = useState<string | null>(null);
