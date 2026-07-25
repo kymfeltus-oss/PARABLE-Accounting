@@ -86,11 +86,15 @@ describe("GivingPageContent", () => {
   it("links recent giving transactions to their detail pages", () => {
     render(<GivingPageContent data={createPopulatedGivingData()} {...emptyFormProps} />);
 
-    const viewLinks = screen.getAllByRole("link", { name: "View" });
-    expect(viewLinks.map((link) => link.getAttribute("href"))).toEqual([
+    expect(screen.getByText("Posted to ledger")).toBeTruthy();
+    expect(screen.getByText("Not posted to ledger")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Post to ledger" }),
+    ).toHaveAttribute("href", "/giving/gift-2");
+    expect(screen.getByRole("link", { name: "View" })).toHaveAttribute(
+      "href",
       "/giving/gift-1",
-      "/giving/gift-2",
-    ]);
+    );
   });
 
   it("renders honest zero KPI values when giving data is empty", () => {
