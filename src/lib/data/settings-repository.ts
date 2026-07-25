@@ -68,8 +68,12 @@ function shortenUserId(userId: string): string {
   return `${userId.slice(0, 8)}…${userId.slice(-4)}`;
 }
 
+type MembershipWithEmailRow = OrganizationMembershipRow & {
+  email?: string | null;
+};
+
 function enrichMemberships(
-  memberships: OrganizationMembershipRow[],
+  memberships: MembershipWithEmailRow[],
   invites: OrganizationInviteRow[],
   currentUserId: string,
   currentUserEmail: string | null | undefined,
@@ -88,9 +92,13 @@ function enrichMemberships(
 
   return memberships.map((membership) => {
     const isCurrentUser = membership.user_id === currentUserId;
+    const rpcEmail =
+      typeof membership.email === "string" && membership.email.trim() !== ""
+        ? membership.email.trim()
+        : null;
     const email = isCurrentUser
-      ? (currentUserEmail?.trim() || null)
-      : (emailByAcceptedUserId.get(membership.user_id) ?? null);
+      ? (currentUserEmail?.trim() || rpcEmail || null)
+      : (rpcEmail ?? emailByAcceptedUserId.get(membership.user_id) ?? null);
     const displayName = isCurrentUser
       ? email
         ? `You (${email})`
@@ -98,7 +106,12 @@ function enrichMemberships(
       : (email ?? shortenUserId(membership.user_id));
 
     return {
-      ...membership,
+      id: membership.id,
+      organization_id: membership.organization_id,
+      user_id: membership.user_id,
+      role: membership.role,
+      created_at: membership.created_at,
+      updated_at: membership.updated_at,
       displayName,
       email,
       isCurrentUser,
@@ -134,11 +147,9 @@ export async function getSettingsData(
       .from("organizations")
       .select("*")
       .eq("id", scopedOrganizationId),
-    supabase
-      .from("organization_memberships")
-      .select("*")
-      .eq("organization_id", scopedOrganizationId)
-      .order("created_at", { ascending: false }),
+    supabase.rpc("list_organization_memberships", {
+      target_organization_id: scopedOrganizationId,
+    }),
     supabase
       .from("organization_memberships")
       .select("role")
@@ -179,10 +190,15 @@ export async function getSettingsData(
     });
   }
 
-  const memberships = unwrapRows<OrganizationMembershipRow>(
-    "getSettingsData.memberships",
-    membershipsResult,
-  );
+  if (membershipsResult.error) {
+    throw toDataAccessError(
+      "getSettingsData.memberships",
+      membershipsResult.error,
+    );
+  }
+
+  const memberships = (membershipsResult.data ??
+    []) as MembershipWithEmailRow[];
 
   if (currentMembershipResult.error) {
     throw toDataAccessError(
