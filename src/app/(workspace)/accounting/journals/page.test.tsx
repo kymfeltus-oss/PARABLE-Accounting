@@ -174,4 +174,17 @@ describe("Journal register page wiring", () => {
     expect(contents).toContain("getCurrentOrganizationId()");
     expect(contents).not.toMatch(/organizationId:\s*string/);
   });
+
+  it("includes a Create journal entry action to the new journal page", () => {
+    const contents = readFileSync(
+      path.join(
+        process.cwd(),
+        "src/app/(workspace)/accounting/journals/page.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(contents).toContain('href="/accounting/journals/new"');
+    expect(contents).toContain("Create journal entry");
+  });
 });

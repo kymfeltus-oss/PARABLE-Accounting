@@ -123,18 +123,18 @@ export function FinancialOverviewHeader({
           </Button>
         )}
 
-        <CreateExpenseDraftForm
-          vendorOptions={vendorOptions}
-          triggerLabel="Record Transaction"
-          triggerClassName="h-11 px-4"
-        />
-
         <Button asChild className="h-11 px-4">
           <Link href="/accounting/journals/new">
             <BookPlus aria-hidden className="size-4" />
             Create journal entry
           </Link>
         </Button>
+
+        <CreateExpenseDraftForm
+          vendorOptions={vendorOptions}
+          triggerLabel="Record Transaction"
+          triggerClassName="h-11 px-4"
+        />
 
         <Button
           asChild
