@@ -308,6 +308,32 @@ export function buildIncomeStatement(
   };
 }
 
+/**
+ * Fund net position from balance-sheet accounts only (asset − liability + net_asset).
+ *
+ * Revenue/expense lines are excluded so dual-tagged journals (both sides share a
+ * fund_id, as giving/expense RPCs write) do not cancel to zero.
+ */
+function fundBalanceContribution(line: LedgerLineInput): number {
+  if (line.accountType === "asset" || line.accountType === "net_asset") {
+    return computeNaturalBalance(
+      line.accountType,
+      line.debitAmount,
+      line.creditAmount,
+    );
+  }
+
+  if (line.accountType === "liability") {
+    return -computeNaturalBalance(
+      line.accountType,
+      line.debitAmount,
+      line.creditAmount,
+    );
+  }
+
+  return 0;
+}
+
 export function buildFundBalanceReport(
   lines: ReadonlyArray<LedgerLineInput>,
   funds: ReadonlyArray<FundInfo>,
@@ -324,7 +350,11 @@ export function buildFundBalanceReport(
       continue;
     }
 
-    const signedAmount = line.creditAmount - line.debitAmount;
+    const signedAmount = fundBalanceContribution(line);
+    if (signedAmount === 0) {
+      continue;
+    }
+
     balanceByFundId.set(
       line.fundId,
       (balanceByFundId.get(line.fundId) ?? 0) + signedAmount,
@@ -371,7 +401,11 @@ export function buildFundBalanceMap(
       continue;
     }
 
-    const signedAmount = line.creditAmount - line.debitAmount;
+    const signedAmount = fundBalanceContribution(line);
+    if (signedAmount === 0) {
+      continue;
+    }
+
     balanceByFundId.set(
       line.fundId,
       (balanceByFundId.get(line.fundId) ?? 0) + signedAmount,

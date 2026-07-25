@@ -173,7 +173,8 @@ const AVAILABLE_REPORTS: ReportCatalogEntry[] = [
   {
     id: "fund-balance",
     name: "Fund Balance Report",
-    description: "Net credit balance by designated fund from posted activity.",
+    description:
+      "Fund equity by designated fund from posted balance-sheet activity.",
   },
   {
     id: "budget-vs-actual",
