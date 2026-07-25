@@ -7,13 +7,15 @@ import {
 import { getMembersData } from "@/lib/data/members-repository";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
 import { getFundsData } from "@/lib/data/funds-repository";
+import { getOrganizationSettings } from "@/lib/data/organization-settings-repository";
 
 export default async function GivingPage() {
   const organizationId = await getCurrentOrganizationId();
-  const [data, membersData, fundsData] = await Promise.all([
+  const [data, membersData, fundsData, organizationSettings] = await Promise.all([
     getGivingData(organizationId),
     getMembersData(organizationId),
     getFundsData(organizationId),
+    getOrganizationSettings(organizationId),
   ]);
 
   const [revenueAccountOptions, ...allDebitAccountGroups] = await Promise.all([
@@ -59,6 +61,10 @@ export default async function GivingPage() {
         label: account.displayLabel,
         accountType: account.accountType,
       }))}
+      defaultDebitAccountId={organizationSettings?.default_cash_account_id ?? null}
+      defaultRevenueAccountId={
+        organizationSettings?.default_revenue_account_id ?? null
+      }
     />
   );
 }

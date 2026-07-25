@@ -14,6 +14,8 @@ export type GivingDetailPageContentProps = {
   transaction: GivingTransactionRecord;
   debitAccountOptions: GivingRecordingAccountOption[];
   revenueAccountOptions: GivingRecordingAccountOption[];
+  defaultDebitAccountId?: string | null;
+  defaultRevenueAccountId?: string | null;
   journalLinkage?: GivingJournalLinkage | null;
 };
 
@@ -55,6 +57,8 @@ export function GivingDetailPageContent({
   transaction,
   debitAccountOptions,
   revenueAccountOptions,
+  defaultDebitAccountId = null,
+  defaultRevenueAccountId = null,
   journalLinkage = null,
 }: GivingDetailPageContentProps) {
   const isRecorded = transaction.status === "recorded";
@@ -171,6 +175,8 @@ export function GivingDetailPageContent({
         <RecordGivingSection
           amount={Number(transaction.amount)}
           debitAccountOptions={debitAccountOptions}
+          defaultDebitAccountId={defaultDebitAccountId}
+          defaultRevenueAccountId={defaultRevenueAccountId}
           givingMethod={transaction.giving_method}
           givingTransactionId={transaction.id}
           revenueAccountOptions={revenueAccountOptions}

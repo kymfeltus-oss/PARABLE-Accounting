@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/giving-recording-options";
 import { getGivingTransactionById } from "@/lib/data/giving-repository";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
+import { getOrganizationSettings } from "@/lib/data/organization-settings-repository";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -60,25 +61,36 @@ export default async function GivingDetailPage({
   const canRecordToLedger =
     transaction.status === "recorded" && !isLinkedToJournal;
 
-  const [debitAccountOptions, revenueAccountOptions, journalLinkage] =
-    await Promise.all([
-      canRecordToLedger
-        ? getGivingDebitAccountOptions(
-            organizationId,
-            transaction.giving_method,
-          )
-        : Promise.resolve([]),
-      canRecordToLedger
-        ? getGivingRevenueAccountOptions(organizationId)
-        : Promise.resolve([]),
-      isLinkedToJournal
-        ? getGivingJournalLinkage(organizationId, id)
-        : Promise.resolve(null),
-    ]);
+  const [
+    debitAccountOptions,
+    revenueAccountOptions,
+    journalLinkage,
+    organizationSettings,
+  ] = await Promise.all([
+    canRecordToLedger
+      ? getGivingDebitAccountOptions(
+          organizationId,
+          transaction.giving_method,
+        )
+      : Promise.resolve([]),
+    canRecordToLedger
+      ? getGivingRevenueAccountOptions(organizationId)
+      : Promise.resolve([]),
+    isLinkedToJournal
+      ? getGivingJournalLinkage(organizationId, id)
+      : Promise.resolve(null),
+    canRecordToLedger
+      ? getOrganizationSettings(organizationId)
+      : Promise.resolve(null),
+  ]);
 
   return (
     <GivingDetailPageView
       debitAccountOptions={debitAccountOptions}
+      defaultDebitAccountId={organizationSettings?.default_cash_account_id ?? null}
+      defaultRevenueAccountId={
+        organizationSettings?.default_revenue_account_id ?? null
+      }
       journalLinkage={journalLinkage}
       revenueAccountOptions={revenueAccountOptions}
       transaction={transaction}

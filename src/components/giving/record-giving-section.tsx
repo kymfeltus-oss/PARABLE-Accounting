@@ -18,6 +18,8 @@ type RecordGivingSectionProps = {
   givingMethod: string;
   debitAccountOptions: GivingRecordingAccountOption[];
   revenueAccountOptions: GivingRecordingAccountOption[];
+  defaultDebitAccountId?: string | null;
+  defaultRevenueAccountId?: string | null;
 };
 
 function mapAccountOptions(
@@ -38,6 +40,8 @@ export function RecordGivingSection({
   givingMethod,
   debitAccountOptions,
   revenueAccountOptions,
+  defaultDebitAccountId = null,
+  defaultRevenueAccountId = null,
 }: RecordGivingSectionProps) {
   const router = useRouter();
 
@@ -53,6 +57,8 @@ export function RecordGivingSection({
     <RecordGivingForm
       amount={amount}
       debitAccounts={mapAccountOptions(debitAccountOptions)}
+      defaultDebitAccountId={defaultDebitAccountId}
+      defaultRevenueAccountId={defaultRevenueAccountId}
       givingMethod={givingMethod}
       givingTransactionId={givingTransactionId}
       revenueAccounts={mapAccountOptions(revenueAccountOptions)}

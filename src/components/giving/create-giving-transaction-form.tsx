@@ -72,6 +72,8 @@ type CreateGivingTransactionFormProps = {
   fundOptions?: GivingFundOption[];
   debitAccountOptions?: GivingAccountOption[];
   revenueAccountOptions?: GivingAccountOption[];
+  defaultDebitAccountId?: string | null;
+  defaultRevenueAccountId?: string | null;
   triggerLabel?: string;
 };
 
@@ -104,6 +106,8 @@ export function CreateGivingTransactionForm({
   fundOptions = [],
   debitAccountOptions = [],
   revenueAccountOptions = [],
+  defaultDebitAccountId = null,
+  defaultRevenueAccountId = null,
   triggerLabel = "Record Giving",
 }: CreateGivingTransactionFormProps) {
   const router = useRouter();
@@ -130,6 +134,40 @@ export function CreateGivingTransactionForm({
       allowedTypes.includes(account.accountType as "asset" | "liability"),
     );
   }, [debitAccountOptions, givingMethod]);
+
+  function resolveDefaultDebitAccountId(
+    method: GivingMethod = givingMethod,
+  ): string {
+    if (!defaultDebitAccountId) {
+      return "";
+    }
+
+    const allowedTypes = resolveDebitAccountTypes(method);
+    const match = debitAccountOptions.find(
+      (account) =>
+        account.id === defaultDebitAccountId &&
+        allowedTypes.includes(account.accountType as "asset" | "liability"),
+    );
+
+    return match?.id ?? "";
+  }
+
+  function resolveDefaultRevenueAccountId(): string {
+    if (!defaultRevenueAccountId) {
+      return "";
+    }
+
+    return revenueAccountOptions.some(
+      (account) => account.id === defaultRevenueAccountId,
+    )
+      ? defaultRevenueAccountId
+      : "";
+  }
+
+  function applyLedgerDefaults(method: GivingMethod = givingMethod) {
+    setDebitAccountId(resolveDefaultDebitAccountId(method));
+    setCreditAccountId(resolveDefaultRevenueAccountId());
+  }
 
   function scrollToSave() {
     const body = scrollBodyRef.current;
@@ -320,8 +358,13 @@ export function CreateGivingTransactionForm({
                   id="giving-method"
                   value={givingMethod}
                   onChange={(event) => {
-                    setGivingMethod(event.target.value as GivingMethod);
-                    setDebitAccountId("");
+                    const nextMethod = event.target.value as GivingMethod;
+                    setGivingMethod(nextMethod);
+                    if (recordImmediately) {
+                      setDebitAccountId(resolveDefaultDebitAccountId(nextMethod));
+                    } else {
+                      setDebitAccountId("");
+                    }
                   }}
                 >
                   {GIVING_METHOD_OPTIONS.map((option) => (
@@ -389,8 +432,11 @@ export function CreateGivingTransactionForm({
                     checked={recordImmediately}
                     type="checkbox"
                     onChange={(event) => {
-                      setRecordImmediately(event.target.checked);
-                      if (!event.target.checked) {
+                      const checked = event.target.checked;
+                      setRecordImmediately(checked);
+                      if (checked) {
+                        applyLedgerDefaults();
+                      } else {
                         setDebitAccountId("");
                         setCreditAccountId("");
                       }
@@ -398,6 +444,10 @@ export function CreateGivingTransactionForm({
                   />
                   Record to ledger immediately
                 </label>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Uses your organization accounting defaults when available.
+                  Change them anytime under Settings.
+                </p>
 
                 {recordImmediately ? (
                   <div className="mt-4 space-y-4">

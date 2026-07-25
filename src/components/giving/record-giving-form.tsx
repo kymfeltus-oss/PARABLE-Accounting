@@ -43,6 +43,8 @@ export type RecordGivingFormProps = {
   givingMethod: string;
   debitAccounts: RecordingAccountOption[];
   revenueAccounts: RecordingAccountOption[];
+  defaultDebitAccountId?: string | null;
+  defaultRevenueAccountId?: string | null;
   onRecord: (input: {
     givingTransactionId: string;
     debitAccountId: string;
@@ -53,6 +55,17 @@ export type RecordGivingFormProps = {
     journalEntryId: string | null;
   }) => void;
 };
+
+function resolveDefaultAccountId(
+  accountId: string | null | undefined,
+  accounts: RecordingAccountOption[],
+): string {
+  if (!accountId) {
+    return "";
+  }
+
+  return accounts.some((account) => account.id === accountId) ? accountId : "";
+}
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -72,11 +85,17 @@ export function RecordGivingForm({
   givingMethod,
   debitAccounts,
   revenueAccounts,
+  defaultDebitAccountId = null,
+  defaultRevenueAccountId = null,
   onRecord,
   onRecorded,
 }: RecordGivingFormProps) {
-  const [debitAccountId, setDebitAccountId] = useState("");
-  const [creditAccountId, setCreditAccountId] = useState("");
+  const [debitAccountId, setDebitAccountId] = useState(() =>
+    resolveDefaultAccountId(defaultDebitAccountId, debitAccounts),
+  );
+  const [creditAccountId, setCreditAccountId] = useState(() =>
+    resolveDefaultAccountId(defaultRevenueAccountId, revenueAccounts),
+  );
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [debitAccountError, setDebitAccountError] = useState<string | null>(null);
