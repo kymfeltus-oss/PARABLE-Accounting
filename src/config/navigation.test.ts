@@ -124,7 +124,7 @@ describe("navigation configuration", () => {
     const item = getNavItemByPathname("/settings");
 
     expect(item).toBeDefined();
-    expect(isNavItemActive("/settings/profile", item!)).toBe(false);
+    expect(isNavItemActive("/settings/accounting-defaults", item!)).toBe(true);
     expect(isNavItemActive("/dashboard", item!)).toBe(false);
   });
 

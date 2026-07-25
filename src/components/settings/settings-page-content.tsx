@@ -3,13 +3,13 @@ import {
   Archive,
   BookOpen,
   LayoutDashboard,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import { CreateInviteForm } from "@/components/settings/create-invite-form";
 import { OrganizationInvitesTable } from "@/components/settings/organization-invites-table";
 import { OrganizationMembershipsTable } from "@/components/settings/organization-memberships-table";
 import { OrganizationProfileForm } from "@/components/settings/organization-profile-form";
-import { OrganizationSettingsForm } from "@/components/settings/organization-settings-form";
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -90,14 +90,9 @@ function formatSummaryValue(
   }
 }
 
-function canEditAccountingDefaults(role: OrganizationMembershipRole): boolean {
-  return role === "owner" || role === "accountant";
-}
-
 export function SettingsPageContent({ data }: SettingsPageContentProps) {
   const settingsNav = getNavItemByPathname("/settings");
   const isOwner = data.currentUserRole === "owner";
-  const showAccountingDefaults = canEditAccountingDefaults(data.currentUserRole);
 
   if (!settingsNav) {
     throw new Error("Settings navigation item is not configured.");
@@ -131,47 +126,29 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
         ))}
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Jump to{" "}
-        <a
-          className="font-medium text-foreground underline underline-offset-4"
-          href="#accounting-defaults"
-        >
-          Accounting Defaults
-        </a>{" "}
-        (cash and revenue accounts used when posting giving).
-      </p>
-
       <section
-        id="accounting-defaults"
         aria-labelledby="settings-accounting-defaults-title"
-        className="scroll-mt-24 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
       >
-        <div className="space-y-1">
-          <h2
-            id="settings-accounting-defaults-title"
-            className="text-lg font-semibold text-foreground"
-          >
-            Accounting Defaults
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Configure fiscal year timing and default posting accounts for the
-            organization.
-          </p>
-        </div>
-
-        <div className="mt-6">
-          {showAccountingDefaults ? (
-            <OrganizationSettingsForm
-              accounts={data.accounts}
-              settings={data.settings}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground" role="status">
-              Only owners and accountants can edit accounting defaults. Your
-              role is {formatMembershipRole(data.currentUserRole)}.
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h2
+              id="settings-accounting-defaults-title"
+              className="text-lg font-semibold text-foreground"
+            >
+              Accounting Defaults
+            </h2>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Set fiscal year timing and the default cash/revenue accounts used
+              when posting giving to the ledger.
             </p>
-          )}
+          </div>
+          <Button asChild className="w-full sm:w-auto" type="button">
+            <Link href="/settings/accounting-defaults">
+              <SlidersHorizontal aria-hidden className="size-4" />
+              Open accounting defaults
+            </Link>
+          </Button>
         </div>
       </section>
 

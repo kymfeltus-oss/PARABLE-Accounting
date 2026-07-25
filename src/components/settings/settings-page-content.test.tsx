@@ -26,10 +26,6 @@ vi.mock("@/components/settings/organization-profile-form", () => ({
   OrganizationProfileForm: () => <div>Organization profile form</div>,
 }));
 
-vi.mock("@/components/settings/organization-settings-form", () => ({
-  OrganizationSettingsForm: () => <div>Organization settings form</div>,
-}));
-
 vi.mock("@/components/settings/create-invite-form", () => ({
   CreateInviteForm: () => <div>Create invite form</div>,
 }));
@@ -165,17 +161,18 @@ describe("SettingsPageContent", () => {
     render(<SettingsPageContent data={createPopulatedSettingsData("owner")} />);
 
     expect(screen.getByText("Organization profile form")).toBeTruthy();
-    expect(screen.getByText("Organization settings form")).toBeTruthy();
     expect(screen.getByText("Create invite form")).toBeTruthy();
     expect(screen.getByText("Organization invites table")).toBeTruthy();
   });
 
-  it("renders accounting defaults for accountants without owner invite controls", () => {
+  it("renders accounting defaults button for accountants without owner invite controls", () => {
     render(
       <SettingsPageContent data={createPopulatedSettingsData("accountant")} />,
     );
 
-    expect(screen.getByText("Organization settings form")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /Open accounting defaults/i }),
+    ).toHaveAttribute("href", "/settings/accounting-defaults");
     expect(screen.queryByText("Organization profile form")).toBeNull();
     expect(screen.queryByText("Create invite form")).toBeNull();
   });
@@ -183,24 +180,22 @@ describe("SettingsPageContent", () => {
   it("does not render editable owner controls for staff", () => {
     render(<SettingsPageContent data={createPopulatedSettingsData("staff")} />);
 
-    expect(screen.getByRole("heading", { name: "Accounting Defaults" })).toBeTruthy();
     expect(
-      screen.getByText(/Only owners and accountants can edit accounting defaults/i),
-    ).toBeTruthy();
+      screen.getByRole("link", { name: /Open accounting defaults/i }),
+    ).toHaveAttribute("href", "/settings/accounting-defaults");
     expect(screen.queryByText("Organization profile form")).toBeNull();
-    expect(screen.queryByText("Organization settings form")).toBeNull();
     expect(screen.queryByText("Create invite form")).toBeNull();
   });
 
-  it("puts Accounting Defaults near the top with a jump link", () => {
+  it("links to the Accounting Defaults page from Settings", () => {
     render(<SettingsPageContent data={createEmptySettingsData()} />);
 
     expect(
-      screen.getByRole("link", { name: "Accounting Defaults" }),
-    ).toHaveAttribute("href", "#accounting-defaults");
-    expect(
       screen.getByRole("heading", { name: "Accounting Defaults" }),
     ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /Open accounting defaults/i }),
+    ).toHaveAttribute("href", "/settings/accounting-defaults");
   });
 
   it("renders related workspace navigation links", () => {

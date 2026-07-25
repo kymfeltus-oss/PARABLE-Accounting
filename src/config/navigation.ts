@@ -276,5 +276,14 @@ export function getNavItemByPathname(pathname: string): NavItem | undefined {
 }
 
 export function isNavItemActive(pathname: string, item: NavItem): boolean {
-  return pathname === item.href;
+  if (pathname === item.href) {
+    return true;
+  }
+
+  // Keep parent nav items highlighted on nested routes (e.g. Settings pages).
+  if (item.href === "/settings") {
+    return pathname.startsWith(`${item.href}/`);
+  }
+
+  return false;
 }
