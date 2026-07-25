@@ -97,6 +97,29 @@ describe("createGivingTransactionAction", () => {
       "22222222-2222-4222-8222-222222222222",
     );
   });
+
+  it("surfaces ledger recording failures after a successful create", async () => {
+    const { DataAccessError } = await import("@/lib/data/data-access-error");
+
+    recordGivingMock.mockRejectedValue(
+      new DataAccessError({
+        operation: "recordGiving",
+        message: "Accounting period is closed",
+      }),
+    );
+
+    const result = await createGivingTransactionAction({
+      ...validInput,
+      debitAccountId: "11111111-1111-4111-8111-111111111111",
+      creditAccountId: "22222222-2222-4222-8222-222222222222",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      message:
+        "This giving transaction cannot be recorded because its accounting period is closed.",
+    });
+  });
 });
 
 describe("recordGivingAction remains intact", () => {

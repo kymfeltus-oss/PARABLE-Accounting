@@ -138,6 +138,12 @@ function isValidUuid(value: string): boolean {
 }
 
 function mapRecordGivingError(error: DataAccessError): string {
+  if (
+    error.message.includes("Could not find the function public.record_giving")
+  ) {
+    return "Ledger recording is not available right now. The giving transaction may have been saved — try recording it from the giving detail page, or contact support.";
+  }
+
   return (
     RECORD_GIVING_RPC_ERROR_MESSAGES[error.message] ?? GENERIC_RECORD_GIVING_ERROR
   );
@@ -311,13 +317,27 @@ export async function createGivingTransactionAction(
     let journalEntryId: string | null = null;
 
     if (validatedInput.debitAccountId && validatedInput.creditAccountId) {
-      const recorded = await recordGiving(
-        organizationId,
-        givingTransaction.id,
-        validatedInput.debitAccountId,
-        validatedInput.creditAccountId,
-      );
-      journalEntryId = recorded.journal_entry_id ?? null;
+      try {
+        const recorded = await recordGiving(
+          organizationId,
+          givingTransaction.id,
+          validatedInput.debitAccountId,
+          validatedInput.creditAccountId,
+        );
+        journalEntryId = recorded.journal_entry_id ?? null;
+      } catch (error) {
+        if (error instanceof DataAccessError) {
+          return {
+            success: false,
+            message: mapRecordGivingError(error),
+          };
+        }
+
+        return {
+          success: false,
+          message: GENERIC_RECORD_GIVING_ERROR,
+        };
+      }
     }
 
     revalidatePath("/giving");
