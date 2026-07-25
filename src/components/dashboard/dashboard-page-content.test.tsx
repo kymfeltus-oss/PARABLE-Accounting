@@ -55,7 +55,15 @@ describe("DashboardPageContent", () => {
       "href",
       "/bills",
     );
-    expect(screen.getByRole("link", { name: /Ask Parable/i })).toHaveAttribute("href", "/ai-close");
+    expect(screen.getByRole("link", { name: /View reports/i })).toHaveAttribute(
+      "href",
+      "/reports",
+    );
+    expect(
+      screen.getByRole("link", { name: /Open accounting/i }),
+    ).toHaveAttribute("href", "/accounting");
+    expect(screen.queryByRole("link", { name: /Ask Parable/i })).toBeNull();
+    expect(screen.queryByText("$125K")).toBeNull();
   });
 });
 
