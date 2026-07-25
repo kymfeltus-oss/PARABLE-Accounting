@@ -131,6 +131,50 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
         ))}
       </div>
 
+      <p className="text-sm text-muted-foreground">
+        Jump to{" "}
+        <a
+          className="font-medium text-foreground underline underline-offset-4"
+          href="#accounting-defaults"
+        >
+          Accounting Defaults
+        </a>{" "}
+        (cash and revenue accounts used when posting giving).
+      </p>
+
+      <section
+        id="accounting-defaults"
+        aria-labelledby="settings-accounting-defaults-title"
+        className="scroll-mt-24 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+      >
+        <div className="space-y-1">
+          <h2
+            id="settings-accounting-defaults-title"
+            className="text-lg font-semibold text-foreground"
+          >
+            Accounting Defaults
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Configure fiscal year timing and default posting accounts for the
+            organization.
+          </p>
+        </div>
+
+        <div className="mt-6">
+          {showAccountingDefaults ? (
+            <OrganizationSettingsForm
+              accounts={data.accounts}
+              settings={data.settings}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground" role="status">
+              Only owners and accountants can edit accounting defaults. Your
+              role is {formatMembershipRole(data.currentUserRole)}.
+            </p>
+          )}
+        </div>
+      </section>
+
       <section
         aria-labelledby="settings-organization-profile-title"
         className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
@@ -200,33 +244,6 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
           )}
         </div>
       </section>
-
-      {showAccountingDefaults ? (
-        <section
-          aria-labelledby="settings-accounting-defaults-title"
-          className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
-        >
-          <div className="space-y-1">
-            <h2
-              id="settings-accounting-defaults-title"
-              className="text-lg font-semibold text-foreground"
-            >
-              Accounting Defaults
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Configure fiscal year timing and default posting accounts for the
-              organization.
-            </p>
-          </div>
-
-          <div className="mt-6">
-            <OrganizationSettingsForm
-              accounts={data.accounts}
-              settings={data.settings}
-            />
-          </div>
-        </section>
-      ) : null}
 
       <section
         aria-labelledby="settings-access-membership-title"
