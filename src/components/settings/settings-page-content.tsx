@@ -249,13 +249,15 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
             Access & Membership
           </h2>
           <p className="text-sm text-muted-foreground">
-            Organization membership records linked to user identifiers.
+            People who can access this ministry workspace and their roles.
           </p>
         </div>
 
         <dl className="mt-6">
           <div>
-            <dt className="text-sm font-medium text-muted-foreground">Role</dt>
+            <dt className="text-sm font-medium text-muted-foreground">
+              Your role
+            </dt>
             <dd className="mt-1 text-sm text-foreground">
               {formatMembershipRole(data.currentUserRole)}
             </dd>
@@ -266,7 +268,10 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
           {data.memberships.length === 0 ? (
             <WorkspaceDataEmpty message="No organization memberships yet." />
           ) : (
-            <OrganizationMembershipsTable memberships={data.memberships} />
+            <OrganizationMembershipsTable
+              canManageRoles={isOwner}
+              memberships={data.memberships}
+            />
           )}
         </div>
       </section>
@@ -284,7 +289,8 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
               Team Invites
             </h2>
             <p className="text-sm text-muted-foreground">
-              Create invite codes so teammates can join your ministry workspace.
+              Create an invite code, share it with a teammate, and have them join
+              from the Welcome page after they sign in.
             </p>
           </div>
 

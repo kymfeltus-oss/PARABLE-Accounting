@@ -38,6 +38,27 @@ vi.mock("@/components/settings/organization-invites-table", () => ({
   OrganizationInvitesTable: () => <div>Organization invites table</div>,
 }));
 
+vi.mock("@/components/settings/organization-memberships-table", () => ({
+  OrganizationMembershipsTable: ({
+    canManageRoles,
+  }: {
+    canManageRoles?: boolean;
+  }) => (
+    <div>
+      Organization memberships table
+      {canManageRoles ? " (can manage roles)" : ""}
+    </div>
+  ),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -90,9 +111,9 @@ describe("SettingsPageContent", () => {
     expect(
       screen.getByText("Total Memberships").closest("article")?.textContent,
     ).toContain("2");
-    expect(screen.getByRole("table").textContent).toContain(
-      "11111111-1111-4111-8111-111111111111",
-    );
+    expect(
+      screen.getByText("Organization memberships table (can manage roles)"),
+    ).toBeTruthy();
   });
 
   it("renders honest empty membership state", () => {
@@ -115,7 +136,7 @@ describe("SettingsPageContent", () => {
         />,
       );
 
-      const roleTerm = screen.getByText("Role");
+      const roleTerm = screen.getByText("Your role");
       expect(roleTerm.closest("dl")?.textContent).toContain(label);
     },
   );

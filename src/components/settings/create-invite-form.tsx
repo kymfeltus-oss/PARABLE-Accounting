@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { createOrganizationInviteAction } from "@/app/(workspace)/settings/actions";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ const INVITE_ROLES = [
 ] as const;
 
 export function CreateInviteForm() {
+  const router = useRouter();
   const [role, setRole] = useState<string>("staff");
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export function CreateInviteForm() {
 
       setCreatedToken(result.token);
       setEmail("");
+      router.refresh();
     });
   }
 
@@ -52,9 +55,11 @@ export function CreateInviteForm() {
 
     try {
       await navigator.clipboard.writeText(createdToken);
-      setCopyMessage("Token copied to clipboard.");
+      setCopyMessage("Invite code copied.");
     } catch {
-      setCopyMessage("Unable to copy automatically. Select and copy the token manually.");
+      setCopyMessage(
+        "Unable to copy automatically. Select and copy the invite code manually.",
+      );
     }
   }
 
@@ -125,14 +130,24 @@ export function CreateInviteForm() {
           role="status"
         >
           <p className="text-sm font-medium text-foreground">
-            Invite code (copy now)
+            Invite code ready — copy it now
           </p>
           <p className="mt-2 break-all font-mono text-sm text-foreground">
             {createdToken}
           </p>
+          <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+            <li>Share this invite code with your teammate.</li>
+            <li>They sign in (or create an account) at Parable Accounting.</li>
+            <li>
+              On the Welcome page, they choose{" "}
+              <span className="font-medium text-foreground">
+                Join with an invite code
+              </span>{" "}
+              and paste it.
+            </li>
+          </ol>
           <p className="mt-2 text-xs text-muted-foreground">
-            Share this code with your teammate. It won&apos;t be shown again
-            after you leave this page.
+            This code won&apos;t be shown again after you leave this page.
           </p>
           <Button
             className="mt-3"
@@ -140,7 +155,7 @@ export function CreateInviteForm() {
             type="button"
             variant="outline"
           >
-            Copy token
+            Copy invite code
           </Button>
           {copyMessage ? (
             <p className="mt-2 text-sm text-muted-foreground">{copyMessage}</p>
