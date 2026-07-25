@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { AlertTriangle, BookOpenCheck, ChartNoAxesCombined, ChevronRight, CircleCheck, FileText, HandCoins, MoreVertical, RefreshCw, Sparkles, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  BookOpenCheck,
+  ChevronRight,
+  CircleCheck,
+  FileText,
+  HandCoins,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
@@ -11,10 +21,6 @@ import type { FundsData } from "@/lib/data/funds-repository";
 
 import { KpiGrid } from "./kpi-grid";
 import { FinancialOverviewHeader } from "./financial-overview-header";
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-}
 
 export function FinancialOverviewDashboard({
   data,
@@ -92,80 +98,56 @@ export function FinancialOverviewDashboard({
       <KpiGrid kpis={kpis} />
 
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
-        <section aria-labelledby="activity-title" className="dashboard-command-card min-h-[19.5rem] min-w-0 overflow-hidden p-4">
+        <section
+          aria-labelledby="activity-title"
+          className="dashboard-command-card min-h-[19.5rem] min-w-0 overflow-hidden p-4"
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0">
-              <h2 id="activity-title" className="text-sm font-semibold tracking-[0.04em] text-[#F7FAFF] uppercase">Giving &amp; Expense Activity</h2>
-              <div className="mt-3 flex flex-wrap items-start gap-4 text-xs text-[#AEB9CE] sm:gap-8">
-                <span className="flex items-start gap-2">
-                  <span className="mt-1 size-2.5 rounded-full bg-[#1677FF]" />
-                  <span>Giving<br /><span className="text-[#7E8AA8]">(Contributions)</span></span>
-                </span>
-                <span className="flex items-start gap-2">
-                  <span className="mt-1 size-2.5 rounded-full bg-[#DDE5F3]" />
-                  <span>Expenses<br /><span className="text-[#7E8AA8]">(Operating)</span></span>
-                </span>
-              </div>
+              <h2
+                id="activity-title"
+                className="text-sm font-semibold tracking-[0.04em] text-[#F7FAFF] uppercase"
+              >
+                Giving &amp; Expense Activity
+              </h2>
+              <p className="mt-2 text-xs text-[#AEB9CE]">
+                Live totals for the current month. Open Giving or Expenses for
+                the full registers.
+              </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2 self-start">
-              <div aria-label="Activity range" className="flex max-w-full overflow-x-auto rounded-md border border-white/10 text-[0.68rem] text-[#AEB9CE]">
-                {["7D", "30D", "90D", "YTD"].map((range) => (
-                  <button
-                    key={range}
-                    type="button"
-                    aria-pressed={range === "30D"}
-                    className={`min-w-10 shrink-0 border-r border-white/10 px-2.5 py-2 last:border-r-0 sm:min-w-12 sm:px-3 ${range === "30D" ? "bg-[#0B3577] text-[#F7FAFF] shadow-[inset_0_0_12px_rgb(22_119_255/22%)]" : "bg-[#07111D] hover:bg-white/[0.04]"}`}
-                  >
-                    {range}
-                  </button>
-                ))}
-              </div>
-              <button type="button" aria-label="Activity options" className="grid size-8 place-items-center rounded-md text-[#AEB9CE] hover:bg-white/[0.04] hover:text-[#F7FAFF]">
-                <MoreVertical aria-hidden className="size-4" />
-              </button>
-            </div>
+            <p className="shrink-0 rounded-md border border-white/10 bg-[#07111D] px-3 py-2 text-[0.68rem] text-[#AEB9CE]">
+              This month
+            </p>
           </div>
 
-          <div className="mt-2 grid grid-cols-[2.8rem_minmax(0,1fr)] gap-2 text-[0.62rem] text-[#7E8AA8]">
-            <div className="flex h-[11.7rem] flex-col justify-between py-0.5 text-right tabular-nums">
-              <span>$125K</span><span>$100K</span><span>$75K</span><span>$50K</span><span>$25K</span><span>$0</span>
-            </div>
-            <div>
-              <svg
-                aria-label={`Giving ${formatCurrency(data.summary.givingThisMonth)}; expenses ${formatCurrency(data.summary.expensesThisMonth)}`}
-                className="h-[11.7rem] w-full overflow-visible"
-                preserveAspectRatio="none"
-                role="img"
-                viewBox="0 0 620 186"
-              >
-                <defs>
-                  <linearGradient id="giving-area" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#1677FF" stopOpacity=".42" />
-                    <stop offset="100%" stopColor="#1677FF" stopOpacity="0" />
-                  </linearGradient>
-                  <linearGradient id="expense-area" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#DDE5F3" stopOpacity=".25" />
-                    <stop offset="100%" stopColor="#DDE5F3" stopOpacity=".02" />
-                  </linearGradient>
-                  <filter id="line-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur result="blur" stdDeviation="3" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                </defs>
-                {[0, 37, 74, 111, 148, 185].map((y) => (
-                  <line key={y} x1="0" x2="620" y1={y} y2={y} stroke="rgba(126,138,168,.16)" strokeDasharray="3 4" />
-                ))}
-                <path d="M0 186 L0 112 L23 87 L46 65 L69 85 L92 62 L115 75 L138 31 L161 73 L184 97 L207 82 L230 73 L253 80 L276 31 L299 63 L322 82 L345 104 L368 113 L391 100 L414 67 L437 51 L460 12 L483 48 L506 64 L529 66 L552 91 L575 77 L598 85 L620 80 L620 186 Z" fill="url(#giving-area)" />
-                <path d="M0 186 L0 166 L23 155 L46 160 L69 143 L92 155 L115 145 L138 126 L161 140 L184 131 L207 126 L230 129 L253 111 L276 90 L299 105 L322 116 L345 130 L368 139 L391 119 L414 109 L437 103 L460 76 L483 106 L506 94 L529 119 L552 132 L575 114 L598 108 L620 82 L620 186 Z" fill="url(#expense-area)" />
-                <polyline fill="none" filter="url(#line-glow)" points="0,112 23,87 46,65 69,85 92,62 115,75 138,31 161,73 184,97 207,82 230,73 253,80 276,31 299,63 322,82 345,104 368,113 391,100 414,67 437,51 460,12 483,48 506,64 529,66 552,91 575,77 598,85 620,80" stroke="#1677FF" strokeWidth="1.6" />
-                <polyline fill="none" points="0,166 23,155 46,160 69,143 92,155 115,145 138,126 161,140 184,131 207,126 230,129 253,111 276,90 299,105 322,116 345,130 368,139 391,119 414,109 437,103 460,76 483,106 506,94 529,119 552,132 575,114 598,108 620,82" stroke="#DDE5F3" strokeWidth="1.5" />
-                {[["0","112"],["46","65"],["92","62"],["138","31"],["184","97"],["230","73"],["276","31"],["322","82"],["368","113"],["414","67"],["460","12"],["506","64"],["552","91"],["598","85"],["620","80"]].map(([x,y]) => <circle key={`g-${x}`} cx={x} cy={y} fill="#1677FF" r="2.8" stroke="#6FB0FF" strokeWidth=".7" />)}
-                {[["0","166"],["46","160"],["92","155"],["138","126"],["184","131"],["230","129"],["276","90"],["322","116"],["368","139"],["414","109"],["460","76"],["506","94"],["552","132"],["598","108"],["620","82"]].map(([x,y]) => <circle key={`e-${x}`} cx={x} cy={y} fill="#DDE5F3" r="2.6" stroke="#F7FAFF" strokeWidth=".6" />)}
-              </svg>
-              <div className="mt-1 flex justify-between border-t border-white/10 pt-2 tabular-nums">
-                <span>Jun 29</span><span>Jul 6</span><span>Jul 13</span><span>Jul 20</span><span>Jul 27</span>
-              </div>
-            </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Link
+              href="/giving"
+              className="rounded-lg border border-white/10 bg-[#07111D] p-4 transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF]/50"
+            >
+              <p className="brand-label text-[#7E8AA8]">Giving this month</p>
+              <p className="mt-2 font-heading text-2xl text-[#F7FAFF] tabular-nums">
+                {formatCurrency(data.summary.givingThisMonth)}
+              </p>
+              <p className="mt-2 text-xs text-[#1677FF]">Open giving →</p>
+            </Link>
+            <Link
+              href="/expenses"
+              className="rounded-lg border border-white/10 bg-[#07111D] p-4 transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF]/50"
+            >
+              <p className="brand-label text-[#7E8AA8]">Expenses this month</p>
+              <p className="mt-2 font-heading text-2xl text-[#F7FAFF] tabular-nums">
+                {formatCurrency(data.summary.expensesThisMonth)}
+              </p>
+              <p className="mt-2 text-xs text-[#1677FF]">Open expenses →</p>
+            </Link>
+          </div>
+
+          <div className="mt-4 rounded-lg border border-white/10 px-4 py-3">
+            <p className="brand-label text-[#7E8AA8]">Net operating position</p>
+            <p className="mt-1 font-heading text-xl text-[#F7FAFF] tabular-nums">
+              {formatCurrency(data.summary.netOperatingPosition)}
+            </p>
           </div>
         </section>
 
@@ -229,37 +211,57 @@ export function FinancialOverviewDashboard({
             )}
           </div>
         </section>
-        <section className="dashboard-command-card dashboard-ai-insight overflow-hidden p-4" aria-labelledby="close-title">
+        <section
+          className="dashboard-command-card dashboard-ai-insight overflow-hidden p-4"
+          aria-labelledby="close-title"
+        >
           <div className="relative z-10 flex items-center gap-2">
-            <Sparkles aria-hidden className="size-4 text-[#6674FF]" />
-            <h2 id="close-title" className="text-xs font-semibold tracking-[0.05em] text-[#F7FAFF] uppercase">
-              AI Financial Insight
+            <BookOpen aria-hidden className="size-4 text-[#6674FF]" />
+            <h2
+              id="close-title"
+              className="text-xs font-semibold tracking-[0.05em] text-[#F7FAFF] uppercase"
+            >
+              Month-end focus
             </h2>
-            <span className="rounded bg-white/10 px-1.5 py-0.5 text-[0.58rem] font-medium text-[#AEB9CE]">
-              BETA
-            </span>
           </div>
           <p className="relative z-10 mt-4 max-w-[18rem] text-[0.7rem] leading-5 text-[#D6DEEB]">
-            Giving totals <span className="text-[#13C6FF]">{formatCurrency(data.summary.givingThisMonth)}</span> this month,
-            while operating expenses total {formatCurrency(data.summary.expensesThisMonth)}.
-            The current net operating position is {formatCurrency(data.summary.netOperatingPosition)}.
+            Giving totals{" "}
+            <span className="text-[#13C6FF]">
+              {formatCurrency(data.summary.givingThisMonth)}
+            </span>{" "}
+            this month, while operating expenses total{" "}
+            {formatCurrency(data.summary.expensesThisMonth)}. The current net
+            operating position is{" "}
+            {formatCurrency(data.summary.netOperatingPosition)}.
           </p>
           <p className="relative z-10 mt-4 text-[0.6rem] font-medium tracking-[0.06em] text-[#1677FF] uppercase">
-            Recommendations
+            Next steps
           </p>
           <ul className="relative z-10 mt-2 space-y-2">
             {insightRecommendations.map((recommendation) => (
-              <li key={recommendation} className="flex items-center gap-2 text-[0.68rem] text-[#D6DEEB]">
-                <CircleCheck aria-hidden className="size-3.5 shrink-0 text-[#13C6FF]" />
+              <li
+                key={recommendation}
+                className="flex items-center gap-2 text-[0.68rem] text-[#D6DEEB]"
+              >
+                <CircleCheck
+                  aria-hidden
+                  className="size-3.5 shrink-0 text-[#13C6FF]"
+                />
                 <span className="min-w-0 flex-1 truncate">{recommendation}</span>
-                <ChevronRight aria-hidden className="size-3.5 shrink-0 text-[#AEB9CE]" />
+                <ChevronRight
+                  aria-hidden
+                  className="size-3.5 shrink-0 text-[#AEB9CE]"
+                />
               </li>
             ))}
           </ul>
-          <Button asChild className="relative z-10 mt-4 h-8 w-full border border-[#1677FF]/35 bg-[#0B3577] text-[0.68rem] text-[#6FADFF] shadow-none hover:bg-[#104493]">
-            <Link href="/ai-close">
-              <ChartNoAxesCombined aria-hidden className="size-3.5" />
-              View Full Analysis
+          <Button
+            asChild
+            className="relative z-10 mt-4 h-8 w-full border border-[#1677FF]/35 bg-[#0B3577] text-[0.68rem] text-[#6FADFF] shadow-none hover:bg-[#104493]"
+          >
+            <Link href="/accounting">
+              <BookOpen aria-hidden className="size-3.5" />
+              Open accounting
             </Link>
           </Button>
         </section>

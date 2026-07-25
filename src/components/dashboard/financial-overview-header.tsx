@@ -10,7 +10,6 @@ import {
   FileText,
   Search,
   SlidersHorizontal,
-  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ export function FinancialOverviewHeader({
                   Reporting Controls
                 </span>
                 <span className="mt-1 text-[0.62rem] text-[#7E8AA8]">
-                  Accrual&nbsp;&nbsp;•&nbsp;&nbsp;Books Open
+                  Reports&nbsp;&nbsp;•&nbsp;&nbsp;Accounting
                 </span>
               </span>
               <ChevronDown aria-hidden className="size-3.5 text-[#AEB9CE] transition group-open:rotate-180" />
@@ -153,9 +152,9 @@ export function FinancialOverviewHeader({
           variant="outline"
           className="h-11 border-[#20324B] bg-[#09111D] px-4 hover:bg-[#0E1726]"
         >
-          <Link href="/ai-close">
-            <Sparkles aria-hidden className="size-4 text-[#13C6FF]" />
-            Ask Parable
+          <Link href="/reports">
+            <FileText aria-hidden className="size-4" />
+            View reports
           </Link>
         </Button>
       </div>
