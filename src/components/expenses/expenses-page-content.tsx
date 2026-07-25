@@ -22,7 +22,10 @@ import {
   type ExpenseStatusFilterId,
 } from "@/components/expenses/expense-list-filtering";
 import { ExpenseListToolbar } from "@/components/expenses/expense-list-toolbar";
-import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
+import {
+  ExpenseStatusBadge,
+  getExpenseStatusPresentation,
+} from "@/components/expenses/expense-status-badge";
 import type {
   ExpenseAccountOption,
   ExpenseFundOption,
@@ -160,6 +163,14 @@ function ExpenseListItem({
   fundOptions: ExpenseFundOption[];
   defaultExpenseAccountId: string | null;
 }) {
+  const presentation = getExpenseStatusPresentation(expense);
+  const primaryActionLabel =
+    presentation === "posted-to-ledger"
+      ? "View"
+      : presentation === "ready-to-post"
+        ? "Post to ledger"
+        : "View";
+
   return (
     <li className="rounded-lg border border-border p-4 text-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -201,7 +212,7 @@ function ExpenseListItem({
       </div>
       <div className="mt-3 flex flex-wrap items-start gap-2">
         <Button asChild size="sm" type="button" variant="outline">
-          <Link href={`/expenses/${expense.id}`}>View</Link>
+          <Link href={`/expenses/${expense.id}`}>{primaryActionLabel}</Link>
         </Button>
         {expense.status === "draft"
           ? renderDraftAllocationControls(
