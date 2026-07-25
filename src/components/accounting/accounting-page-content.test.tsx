@@ -26,6 +26,14 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
 class ResizeObserverMock {
   observe() {}
   unobserve() {}
@@ -69,6 +77,19 @@ describe("AccountingPageContent", () => {
     }
   });
 
+  it("links to the journal register", () => {
+    render(<AccountingPageContent data={createEmptyAccountingData()} />);
+
+    expect(
+      screen.getByRole("link", { name: "View journal register" }),
+    ).toHaveAttribute("href", "/accounting/journals");
+    expect(
+      screen.getByRole("link", {
+        name: /Journal registerBrowse and filter all journal entries/i,
+      }),
+    ).toHaveAttribute("href", "/accounting/journals");
+  });
+
   it("renders the Add Period control", () => {
     render(<AccountingPageContent data={createEmptyAccountingData()} />);
 
@@ -100,10 +121,17 @@ describe("AccountingPageContent", () => {
   });
 
   it("renders live accounting props", () => {
-    render(<AccountingPageContent data={createPopulatedAccountingData()} />);
+    const data = createPopulatedAccountingData();
+    render(<AccountingPageContent data={data} />);
 
     expect(screen.getAllByText(/1000 · Operating Cash/).length).toBeGreaterThan(0);
     expect(screen.getByText(/JE-1001/)).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /JE-1001/ }),
+    ).toHaveAttribute(
+      "href",
+      `/accounting/journals/${data.journalEntries[0]?.id}`,
+    );
     expect(screen.getByText("July 2026")).toBeTruthy();
     expect(
       screen.getByText("Total Accounts").closest("article")?.textContent,

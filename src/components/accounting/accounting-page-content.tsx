@@ -3,6 +3,7 @@ import {
   ArrowUpRight,
   BookPlus,
   FileText,
+  ListOrdered,
   PieChart,
   Receipt,
   Wallet,
@@ -28,6 +29,13 @@ const summaryLabels = [
 ] as const;
 
 const navigationLinks = [
+  {
+    id: "journals",
+    label: "Journal register",
+    href: "/accounting/journals",
+    description: "Browse and filter all journal entries",
+    icon: ListOrdered,
+  },
   {
     id: "transactions",
     label: "Transactions",
@@ -146,6 +154,12 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
               <Link href="/accounting/journals/new">
                 <BookPlus aria-hidden className="size-4" />
                 Create journal entry
+              </Link>
+            </Button>
+            <Button asChild type="button" variant="outline">
+              <Link href="/accounting/journals">
+                <ListOrdered aria-hidden className="size-4" />
+                View journal register
               </Link>
             </Button>
             <CreateAccountForm />
@@ -348,12 +362,17 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
               Entry date, reference, description, status, and line totals.
             </p>
           </div>
-          <Button asChild size="sm" type="button" variant="outline">
-            <Link href="/accounting/journals/new">
-              <BookPlus aria-hidden className="size-4" />
-              Create journal entry
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild size="sm" type="button" variant="outline">
+              <Link href="/accounting/journals">View all</Link>
+            </Button>
+            <Button asChild size="sm" type="button" variant="outline">
+              <Link href="/accounting/journals/new">
+                <BookPlus aria-hidden className="size-4" />
+                Create journal entry
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="mt-6">
@@ -362,21 +381,25 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
           ) : (
             <ul className="space-y-3">
               {recentJournalEntries.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="rounded-lg border border-border p-3 text-sm"
-                >
-                  <p className="font-medium text-foreground">
-                    {formatDate(entry.entry_date)} · {entry.entry_number}
-                  </p>
-                  <p className="mt-1 text-muted-foreground">{entry.description}</p>
-                  <p className="mt-1 text-muted-foreground">
-                    {entry.status} · {entry.lineCount} line
-                    {entry.lineCount === 1 ? "" : "s"} · Debits{" "}
-                    {formatCurrency(entry.debitTotal)} · Credits{" "}
-                    {formatCurrency(entry.creditTotal)} ·{" "}
-                    {formatBalancedState(entry)}
-                  </p>
+                <li key={entry.id}>
+                  <Link
+                    href={`/accounting/journals/${entry.id}`}
+                    className="block rounded-lg border border-border p-3 text-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <p className="font-medium text-foreground">
+                      {formatDate(entry.entry_date)} · {entry.entry_number}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {entry.description}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {entry.status} · {entry.lineCount} line
+                      {entry.lineCount === 1 ? "" : "s"} · Debits{" "}
+                      {formatCurrency(entry.debitTotal)} · Credits{" "}
+                      {formatCurrency(entry.creditTotal)} ·{" "}
+                      {formatBalancedState(entry)}
+                    </p>
+                  </Link>
                 </li>
               ))}
             </ul>
