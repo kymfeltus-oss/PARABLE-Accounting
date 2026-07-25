@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -30,15 +30,22 @@ export const metadata: Metadata = {
     "Ministry Finance OS — AI-driven accounting and financial stewardship for churches and ministries.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#05080f",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full overflow-x-clip">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} flex min-h-full flex-col bg-background font-sans text-foreground antialiased`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} flex min-h-full min-w-0 flex-col overflow-x-clip bg-background font-sans text-foreground antialiased`}
       >
         {children}
       </body>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowUpRight,
+  BookPlus,
   FileText,
   PieChart,
   Receipt,
@@ -140,7 +141,15 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
               {accountingNav.description}
             </p>
           </div>
-          <CreateAccountForm />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild type="button">
+              <Link href="/accounting/journals/new">
+                <BookPlus aria-hidden className="size-4" />
+                Create journal entry
+              </Link>
+            </Button>
+            <CreateAccountForm />
+          </div>
         </div>
       </header>
 
@@ -327,16 +336,24 @@ export function AccountingPageContent({ data }: AccountingPageContentProps) {
         aria-labelledby="accounting-journals-title"
         className="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
       >
-        <div className="space-y-1">
-          <h2
-            id="accounting-journals-title"
-            className="text-lg font-semibold text-foreground"
-          >
-            Recent Journal Entries
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Entry date, reference, description, status, and line totals.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h2
+              id="accounting-journals-title"
+              className="text-lg font-semibold text-foreground"
+            >
+              Recent Journal Entries
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Entry date, reference, description, status, and line totals.
+            </p>
+          </div>
+          <Button asChild size="sm" type="button" variant="outline">
+            <Link href="/accounting/journals/new">
+              <BookPlus aria-hidden className="size-4" />
+              Create journal entry
+            </Link>
+          </Button>
         </div>
 
         <div className="mt-6">

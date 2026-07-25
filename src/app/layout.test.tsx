@@ -17,10 +17,11 @@ vi.mock("next/font/google", () => ({
   }),
 }));
 
-import RootLayout, { metadata } from "./layout";
+import RootLayout, { metadata, viewport } from "./layout";
 
 type RootElementProps = {
   children?: ReactNode;
+  className?: string;
   lang?: string;
 };
 
@@ -72,6 +73,14 @@ describe("RootLayout", () => {
     );
   });
 
+  it("exports a device-width viewport for responsive layout", () => {
+    expect(viewport).toMatchObject({
+      width: "device-width",
+      initialScale: 1,
+      viewportFit: "cover",
+    });
+  });
+
   it("returns html lang en with a body containing child content", () => {
     const result = RootLayout({
       children: <p>Root child content</p>,
@@ -80,6 +89,7 @@ describe("RootLayout", () => {
 
     expect(root.type).toBe("html");
     expect(root.props.lang).toBe("en");
+    expect(String(root.props.className ?? "")).toContain("overflow-x-clip");
 
     const body = getElementChildren(root.props.children).find(
       (child) => child.type === "body",

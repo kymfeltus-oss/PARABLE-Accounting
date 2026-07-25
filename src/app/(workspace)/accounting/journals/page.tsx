@@ -1,5 +1,9 @@
+import Link from "next/link";
+import { BookPlus } from "lucide-react";
+
 import { JournalRegisterSection } from "@/components/accounting/journal-register-section";
 import type { JournalRegisterRow } from "@/components/accounting/journal-register-table";
+import { Button } from "@/components/ui/button";
 import {
   getJournalRegister,
   normalizeJournalRegisterSource,
@@ -69,16 +73,26 @@ export default async function JournalRegisterPage({
   return (
     <section aria-labelledby="journal-register-page-title" className="space-y-6">
       <header className="space-y-2">
-        <h1
-          className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
-          id="journal-register-page-title"
-        >
-          Journal register
-        </h1>
-        <p className="max-w-3xl text-sm text-muted-foreground">
-          Review organization journal entries, filter by status or source, and
-          inspect debit and credit totals for each entry.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1
+              className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+              id="journal-register-page-title"
+            >
+              Journal register
+            </h1>
+            <p className="max-w-3xl text-sm text-muted-foreground">
+              Review organization journal entries, filter by status or source, and
+              inspect debit and credit totals for each entry.
+            </p>
+          </div>
+          <Button asChild type="button">
+            <Link href="/accounting/journals/new">
+              <BookPlus aria-hidden className="size-4" />
+              Create journal entry
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <JournalRegisterSection

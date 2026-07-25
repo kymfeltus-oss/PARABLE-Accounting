@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Bell,
+  BookPlus,
   CalendarDays,
   ChevronDown,
   Search,
@@ -34,7 +35,7 @@ export function FinancialOverviewHeader({
   return (
     <header className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
       <div className="shrink-0">
-        <h1 className="font-heading text-3xl font-semibold tracking-[-0.035em] text-[#F7FAFF]">
+        <h1 className="font-heading text-[clamp(1.5rem,5vw,1.875rem)] font-semibold tracking-[-0.035em] text-[#F7FAFF]">
           Financial Overview
         </h1>
         <p className="mt-1 text-sm text-[#AEB9CE]">
@@ -42,10 +43,10 @@ export function FinancialOverviewHeader({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-2.5">
-        <details className="group relative">
+      <div className="flex w-full flex-wrap items-center justify-start gap-2.5 sm:justify-end xl:w-auto">
+        <details className="group relative w-full sm:w-auto">
           <summary
-            className="flex h-12 min-w-[12.5rem] cursor-pointer list-none items-center justify-start gap-3 rounded-lg border border-[#20324B] bg-[#09111D] px-3 text-sm transition hover:bg-[#0E1726] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF]/50"
+            className="flex h-12 w-full min-w-0 cursor-pointer list-none items-center justify-start gap-3 rounded-lg border border-[#20324B] bg-[#09111D] px-3 text-sm transition hover:bg-[#0E1726] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF]/50 sm:min-w-[12.5rem] sm:w-auto"
             aria-label="Reporting Controls"
           >
               <SlidersHorizontal aria-hidden className="size-5 text-[#AEB9CE]" />
@@ -121,6 +122,13 @@ export function FinancialOverviewHeader({
             <Search aria-hidden className="size-5" />
           </Button>
         )}
+
+        <Button asChild className="h-11 px-4">
+          <Link href="/accounting/journals/new">
+            <BookPlus aria-hidden className="size-4" />
+            Create journal entry
+          </Link>
+        </Button>
 
         <CreateExpenseDraftForm
           vendorOptions={vendorOptions}

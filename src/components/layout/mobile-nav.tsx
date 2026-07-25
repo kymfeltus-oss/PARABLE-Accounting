@@ -30,7 +30,7 @@ export function MobileNav({ open, onOpenChange }: MobileNavProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="flex h-full w-[min(100%,20rem)] flex-col gap-0 border-sidebar-border bg-sidebar p-0"
+        className="flex h-full w-[min(100%,20rem)] max-w-[min(100%,20rem)] flex-col gap-0 overflow-hidden border-sidebar-border bg-sidebar p-0 sm:max-w-[min(100%,20rem)]"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Parable Accounting navigation</SheetTitle>

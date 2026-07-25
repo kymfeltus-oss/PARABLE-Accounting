@@ -143,7 +143,7 @@ export function KpiGrid({ kpis }: { kpis: DashboardKpi[] }) {
                 <p className="brand-label truncate text-[#AEB9CE]">
                   {kpi.label}
                 </p>
-                <p className="mt-2 whitespace-nowrap font-heading text-[1.7rem] font-medium tracking-[-0.035em] text-[#F7FAFF] tabular-nums">
+                <p className="mt-2 min-w-0 truncate font-heading text-[clamp(1.2rem,4vw,1.7rem)] font-medium tracking-[-0.035em] text-[#F7FAFF] tabular-nums">
                   {kpi.value === null
                     ? "Unavailable"
                     : formatCurrency(kpi.value)}
