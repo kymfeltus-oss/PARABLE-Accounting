@@ -7,6 +7,7 @@ import {
   BookPlus,
   CalendarDays,
   ChevronDown,
+  FileText,
   Search,
   SlidersHorizontal,
   Sparkles,
@@ -127,6 +128,17 @@ export function FinancialOverviewHeader({
           <Link href="/accounting/journals/new">
             <BookPlus aria-hidden className="size-4" />
             Create journal entry
+          </Link>
+        </Button>
+
+        <Button
+          asChild
+          variant="outline"
+          className="h-11 border-[#20324B] bg-[#09111D] px-4 hover:bg-[#0E1726]"
+        >
+          <Link href="/bills">
+            <FileText aria-hidden className="size-4" />
+            Bills
           </Link>
         </Button>
 

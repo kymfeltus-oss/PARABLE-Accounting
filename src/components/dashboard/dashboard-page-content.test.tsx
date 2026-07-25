@@ -47,6 +47,14 @@ describe("DashboardPageContent", () => {
     expect(
       screen.getByRole("link", { name: /Create journal entry/i }),
     ).toHaveAttribute("href", "/accounting/journals/new");
+    expect(screen.getByRole("link", { name: /^Bills$/i })).toHaveAttribute(
+      "href",
+      "/bills",
+    );
+    expect(screen.getByRole("link", { name: /Open Bills/i })).toHaveAttribute(
+      "href",
+      "/bills",
+    );
     expect(screen.getByRole("link", { name: /Ask Parable/i })).toHaveAttribute("href", "/ai-close");
   });
 });
