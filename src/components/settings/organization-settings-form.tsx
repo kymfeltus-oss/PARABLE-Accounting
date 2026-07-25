@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { updateOrganizationSettingsAction } from "@/app/(workspace)/settings/actions";
 import { Button } from "@/components/ui/button";
@@ -36,10 +37,25 @@ function formatAccountLabel(account: AccountRow): string {
   return `${account.code} — ${account.name}`;
 }
 
+function findSuggestedAccount(
+  accounts: AccountRow[],
+  preferredCodes: string[],
+): AccountRow | undefined {
+  for (const code of preferredCodes) {
+    const match = accounts.find((account) => account.code === code);
+    if (match) {
+      return match;
+    }
+  }
+
+  return accounts[0];
+}
+
 export function OrganizationSettingsForm({
   settings,
   accounts,
 }: OrganizationSettingsFormProps) {
+  const router = useRouter();
   const [fiscalYearStartMonth, setFiscalYearStartMonth] = useState(
     String(settings?.fiscal_year_start_month ?? 1),
   );
@@ -63,6 +79,28 @@ export function OrganizationSettingsForm({
     [accounts],
   );
 
+  const suggestedCash = useMemo(
+    () => findSuggestedAccount(cashAccounts, ["1000"]),
+    [cashAccounts],
+  );
+
+  const suggestedRevenue = useMemo(
+    () => findSuggestedAccount(revenueAccounts, ["4000", "4200"]),
+    [revenueAccounts],
+  );
+
+  const defaultsMissing =
+    defaultCashAccountId === "" || defaultRevenueAccountId === "";
+
+  function applySuggestedDefaults() {
+    if (suggestedCash) {
+      setDefaultCashAccountId(suggestedCash.id);
+    }
+    if (suggestedRevenue) {
+      setDefaultRevenueAccountId(suggestedRevenue.id);
+    }
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -82,11 +120,40 @@ export function OrganizationSettingsForm({
       }
 
       setSuccessMessage("Accounting defaults updated.");
+      router.refresh();
     });
   }
 
   return (
     <form className="space-y-4" noValidate onSubmit={handleSubmit}>
+      <p className="text-sm text-muted-foreground">
+        These defaults prefill debit and revenue accounts when you record giving
+        to the ledger.
+      </p>
+
+      {defaultsMissing && (suggestedCash || suggestedRevenue) ? (
+        <div className="rounded-lg border border-border bg-muted/20 p-3">
+          <p className="text-sm text-foreground">
+            No defaults selected yet. Suggested:{" "}
+            {suggestedCash ? formatAccountLabel(suggestedCash) : "cash account"}
+            {" · "}
+            {suggestedRevenue
+              ? formatAccountLabel(suggestedRevenue)
+              : "revenue account"}
+            .
+          </p>
+          <Button
+            className="mt-3"
+            disabled={isPending}
+            type="button"
+            variant="outline"
+            onClick={applySuggestedDefaults}
+          >
+            Use suggested defaults
+          </Button>
+        </div>
+      ) : null}
+
       <div>
         <label
           className="block text-sm font-medium text-foreground"
@@ -119,7 +186,7 @@ export function OrganizationSettingsForm({
         </label>
         <select
           className={inputClassName}
-          disabled={isPending}
+          disabled={isPending || cashAccounts.length === 0}
           id="default-cash-account-id"
           name="defaultCashAccountId"
           value={defaultCashAccountId}
@@ -132,6 +199,9 @@ export function OrganizationSettingsForm({
             </option>
           ))}
         </select>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Usually your operating checking account (asset).
+        </p>
       </div>
 
       <div>
@@ -143,7 +213,7 @@ export function OrganizationSettingsForm({
         </label>
         <select
           className={inputClassName}
-          disabled={isPending}
+          disabled={isPending || revenueAccounts.length === 0}
           id="default-revenue-account-id"
           name="defaultRevenueAccountId"
           value={defaultRevenueAccountId}
@@ -156,7 +226,16 @@ export function OrganizationSettingsForm({
             </option>
           ))}
         </select>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Usually contributions or giving income (revenue).
+        </p>
       </div>
+
+      {cashAccounts.length === 0 || revenueAccounts.length === 0 ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          Add active posting accounts under Accounting before setting defaults.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-destructive" role="alert">

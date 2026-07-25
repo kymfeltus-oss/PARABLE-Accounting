@@ -58,6 +58,8 @@ type GivingPageContentProps = {
   fundOptions?: GivingFundOption[];
   debitAccountOptions?: GivingAccountOption[];
   revenueAccountOptions?: GivingAccountOption[];
+  defaultDebitAccountId?: string | null;
+  defaultRevenueAccountId?: string | null;
 };
 
 function formatCurrency(amount: number): string {
@@ -220,6 +222,8 @@ export function GivingPageContent({
   fundOptions = [],
   debitAccountOptions = [],
   revenueAccountOptions = [],
+  defaultDebitAccountId = null,
+  defaultRevenueAccountId = null,
 }: GivingPageContentProps) {
   const givingNav = getNavItemByPathname("/giving");
 
@@ -251,6 +255,8 @@ export function GivingPageContent({
             fundOptions={fundOptions}
             memberOptions={memberOptions}
             revenueAccountOptions={revenueAccountOptions}
+            defaultDebitAccountId={defaultDebitAccountId}
+            defaultRevenueAccountId={defaultRevenueAccountId}
           />
         </div>
       </header>

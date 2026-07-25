@@ -10,6 +10,7 @@ const {
   getFundsDataMock,
   getGivingDebitAccountOptionsMock,
   getGivingRevenueAccountOptionsMock,
+  getOrganizationSettingsMock,
 } = vi.hoisted(() => ({
   getCurrentOrganizationIdMock: vi.fn(),
   getGivingDataMock: vi.fn(),
@@ -17,6 +18,7 @@ const {
   getFundsDataMock: vi.fn(),
   getGivingDebitAccountOptionsMock: vi.fn(),
   getGivingRevenueAccountOptionsMock: vi.fn(),
+  getOrganizationSettingsMock: vi.fn(),
 }));
 
 vi.mock("@/lib/data/organization-context", () => ({
@@ -40,6 +42,10 @@ vi.mock("@/lib/data/giving-recording-options", () => ({
   getGivingRevenueAccountOptions: getGivingRevenueAccountOptionsMock,
 }));
 
+vi.mock("@/lib/data/organization-settings-repository", () => ({
+  getOrganizationSettings: getOrganizationSettingsMock,
+}));
+
 import GivingPage from "./page";
 import { GivingPageContent } from "@/components/giving/giving-page-content";
 
@@ -52,13 +58,22 @@ describe("Giving page wiring", () => {
     getFundsDataMock.mockResolvedValue({ funds: [] });
     getGivingDebitAccountOptionsMock.mockResolvedValue([]);
     getGivingRevenueAccountOptionsMock.mockResolvedValue([]);
+    getOrganizationSettingsMock.mockResolvedValue({
+      default_cash_account_id: "cash-1",
+      default_revenue_account_id: "rev-1",
+    });
 
     const page = await GivingPage();
 
     expect(getGivingDataMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID);
     expect(getMembersDataMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID);
+    expect(getOrganizationSettingsMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+    );
     expect(page.type).toBe(GivingPageContent);
     expect(page.props.data).toEqual(givingData);
     expect(page.props.memberOptions).toEqual([]);
+    expect(page.props.defaultDebitAccountId).toBe("cash-1");
+    expect(page.props.defaultRevenueAccountId).toBe("rev-1");
   });
 });

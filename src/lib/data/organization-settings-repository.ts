@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 import { DataAccessError } from "./data-access-error";
 import { requireOrganizationId } from "./organization-id";
-import { toDataAccessError } from "./query-helpers";
+import { toDataAccessError, unwrapRows } from "./query-helpers";
 import type {
   OrganizationRow,
   OrganizationSettingsRow,
@@ -31,6 +31,26 @@ function requireOrganizationName(name: string, operation: string): string {
   }
 
   return normalized;
+}
+
+export async function getOrganizationSettings(
+  organizationId: string,
+): Promise<OrganizationSettingsRow | null> {
+  const operation = "getOrganizationSettings";
+  const scopedOrganizationId = requireOrganizationId(organizationId, operation);
+  const supabase = await createServerSupabaseClient();
+
+  const result = await supabase
+    .from("organization_settings")
+    .select("*")
+    .eq("organization_id", scopedOrganizationId);
+
+  if (result.error) {
+    throw toDataAccessError(operation, result.error);
+  }
+
+  const rows = unwrapRows<OrganizationSettingsRow>(operation, result);
+  return rows[0] ?? null;
 }
 
 export async function updateOrganizationProfile(
