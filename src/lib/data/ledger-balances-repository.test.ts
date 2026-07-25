@@ -151,8 +151,12 @@ describe("loadLedgerBalanceContext", () => {
 
     expect(reports.trialBalance.isBalanced).toBe(true);
     expect(reports.incomeStatement.netIncome).toBe(100);
-    expect(reports.fundBalance.rows).toHaveLength(0);
-    expect(reports.fundBalance.totalBalance).toBe(0);
+    expect(reports.balanceSheet.unclosedChangeInNetAssets).toBe(100);
+    expect(reports.balanceSheet.isEquationBalanced).toBe(true);
+    expect(reports.fundBalance.rows).toEqual([
+      expect.objectContaining({ id: "fund-1", balance: 100 }),
+    ]);
+    expect(reports.fundBalance.totalBalance).toBe(100);
   });
 
   it("throws when a query fails", async () => {

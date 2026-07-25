@@ -7,6 +7,14 @@ import type { NavItemId } from "@/config/navigation";
 
 vi.mock("server-only", () => ({}));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
 vi.mock("@/lib/data/organization-context", () => ({
   getCurrentOrganizationId: vi.fn(async () => "22222222-2222-4222-8222-222222222222"),
 }));
@@ -245,6 +253,8 @@ vi.mock("@/lib/data/reports-repository", () => ({
         totalLiabilities: 0,
         totalNetAssets: 0,
         totalLiabilitiesAndNetAssets: 0,
+        unclosedChangeInNetAssets: 0,
+        isEquationBalanced: true,
       },
       incomeStatement: {
         startDate: "2026-01-01",

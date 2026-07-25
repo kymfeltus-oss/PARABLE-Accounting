@@ -27,6 +27,8 @@ export function createEmptyFinancialReports(
       totalLiabilities: 0,
       totalNetAssets: 0,
       totalLiabilitiesAndNetAssets: 0,
+      unclosedChangeInNetAssets: 0,
+      isEquationBalanced: true,
     },
     incomeStatement: {
       startDate: periodStartDate,
@@ -121,6 +123,8 @@ export function createPopulatedFinancialReports(): FinancialReports {
       totalLiabilities: 0,
       totalNetAssets: 850,
       totalLiabilitiesAndNetAssets: 850,
+      unclosedChangeInNetAssets: 0,
+      isEquationBalanced: true,
     },
     incomeStatement: {
       startDate: "2026-01-01",

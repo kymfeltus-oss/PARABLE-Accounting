@@ -267,6 +267,52 @@ describe("buildBalanceSheet", () => {
     expect(report.totalLiabilities).toBe(200);
     expect(report.totalNetAssets).toBe(800);
     expect(report.totalLiabilitiesAndNetAssets).toBe(1000);
+    expect(report.unclosedChangeInNetAssets).toBe(0);
+    expect(report.isEquationBalanced).toBe(true);
+  });
+
+  it("reports unclosed surplus so the equation stays honest mid-period", () => {
+    const lines: LedgerLineInput[] = [
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "cash",
+        accountType: "asset",
+        debitAmount: 500,
+        creditAmount: 0,
+      }),
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "donations",
+        accountType: "revenue",
+        debitAmount: 0,
+        creditAmount: 500,
+      }),
+      createLine({
+        journalEntryId: "je-2",
+        entryDate: "2026-07-15",
+        accountId: "utilities",
+        accountType: "expense",
+        debitAmount: 120,
+        creditAmount: 0,
+      }),
+      createLine({
+        journalEntryId: "je-2",
+        entryDate: "2026-07-15",
+        accountId: "cash",
+        accountType: "asset",
+        debitAmount: 0,
+        creditAmount: 120,
+      }),
+    ];
+
+    const report = buildBalanceSheet(lines, accounts, "2026-07-31");
+
+    expect(report.totalAssets).toBe(380);
+    expect(report.totalNetAssets).toBe(0);
+    expect(report.unclosedChangeInNetAssets).toBe(380);
+    expect(report.isEquationBalanced).toBe(true);
   });
 });
 

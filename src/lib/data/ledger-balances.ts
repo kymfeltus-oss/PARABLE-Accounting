@@ -74,6 +74,15 @@ export type BalanceSheetReport = {
   totalLiabilities: number;
   totalNetAssets: number;
   totalLiabilitiesAndNetAssets: number;
+  /**
+   * Revenue − expense natural balances through the as-of date that have not
+   * been closed into net_asset accounts.
+   */
+  unclosedChangeInNetAssets: number;
+  /**
+   * True when Assets = Liabilities + Net assets + unclosed change in net assets.
+   */
+  isEquationBalanced: boolean;
 };
 
 export type IncomeStatementRow = AccountInfo & {
@@ -258,6 +267,19 @@ export function buildBalanceSheet(
   const totalAssets = sections[0]?.sectionTotal ?? 0;
   const totalLiabilities = sections[1]?.sectionTotal ?? 0;
   const totalNetAssets = sections[2]?.sectionTotal ?? 0;
+  const totalLiabilitiesAndNetAssets = totalLiabilities + totalNetAssets;
+
+  const unclosedChangeInNetAssets = accountBalances.reduce((sum, balance) => {
+    if (balance.accountType === "revenue") {
+      return sum + balance.balance;
+    }
+    if (balance.accountType === "expense") {
+      return sum - balance.balance;
+    }
+    return sum;
+  }, 0);
+
+  const rightHandSide = totalLiabilitiesAndNetAssets + unclosedChangeInNetAssets;
 
   return {
     asOfDate,
@@ -265,7 +287,9 @@ export function buildBalanceSheet(
     totalAssets,
     totalLiabilities,
     totalNetAssets,
-    totalLiabilitiesAndNetAssets: totalLiabilities + totalNetAssets,
+    totalLiabilitiesAndNetAssets,
+    unclosedChangeInNetAssets,
+    isEquationBalanced: totalAssets === rightHandSide,
   };
 }
 
