@@ -1,7 +1,8 @@
 # Church MVP Completion Plan — Status
 
 Branch: `phase-9-church-mvp`  
-Target: Church MVP go-live (Finish line A)
+Target: Church MVP go-live (Finish line A)  
+**Status: Complete** (2026-07-25) — see `church-mvp-production-smoke.md`
 
 ## Locked decisions (no email provider required)
 - Org bootstrap via `create_organization` seeds COA, General Fund, open period, bank account, settings
@@ -19,7 +20,7 @@ Target: Church MVP go-live (Finish line A)
 | 12 Banking | Done | Bank accounts/transactions/match (no Plaid) |
 | 13 Reports | Done | TB, BS, IS, fund balance |
 | 14 Budgets | Done | Create/lines/activate + vs actual |
-| 15 Close polish | Partial | Period close RPC+UI done; AI Close / filings deferred |
+| 15 Close polish | Done for A | Period close RPC+UI done; AI Close / filings deferred |
 
 ## Deferred (not required for Church MVP A)
 - Plaid / bank connectors
