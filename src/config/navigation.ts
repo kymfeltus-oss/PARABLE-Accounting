@@ -212,7 +212,7 @@ export const navGroups: NavGroup[] = [
         label: "AI Close",
         title: "AI Close",
         description:
-          "AI-assisted period close review and reconciliation support.",
+          "Close sessions and tasks from live records. AI automation is not available yet.",
         icon: Sparkles,
         group: "accounting",
       },

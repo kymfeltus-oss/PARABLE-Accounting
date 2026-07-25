@@ -156,6 +156,17 @@ export function AiClosePageContent({ data }: AiClosePageContentProps) {
         </p>
       </header>
 
+      <div className="space-y-3 rounded-lg border border-dashed border-border bg-muted/20 p-6">
+        <p className="text-sm leading-6 text-muted-foreground">
+          AI confidence scores, automated reconciliation, and suggested close
+          actions are not available yet. This page shows live close sessions and
+          tasks only. Close an accounting period from Accounting.
+        </p>
+        <Button asChild type="button" variant="outline">
+          <Link href="/accounting">Open accounting</Link>
+        </Button>
+      </div>
+
       {!hasCloseActivity(data) ? (
         <WorkspaceDataEmpty message="No close sessions or tasks yet." />
       ) : null}
@@ -173,11 +184,6 @@ export function AiClosePageContent({ data }: AiClosePageContentProps) {
           </article>
         ))}
       </div>
-
-      <p className="text-sm text-muted-foreground">
-        Matching precision scores and automated reconciliation run controls are
-        unavailable until close automation analytics are implemented.
-      </p>
 
       <section
         aria-labelledby="ai-close-sessions-title"
