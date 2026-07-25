@@ -295,25 +295,44 @@ export function GivingPageContent({
               <WorkspaceDataEmpty message="No giving transactions yet." />
             ) : (
               <ul className="space-y-3">
-                {recentTransactions.map((transaction) => (
-                  <li
-                    key={transaction.id}
-                    className="rounded-lg border border-border p-3 text-sm"
-                  >
-                    <p className="font-medium text-foreground">
-                      {formatTransactionLabel(transaction)}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {formatDate(transaction.transaction_date)} ·{" "}
-                      {transaction.status}
-                    </p>
-                    <div className="mt-3">
-                      <Button asChild size="sm" type="button" variant="outline">
-                        <Link href={`/giving/${transaction.id}`}>View</Link>
-                      </Button>
-                    </div>
-                  </li>
-                ))}
+                {recentTransactions.map((transaction) => {
+                  const postedToLedger = Boolean(transaction.journal_entry_id);
+
+                  return (
+                    <li
+                      key={transaction.id}
+                      className="rounded-lg border border-border p-3 text-sm"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <p className="font-medium text-foreground">
+                          {formatTransactionLabel(transaction)}
+                        </p>
+                        <span
+                          className={
+                            postedToLedger
+                              ? "rounded-md border border-[#1677FF]/30 px-2 py-0.5 text-[0.68rem] text-[#1677FF]"
+                              : "rounded-md border border-[#FFB547]/35 px-2 py-0.5 text-[0.68rem] text-[#FFB547]"
+                          }
+                        >
+                          {postedToLedger
+                            ? "Posted to ledger"
+                            : "Not posted to ledger"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-muted-foreground">
+                        {formatDate(transaction.transaction_date)} ·{" "}
+                        {transaction.status}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button asChild size="sm" type="button" variant="outline">
+                          <Link href={`/giving/${transaction.id}`}>
+                            {postedToLedger ? "View" : "Post to ledger"}
+                          </Link>
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
