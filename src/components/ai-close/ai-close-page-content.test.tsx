@@ -50,6 +50,12 @@ describe("AiClosePageContent", () => {
     ).toBeGreaterThan(0);
     expect(screen.getByText("No close sessions yet.")).toBeTruthy();
     expect(screen.getByText("No open close tasks.")).toBeTruthy();
+    expect(
+      screen.getByText(/AI confidence scores.*are not available yet/i),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Open accounting" }),
+    ).toHaveAttribute("href", "/accounting");
   });
 
   it("renders live close session and task props", () => {
@@ -89,7 +95,7 @@ describe("AiClosePageContent", () => {
     render(<AiClosePageContent data={createPopulatedAiCloseData()} />);
 
     expect(
-      screen.getByText(/Matching precision scores and automated reconciliation run controls are unavailable/i),
+      screen.getByText(/AI confidence scores.*are not available yet/i),
     ).toBeTruthy();
   });
 
@@ -106,13 +112,11 @@ describe("AiClosePageContent", () => {
   it("renders related workspace navigation links", () => {
     render(<AiClosePageContent data={createEmptyAiCloseData()} />);
 
-    expect(screen.getByRole("link", { name: /Accounting/i })).toHaveAttribute(
-      "href",
-      "/accounting",
-    );
-    expect(screen.getByRole("link", { name: /Reports/i })).toHaveAttribute(
-      "href",
-      "/reports",
-    );
+    expect(
+      screen.getByRole("link", { name: /Accounting.*Review ledger/i }),
+    ).toHaveAttribute("href", "/accounting");
+    expect(
+      screen.getByRole("link", { name: /Reports.*report-ready/i }),
+    ).toHaveAttribute("href", "/reports");
   });
 });
