@@ -423,6 +423,35 @@ describe("ExpensesPageContent", () => {
     expect(screen.getByText("Needs allocation")).toBeTruthy();
   });
 
+  it("shows Ready to post and Post to ledger for allocated drafts", () => {
+    const base = createPopulatedExpensesData();
+    const data: ExpensesData = {
+      ...base,
+      expenses: [
+        ...base.expenses,
+        createExpenseRecord({
+          id: "expense-ready",
+          description: "Allocated draft ready to post",
+          status: "draft",
+          lineCount: 2,
+        }),
+      ],
+    };
+
+    renderExpensesPage(data);
+
+    expect(screen.getByText("Ready to post")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "Post to ledger" }),
+    ).toHaveAttribute("href", "/expenses/expense-ready");
+  });
+
+  it("shows Posted to ledger for recorded expenses", () => {
+    renderExpensesPage(createPopulatedExpensesData());
+
+    expect(screen.getByText("Posted to ledger")).toBeTruthy();
+  });
+
   it("keeps the New Expense flow available alongside allocation controls", () => {
     renderExpensesPage(createPopulatedExpensesData());
 
