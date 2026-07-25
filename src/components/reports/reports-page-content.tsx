@@ -9,7 +9,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { getNavItemByPathname } from "@/config/navigation";
-import { WorkspaceDataEmpty } from "@/components/workspace/workspace-data-empty";
 import type { ReportsData } from "@/lib/data/reports-repository";
 
 const snapshotLabels = [
@@ -204,7 +203,23 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
       </header>
 
       {!hasReportActivity(data) ? (
-        <WorkspaceDataEmpty message="No report-ready activity yet." />
+        <div className="space-y-3 rounded-lg border border-dashed border-border bg-muted/20 p-6">
+          <p className="text-sm leading-6 text-muted-foreground">
+            No report-ready activity yet. Record giving, post expenses, or create
+            a journal entry to populate these statements.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild type="button" variant="outline">
+              <Link href="/giving">Record giving</Link>
+            </Button>
+            <Button asChild type="button" variant="outline">
+              <Link href="/expenses">Record an expense</Link>
+            </Button>
+            <Button asChild type="button" variant="outline">
+              <Link href="/accounting/journals/new">Create journal entry</Link>
+            </Button>
+          </div>
+        </div>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
