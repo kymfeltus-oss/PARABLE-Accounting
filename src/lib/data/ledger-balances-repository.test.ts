@@ -26,6 +26,64 @@ describe("loadLedgerBalanceContext", () => {
     createServerSupabaseClientMock.mockReset();
   });
 
+  it("pages journal entry lines with a stable order and range", async () => {
+    const { client, queryLog } = createMockSupabaseClient({
+      journal_entries: [
+        {
+          data: [
+            {
+              id: "journal-posted",
+              status: "posted",
+              entry_date: "2026-07-01",
+            },
+          ],
+          error: null,
+        },
+      ],
+      accounts: [
+        {
+          data: [
+            {
+              id: "account-cash",
+              code: "1000",
+              name: "Cash",
+              account_type: "asset",
+            },
+          ],
+          error: null,
+        },
+      ],
+      funds: [{ data: [], error: null }],
+      journal_entry_lines: [
+        {
+          data: [
+            {
+              journal_entry_id: "journal-posted",
+              account_id: "account-cash",
+              fund_id: null,
+              debit_amount: 100,
+              credit_amount: 0,
+            },
+          ],
+          error: null,
+        },
+      ],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await loadLedgerBalanceContext(TEST_ORGANIZATION_ID);
+
+    const lineQuery = queryLog.find(
+      (query) => query.table === "journal_entry_lines",
+    );
+    expect(lineQuery?.filters.some((filter) => filter.method === "order")).toBe(
+      true,
+    );
+    expect(lineQuery?.filters.some((filter) => filter.method === "range")).toBe(
+      true,
+    );
+  });
+
   it("loads only posted journal entry lines for the organization", async () => {
     const { client } = createMockSupabaseClient({
       journal_entries: [

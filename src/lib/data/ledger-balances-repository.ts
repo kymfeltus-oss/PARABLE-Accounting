@@ -15,9 +15,15 @@ import {
   buildIncomeStatement,
   buildTrialBalance,
 } from "./ledger-balances";
+import { DataAccessError } from "./data-access-error";
 import { requireOrganizationId } from "./organization-id";
 import { getYearToDateRange, unwrapRows } from "./query-helpers";
 import type { AccountRow, FundRow, JournalEntryRow } from "./types/rows";
+
+/** Supabase default max rows; page until a short page is returned. */
+const JOURNAL_LINE_PAGE_SIZE = 1000;
+/** Keep `.in()` URL payloads bounded. */
+const JOURNAL_ENTRY_ID_CHUNK_SIZE = 100;
 
 type PostedJournalEntryRow = Pick<
   JournalEntryRow,
@@ -79,6 +85,65 @@ function toFundInfo(fund: FundRow): FundInfo {
     name: fund.name,
     code: fund.code,
   };
+}
+
+function chunkIds(ids: string[], chunkSize: number): string[][] {
+  const chunks: string[][] = [];
+  for (let index = 0; index < ids.length; index += chunkSize) {
+    chunks.push(ids.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+
+async function loadPostedJournalLines(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  postedEntryIds: string[],
+): Promise<JournalEntryLineRow[]> {
+  const postedEntryIdSet = new Set(postedEntryIds);
+  const journalLines: JournalEntryLineRow[] = [];
+
+  for (const entryIdChunk of chunkIds(
+    postedEntryIds,
+    JOURNAL_ENTRY_ID_CHUNK_SIZE,
+  )) {
+    let from = 0;
+
+    for (;;) {
+      const to = from + JOURNAL_LINE_PAGE_SIZE - 1;
+      const journalLinesResult = await supabase
+        .from("journal_entry_lines")
+        .select(
+          "journal_entry_id, account_id, fund_id, debit_amount, credit_amount",
+        )
+        .in("journal_entry_id", entryIdChunk)
+        .order("journal_entry_id", { ascending: true })
+        .order("account_id", { ascending: true })
+        .range(from, to);
+
+      const page = unwrapRows<JournalEntryLineRow>(
+        "loadLedgerBalanceContext.journalLines",
+        journalLinesResult,
+      ).filter((line) => postedEntryIdSet.has(line.journal_entry_id));
+
+      journalLines.push(...page);
+
+      if (page.length > JOURNAL_LINE_PAGE_SIZE) {
+        throw new DataAccessError({
+          operation: "loadLedgerBalanceContext.journalLines",
+          message:
+            "Posted journal line page exceeded the expected page size.",
+        });
+      }
+
+      if (page.length < JOURNAL_LINE_PAGE_SIZE) {
+        break;
+      }
+
+      from += JOURNAL_LINE_PAGE_SIZE;
+    }
+  }
+
+  return journalLines;
 }
 
 function buildLedgerLines(
@@ -177,19 +242,10 @@ export async function loadLedgerBalanceContext(
   const fundInfos = funds.map((fund) => toFundInfo(fund as FundRow));
 
   const postedEntryIds = postedEntries.map((entry) => entry.id);
-  let journalLines: JournalEntryLineRow[] = [];
-
-  if (postedEntryIds.length > 0) {
-    const postedEntryIdSet = new Set(postedEntryIds);
-    const journalLinesResult = await supabase
-      .from("journal_entry_lines")
-      .select("journal_entry_id, account_id, fund_id, debit_amount, credit_amount")
-      .in("journal_entry_id", postedEntryIds);
-    journalLines = unwrapRows<JournalEntryLineRow>(
-      "loadLedgerBalanceContext.journalLines",
-      journalLinesResult,
-    ).filter((line) => postedEntryIdSet.has(line.journal_entry_id));
-  }
+  const journalLines =
+    postedEntryIds.length > 0
+      ? await loadPostedJournalLines(supabase, postedEntryIds)
+      : [];
 
   const lines = buildLedgerLines(postedEntries, journalLines, accountById);
 

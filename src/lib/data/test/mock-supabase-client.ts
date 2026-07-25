@@ -71,6 +71,10 @@ function createThenableBuilder(
       filters.push({ method: "limit", args });
       return builder;
     },
+    range: (...args: unknown[]) => {
+      filters.push({ method: "range", args });
+      return builder;
+    },
     then<TResult1 = MockSupabaseResponse, TResult2 = never>(
       onFulfilled?: ((value: MockSupabaseResponse) => TResult1 | PromiseLike<TResult1>) | null,
       onRejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
