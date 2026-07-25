@@ -317,7 +317,7 @@ describe("getReportsData", () => {
     expect(result.summaries.budgets.budgetsWithLines).toBe(1);
   });
 
-  it("aggregates posted journal debit and credit totals from journal lines only", async () => {
+  it("aggregates posted journal debit and credit totals from the ledger context", async () => {
     const { client } = createMockSupabaseClient({
       giving_transactions: [{ data: [], error: null }],
       expenses: [{ data: [], error: null }],
@@ -332,28 +332,6 @@ describe("getReportsData", () => {
           error: null,
         },
       ],
-      journal_entry_lines: [
-        {
-          data: [
-            {
-              journal_entry_id: "journal-posted",
-              debit_amount: 150,
-              credit_amount: 0,
-            },
-            {
-              journal_entry_id: "journal-posted",
-              debit_amount: 0,
-              credit_amount: 150,
-            },
-            {
-              journal_entry_id: "journal-draft",
-              debit_amount: 999,
-              credit_amount: 0,
-            },
-          ],
-          error: null,
-        },
-      ],
       accounts: [{ data: [], error: null }],
       accounting_periods: [{ data: [], error: null }],
       members: [{ data: [], error: null }],
@@ -361,6 +339,38 @@ describe("getReportsData", () => {
       funds: [{ data: [], error: null }],
     });
     createServerSupabaseClientMock.mockResolvedValue(client);
+    loadLedgerBalanceContextMock.mockResolvedValue({
+      organizationId: TEST_ORGANIZATION_ID,
+      asOfDate: "2026-07-24",
+      periodStartDate: "2026-01-01",
+      periodEndDate: "2026-07-24",
+      lines: [
+        {
+          journalEntryId: "journal-posted",
+          entryDate: "2026-07-01",
+          accountId: "account-cash",
+          accountType: "asset",
+          accountCode: "1000",
+          accountName: "Cash",
+          fundId: null,
+          debitAmount: 150,
+          creditAmount: 0,
+        },
+        {
+          journalEntryId: "journal-posted",
+          entryDate: "2026-07-01",
+          accountId: "account-revenue",
+          accountType: "revenue",
+          accountCode: "4000",
+          accountName: "Donations",
+          fundId: null,
+          debitAmount: 0,
+          creditAmount: 150,
+        },
+      ],
+      accounts: [],
+      funds: [],
+    });
 
     const result = await getReportsData(TEST_ORGANIZATION_ID);
 

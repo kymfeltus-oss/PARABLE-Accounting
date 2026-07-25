@@ -30,12 +30,6 @@ import type {
   VendorRow,
 } from "./types/rows";
 
-type JournalEntryLineAggregationRow = {
-  journal_entry_id: string;
-  debit_amount: number | string;
-  credit_amount: number | string;
-};
-
 type BudgetLineAmountRow = Pick<
   BudgetLineRow,
   "budget_id" | "account_id" | "fund_id" | "amount"
@@ -223,14 +217,6 @@ function isCurrentPeriod(
   );
 }
 
-function normalizeAmount(value: number | string | null | undefined): number {
-  if (value === null || value === undefined) {
-    return 0;
-  }
-
-  return Number(value);
-}
-
 function buildAccountTypeCounts(
   accounts: ReadonlyArray<{ account_type: string }>,
 ): AccountTypeCount[] {
@@ -243,25 +229,6 @@ function buildAccountTypeCounts(
   return [...counts.entries()]
     .map(([accountType, count]) => ({ accountType, count }))
     .sort((left, right) => left.accountType.localeCompare(right.accountType));
-}
-
-function sumPostedJournalTotals(
-  postedJournalIds: Set<string>,
-  lines: JournalEntryLineAggregationRow[],
-): { debitTotal: number; creditTotal: number } {
-  let debitTotal = 0;
-  let creditTotal = 0;
-
-  for (const line of lines) {
-    if (!postedJournalIds.has(line.journal_entry_id)) {
-      continue;
-    }
-
-    debitTotal += normalizeAmount(line.debit_amount);
-    creditTotal += normalizeAmount(line.credit_amount);
-  }
-
-  return { debitTotal, creditTotal };
 }
 
 function sumBudgetLineTotals(
@@ -512,23 +479,6 @@ export async function getReportsData(
   const postedJournalEntries = journalEntries.filter(
     (entry) => entry.status === "posted",
   );
-  // Default financial reports include only posted journals (excludes draft/reversed/void).
-  const postedJournalIds = new Set(
-    postedJournalEntries.map((entry) => entry.id),
-  );
-  let journalLines: JournalEntryLineAggregationRow[] = [];
-
-  if (postedJournalIds.size > 0) {
-    const journalLinesResult = await supabase
-      .from("journal_entry_lines")
-      .select("journal_entry_id, debit_amount, credit_amount")
-      .in("journal_entry_id", [...postedJournalIds]);
-    journalLines = unwrapRows<JournalEntryLineAggregationRow>(
-      "getReportsData.journalLines",
-      journalLinesResult,
-    ).filter((line) => postedJournalIds.has(line.journal_entry_id));
-  }
-
   const activeExpenses = expenses.filter(isActiveExpense);
   const thisMonthExpenses = activeExpenses.filter((expense) =>
     isExpenseInCurrentMonth(expense, monthStart, monthEnd),
@@ -537,7 +487,6 @@ export async function getReportsData(
   const openBills = bills.filter(isOpenBill);
   const paidBills = bills.filter((bill) => bill.status === "paid");
   const totalBudgetedAmount = sumBudgetLineTotals(budgets, budgetLines);
-  const postedJournalTotals = sumPostedJournalTotals(postedJournalIds, journalLines);
   const fundsWithRecordedGiving = new Set(
     recordedGivingTransactions
       .map((transaction) => transaction.fund_id)
@@ -552,6 +501,17 @@ export async function getReportsData(
     periodStartDate: reportPeriodStartDate,
     periodEndDate: reportPeriodEndDate,
   });
+  // Accounting Activity totals reuse the paginated ledger load (no second line fetch).
+  const postedJournalTotals = {
+    debitTotal: ledgerContext.lines.reduce(
+      (sum, line) => sum + line.debitAmount,
+      0,
+    ),
+    creditTotal: ledgerContext.lines.reduce(
+      (sum, line) => sum + line.creditAmount,
+      0,
+    ),
+  };
   const financialReports = buildFinancialReportsFromContext(ledgerContext);
   const budgetVsActual = buildReportBudgetVsActual(
     budgets,
