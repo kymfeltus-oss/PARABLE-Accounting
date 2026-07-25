@@ -33,6 +33,20 @@ describe("ReportsPageContent", () => {
     ).toBeTruthy();
   });
 
+  it("renders report date controls wired to the financial report dates", () => {
+    render(<ReportsPageContent data={createEmptyReportsData()} />);
+
+    const form = screen.getByRole("form", { name: "Report date controls" });
+    expect(form).toHaveAttribute("action", "/reports");
+    expect(form).toHaveAttribute("method", "get");
+    expect(screen.getByLabelText(/As of date/i)).toHaveValue("2026-07-24");
+    expect(screen.getByLabelText(/Period start/i)).toHaveValue("2026-01-01");
+    expect(screen.getByLabelText(/Period end/i)).toHaveValue("2026-07-24");
+    expect(
+      screen.getByRole("button", { name: "Update reports" }),
+    ).toBeTruthy();
+  });
+
   it("does not render Development Preview or demo labels", () => {
     const { container } = render(
       <ReportsPageContent data={createEmptyReportsData()} />,
