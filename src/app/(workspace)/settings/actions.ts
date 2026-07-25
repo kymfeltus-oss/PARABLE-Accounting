@@ -21,6 +21,32 @@ const GENERIC_INVITE_ERROR =
 const GENERIC_SETTINGS_ERROR =
   "Unable to update settings. Please verify the values and your access, then try again.";
 
+function mapSettingsUpdateError(error: DataAccessError): string {
+  const message = error.message.toLowerCase();
+
+  if (message.includes("could not find the function")) {
+    return "Accounting defaults update is not available in the database yet. Please try again after the latest migration is applied.";
+  }
+
+  if (message.includes("insufficient role")) {
+    return "Only owners and accountants can update accounting defaults.";
+  }
+
+  if (message.includes("cash account")) {
+    return "Select an active asset account for the default cash account.";
+  }
+
+  if (message.includes("revenue account")) {
+    return "Select an active revenue account for the default revenue account.";
+  }
+
+  if (message.includes("fiscal year")) {
+    return "Fiscal year start month is invalid.";
+  }
+
+  return GENERIC_SETTINGS_ERROR;
+}
+
 export type CreateInviteActionResult =
   | { ok: true; token: string; inviteId: string; expiresAt: string }
   | { ok: false; error: string };
@@ -207,9 +233,14 @@ export async function updateOrganizationSettingsAction(
     return { ok: true };
   } catch (error) {
     if (error instanceof DataAccessError) {
-      return { ok: false, error: GENERIC_SETTINGS_ERROR };
+      console.error("updateOrganizationSettingsAction failed", {
+        operation: error.operation,
+        message: error.message,
+      });
+      return { ok: false, error: mapSettingsUpdateError(error) };
     }
 
+    console.error("updateOrganizationSettingsAction failed", error);
     return {
       ok: false,
       error: "Something went wrong while updating settings. Please try again.",

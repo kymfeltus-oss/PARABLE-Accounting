@@ -102,9 +102,9 @@ export async function updateOrganizationSettings(
   const supabase = await createServerSupabaseClient();
   const result = await supabase.rpc("update_organization_settings", {
     target_organization_id: scopedOrganizationId,
-    fiscal_year_start_month: input.fiscalYearStartMonth,
-    default_cash_account_id: input.defaultCashAccountId ?? null,
-    default_revenue_account_id: input.defaultRevenueAccountId ?? null,
+    p_fiscal_year_start_month: input.fiscalYearStartMonth,
+    p_default_cash_account_id: input.defaultCashAccountId ?? null,
+    p_default_revenue_account_id: input.defaultRevenueAccountId ?? null,
   });
 
   if (result.error) {
