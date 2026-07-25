@@ -405,6 +405,49 @@ describe("getReportsData", () => {
     expect(buildFinancialReportsFromContextMock).toHaveBeenCalledTimes(1);
   });
 
+  it("defaults ledger period to the current open accounting period", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T15:00:00.000Z"));
+
+    const { client } = createMockSupabaseClient({
+      giving_transactions: [{ data: [], error: null }],
+      expenses: [{ data: [], error: null }],
+      bills: [{ data: [], error: null }],
+      budgets: [{ data: [], error: null }],
+      journal_entries: [{ data: [], error: null }],
+      accounts: [{ data: [], error: null }],
+      accounting_periods: [
+        {
+          data: [
+            {
+              id: "period-july",
+              name: "July 2026",
+              start_date: "2026-07-01",
+              end_date: "2026-07-31",
+              status: "open",
+            },
+          ],
+          error: null,
+        },
+      ],
+      members: [{ data: [], error: null }],
+      vendors: [{ data: [], error: null }],
+      funds: [{ data: [], error: null }],
+    });
+    createServerSupabaseClientMock.mockResolvedValue(client);
+
+    await getReportsData(TEST_ORGANIZATION_ID);
+
+    expect(loadLedgerBalanceContextMock).toHaveBeenCalledWith(
+      TEST_ORGANIZATION_ID,
+      {
+        asOfDate: "2026-07-24",
+        periodStartDate: "2026-07-01",
+        periodEndDate: "2026-07-24",
+      },
+    );
+  });
+
   it("throws DataAccessError when a query fails", async () => {
     const { client } = createMockSupabaseClient({
       giving_transactions: [

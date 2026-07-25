@@ -8,6 +8,11 @@ export type ReportDateParams = {
   periodEndDate: string;
 };
 
+export type OpenAccountingPeriodBounds = {
+  startDate: string;
+  endDate: string;
+};
+
 export function isIsoDateString(value: string | undefined | null): value is string {
   if (!value || !ISO_DATE.test(value)) {
     return false;
@@ -21,26 +26,50 @@ function getTodayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function minDate(left: string, right: string): string {
+  return left <= right ? left : right;
+}
+
 /**
  * Resolve report as-of / income-statement period bounds from optional query input.
- * Invalid values fall back to today and calendar YTD through as-of.
+ *
+ * Defaults:
+ * - as-of → today
+ * - period → current open accounting period through as-of, else calendar YTD
  */
-export function resolveReportDateParams(input: {
-  asOf?: string | null;
-  periodStart?: string | null;
-  periodEnd?: string | null;
-}): ReportDateParams {
+export function resolveReportDateParams(
+  input: {
+    asOf?: string | null;
+    periodStart?: string | null;
+    periodEnd?: string | null;
+  },
+  options?: {
+    openPeriod?: OpenAccountingPeriodBounds | null;
+  },
+): ReportDateParams {
   const asOfDate = isIsoDateString(input.asOf) ? input.asOf : getTodayDateString();
   const ytd = getYearToDateRange(new Date(`${asOfDate}T12:00:00.000Z`));
+  const openPeriod = options?.openPeriod ?? null;
 
-  let periodEndDate = isIsoDateString(input.periodEnd) ? input.periodEnd : asOfDate;
+  const defaultPeriodStart =
+    openPeriod && isIsoDateString(openPeriod.startDate)
+      ? openPeriod.startDate
+      : ytd.startDate;
+  const defaultPeriodEnd =
+    openPeriod && isIsoDateString(openPeriod.endDate)
+      ? minDate(asOfDate, openPeriod.endDate)
+      : asOfDate;
+
+  let periodEndDate = isIsoDateString(input.periodEnd)
+    ? input.periodEnd
+    : defaultPeriodEnd;
   if (periodEndDate > asOfDate) {
     periodEndDate = asOfDate;
   }
 
   let periodStartDate = isIsoDateString(input.periodStart)
     ? input.periodStart
-    : ytd.startDate;
+    : defaultPeriodStart;
   if (periodStartDate > periodEndDate) {
     periodStartDate = periodEndDate;
   }

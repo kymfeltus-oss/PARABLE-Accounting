@@ -23,7 +23,7 @@ import ReportsPage from "./page";
 import { ReportsPageContent } from "@/components/reports/reports-page-content";
 
 describe("Reports page wiring", () => {
-  it("uses getCurrentOrganizationId and passes resolved dates to getReportsData", async () => {
+  it("passes raw report date query params to getReportsData", async () => {
     const reportsData = createEmptyReportsData(TEST_ORGANIZATION_ID);
     getCurrentOrganizationIdMock.mockResolvedValue(TEST_ORGANIZATION_ID);
     getReportsDataMock.mockResolvedValue(reportsData);
@@ -53,6 +53,11 @@ describe("Reports page wiring", () => {
       searchParams: Promise.resolve({}),
     });
 
+    expect(getReportsDataMock).toHaveBeenCalledWith(TEST_ORGANIZATION_ID, {
+      asOfDate: undefined,
+      periodStartDate: undefined,
+      periodEndDate: undefined,
+    });
     expect(page.type).toBe(ReportsPageContent);
     expect(page.props.data).toEqual(reportsData);
   });

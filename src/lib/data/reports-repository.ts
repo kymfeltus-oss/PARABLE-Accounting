@@ -10,6 +10,7 @@ import {
   type BudgetVsActualReport,
 } from "./ledger-balances";
 import { requireOrganizationId } from "./organization-id";
+import { resolveReportDateParams } from "./report-date-params";
 import {
   getMonthDateRange,
   getYearToDateRange,
@@ -335,11 +336,6 @@ export async function getReportsData(
   const today = getTodayDateString();
   const { startDate: monthStart, endDate: monthEnd } = getMonthDateRange();
   const { startDate: yearStart, endDate: yearEnd } = getYearToDateRange();
-  const reportAsOfDate = options?.asOfDate ?? today;
-  const { startDate: defaultYearStart, endDate: defaultYearEnd } =
-    getYearToDateRange(new Date(`${reportAsOfDate}T12:00:00.000Z`));
-  const reportPeriodStartDate = options?.periodStartDate ?? defaultYearStart;
-  const reportPeriodEndDate = options?.periodEndDate ?? defaultYearEnd;
 
   const [
     givingTransactionsResult,
@@ -494,6 +490,25 @@ export async function getReportsData(
   ).size;
   const currentPeriod = accountingPeriods.find((period) =>
     isCurrentPeriod(period, today),
+  );
+  const {
+    asOfDate: reportAsOfDate,
+    periodStartDate: reportPeriodStartDate,
+    periodEndDate: reportPeriodEndDate,
+  } = resolveReportDateParams(
+    {
+      asOf: options?.asOfDate,
+      periodStart: options?.periodStartDate,
+      periodEnd: options?.periodEndDate,
+    },
+    {
+      openPeriod: currentPeriod
+        ? {
+            startDate: currentPeriod.start_date,
+            endDate: currentPeriod.end_date,
+          }
+        : null,
+    },
   );
 
   const ledgerContext = await loadLedgerBalanceContext(scopedOrganizationId, {

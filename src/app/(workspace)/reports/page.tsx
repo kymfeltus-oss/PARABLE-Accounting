@@ -1,6 +1,5 @@
 import { ReportsPageContent } from "@/components/reports/reports-page-content";
 import { getCurrentOrganizationId } from "@/lib/data/organization-context";
-import { resolveReportDateParams } from "@/lib/data/report-date-params";
 import { getReportsData } from "@/lib/data/reports-repository";
 
 type ReportsPageProps = {
@@ -18,12 +17,14 @@ function readSearchParam(value: string | string[] | undefined): string {
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const params = await searchParams;
   const organizationId = await getCurrentOrganizationId();
-  const reportDates = resolveReportDateParams({
-    asOf: readSearchParam(params.asOf),
-    periodStart: readSearchParam(params.periodStart),
-    periodEnd: readSearchParam(params.periodEnd),
+  const asOf = readSearchParam(params.asOf).trim();
+  const periodStart = readSearchParam(params.periodStart).trim();
+  const periodEnd = readSearchParam(params.periodEnd).trim();
+  const data = await getReportsData(organizationId, {
+    asOfDate: asOf || undefined,
+    periodStartDate: periodStart || undefined,
+    periodEndDate: periodEnd || undefined,
   });
-  const data = await getReportsData(organizationId, reportDates);
 
   return <ReportsPageContent data={data} />;
 }

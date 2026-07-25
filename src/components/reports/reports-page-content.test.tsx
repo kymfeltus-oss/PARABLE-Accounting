@@ -55,6 +55,7 @@ describe("ReportsPageContent", () => {
     expect(container.textContent).not.toContain("Development Preview");
     expect(container.textContent).not.toMatch(/demo|mock data|sample data/i);
     expect(container.textContent).toMatch(/posted journal lines/i);
+    expect(container.textContent).toMatch(/open accounting period/i);
   });
 
   it("renders the honest production empty state", () => {
