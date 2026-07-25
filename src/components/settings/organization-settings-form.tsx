@@ -56,19 +56,6 @@ export function OrganizationSettingsForm({
   accounts,
 }: OrganizationSettingsFormProps) {
   const router = useRouter();
-  const [fiscalYearStartMonth, setFiscalYearStartMonth] = useState(
-    String(settings?.fiscal_year_start_month ?? 1),
-  );
-  const [defaultCashAccountId, setDefaultCashAccountId] = useState(
-    settings?.default_cash_account_id ?? "",
-  );
-  const [defaultRevenueAccountId, setDefaultRevenueAccountId] = useState(
-    settings?.default_revenue_account_id ?? "",
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
   const cashAccounts = useMemo(
     () => accounts.filter((account) => account.account_type === "asset"),
     [accounts],
@@ -89,8 +76,24 @@ export function OrganizationSettingsForm({
     [revenueAccounts],
   );
 
-  const defaultsMissing =
-    defaultCashAccountId === "" || defaultRevenueAccountId === "";
+  const [fiscalYearStartMonth, setFiscalYearStartMonth] = useState(
+    String(settings?.fiscal_year_start_month ?? 1),
+  );
+  const [defaultCashAccountId, setDefaultCashAccountId] = useState(
+    () => settings?.default_cash_account_id ?? suggestedCash?.id ?? "",
+  );
+  const [defaultRevenueAccountId, setDefaultRevenueAccountId] = useState(
+    () => settings?.default_revenue_account_id ?? suggestedRevenue?.id ?? "",
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const hasAccountOptions =
+    cashAccounts.length > 0 && revenueAccounts.length > 0;
+  const canSuggestDefaults = Boolean(suggestedCash || suggestedRevenue);
+  const defaultsUnsaved =
+    !settings?.default_cash_account_id || !settings?.default_revenue_account_id;
 
   function applySuggestedDefaults() {
     if (suggestedCash) {
@@ -99,6 +102,8 @@ export function OrganizationSettingsForm({
     if (suggestedRevenue) {
       setDefaultRevenueAccountId(suggestedRevenue.id);
     }
+    setSuccessMessage(null);
+    setError(null);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -128,29 +133,24 @@ export function OrganizationSettingsForm({
     <form className="space-y-4" noValidate onSubmit={handleSubmit}>
       <p className="text-sm text-muted-foreground">
         These defaults prefill debit and revenue accounts when you record giving
-        to the ledger.
+        to the ledger. Choose accounts below, then click{" "}
+        <span className="font-medium text-foreground">
+          Save accounting defaults
+        </span>
+        .
       </p>
 
-      {defaultsMissing && (suggestedCash || suggestedRevenue) ? (
+      {defaultsUnsaved && hasAccountOptions ? (
         <div className="rounded-lg border border-border bg-muted/20 p-3">
           <p className="text-sm text-foreground">
-            No defaults selected yet. Suggested:{" "}
+            Suggested starting point:{" "}
             {suggestedCash ? formatAccountLabel(suggestedCash) : "cash account"}
             {" · "}
             {suggestedRevenue
               ? formatAccountLabel(suggestedRevenue)
               : "revenue account"}
-            .
+            . Confirm the dropdowns look right, then save.
           </p>
-          <Button
-            className="mt-3"
-            disabled={isPending}
-            type="button"
-            variant="outline"
-            onClick={applySuggestedDefaults}
-          >
-            Use suggested defaults
-          </Button>
         </div>
       ) : null}
 
@@ -200,7 +200,7 @@ export function OrganizationSettingsForm({
           ))}
         </select>
         <p className="mt-1 text-xs text-muted-foreground">
-          Usually your operating checking account (asset).
+          Usually your operating checking account (asset), often code 1000.
         </p>
       </div>
 
@@ -227,13 +227,15 @@ export function OrganizationSettingsForm({
           ))}
         </select>
         <p className="mt-1 text-xs text-muted-foreground">
-          Usually contributions or giving income (revenue).
+          Usually contributions or giving income (revenue), often code 4000.
         </p>
       </div>
 
-      {cashAccounts.length === 0 || revenueAccounts.length === 0 ? (
+      {!hasAccountOptions ? (
         <p className="text-sm text-muted-foreground" role="status">
-          Add active posting accounts under Accounting before setting defaults.
+          No active posting accounts were found. Open Accounting and make sure
+          your chart of accounts has active asset and revenue accounts, then
+          return here.
         </p>
       ) : null}
 
@@ -249,9 +251,21 @@ export function OrganizationSettingsForm({
         </p>
       ) : null}
 
-      <Button disabled={isPending} type="submit">
-        {isPending ? "Saving..." : "Save accounting defaults"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button disabled={isPending || !hasAccountOptions} type="submit">
+          {isPending ? "Saving..." : "Save accounting defaults"}
+        </Button>
+        {canSuggestDefaults ? (
+          <Button
+            disabled={isPending}
+            type="button"
+            variant="outline"
+            onClick={applySuggestedDefaults}
+          >
+            Use suggested defaults
+          </Button>
+        ) : null}
+      </div>
     </form>
   );
 }
