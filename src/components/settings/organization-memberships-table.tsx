@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { updateMembershipRoleAction } from "@/app/(workspace)/settings/actions";
 import { Button } from "@/components/ui/button";
-import type { OrganizationMembershipRow } from "@/lib/data/types/rows";
+import type { SettingsMembership } from "@/lib/data/settings-repository";
 
 type OrganizationMembershipsTableProps = {
-  memberships: OrganizationMembershipRow[];
+  memberships: SettingsMembership[];
   canManageRoles?: boolean;
 };
 
@@ -29,14 +29,6 @@ function formatDateTime(value: string): string {
 function formatRole(role: string): string {
   const match = ROLE_OPTIONS.find((option) => option.value === role);
   return match?.label ?? role.charAt(0).toUpperCase() + role.slice(1);
-}
-
-function shortenUserId(userId: string): string {
-  if (userId.length <= 12) {
-    return userId;
-  }
-
-  return `${userId.slice(0, 8)}…${userId.slice(-4)}`;
 }
 
 export function OrganizationMembershipsTable({
@@ -60,11 +52,11 @@ export function OrganizationMembershipsTable({
     );
   }
 
-  function roleFor(membership: OrganizationMembershipRow): string {
+  function roleFor(membership: SettingsMembership): string {
     return draftRoles[membership.id] ?? membership.role;
   }
 
-  function handleSaveRole(membership: OrganizationMembershipRow) {
+  function handleSaveRole(membership: SettingsMembership) {
     const nextRole = roleFor(membership);
 
     if (nextRole === membership.role) {
@@ -136,14 +128,20 @@ export function OrganizationMembershipsTable({
                   className="border-b border-border/70 align-top"
                 >
                   <td className="px-3 py-3 font-medium text-foreground">
-                    <span title={membership.user_id}>
-                      {shortenUserId(membership.user_id)}
+                    <span className="block" title={membership.user_id}>
+                      {membership.displayName}
                     </span>
+                    {membership.email &&
+                    !membership.displayName.includes(membership.email) ? (
+                      <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                        {membership.email}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">
                     {canManageRoles ? (
                       <select
-                        aria-label={`Role for ${membership.user_id}`}
+                        aria-label={`Role for ${membership.displayName}`}
                         className="w-full max-w-[10rem] rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
                         disabled={rowPending}
                         value={selectedRole}

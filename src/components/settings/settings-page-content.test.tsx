@@ -152,16 +152,13 @@ describe("SettingsPageContent", () => {
     expect(container.textContent).not.toMatch(/membership status/i);
   });
 
-  it("states some preferences are still not persisted", () => {
-    render(<SettingsPageContent data={createPopulatedSettingsData()} />);
+  it("does not render unfinished configuration availability placeholders", () => {
+    const { container } = render(
+      <SettingsPageContent data={createPopulatedSettingsData()} />,
+    );
 
-    expect(
-      screen.getByText(/Other application preferences are not yet available/i),
-    ).toBeTruthy();
-    expect(
-      screen.getByText(/Application preferences — not persisted/i),
-    ).toBeTruthy();
-    expect(screen.queryByText(/Accounting defaults — not persisted/i)).toBeNull();
+    expect(container.textContent).not.toContain("Configuration Availability");
+    expect(container.textContent).not.toMatch(/not persisted/i);
   });
 
   it("renders owner management forms", () => {

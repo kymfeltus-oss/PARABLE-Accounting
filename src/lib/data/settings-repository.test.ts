@@ -140,7 +140,10 @@ describe("getSettingsData", () => {
     createAdminSupabaseClientMock.mockReset();
     createServerSupabaseClientMock.mockReset();
     getAuthenticatedUserMock.mockReset();
-    getAuthenticatedUserMock.mockResolvedValue({ id: TEST_USER_ID });
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: TEST_USER_ID,
+      email: "owner@example.com",
+    });
   });
 
   it("requires organizationId", async () => {
@@ -223,6 +226,9 @@ describe("getSettingsData", () => {
       role: "owner",
       created_at: "2026-02-01T09:00:00.000Z",
       updated_at: "2026-02-01T09:00:00.000Z",
+      displayName: "You (owner@example.com)",
+      email: "owner@example.com",
+      isCurrentUser: true,
     });
     expect(result.currentUserRole).toBe("owner");
     expect(result.settings).toEqual({
