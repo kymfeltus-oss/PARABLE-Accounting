@@ -51,6 +51,7 @@ export type ExpenseAllocationEditorProps = {
   expense: ExpenseAllocationEditorExpense;
   accountOptions: ExpenseAccountOption[];
   fundOptions: ExpenseFundOption[];
+  defaultExpenseAccountId?: string | null;
 };
 
 export type EditableAllocationLine = {
@@ -63,12 +64,14 @@ export type EditableAllocationLine = {
 
 let editableLineCounter = 0;
 
-export function createBlankEditableLine(): EditableAllocationLine {
+export function createBlankEditableLine(
+  defaultExpenseAccountId: string | null = null,
+): EditableAllocationLine {
   editableLineCounter += 1;
 
   return {
     clientKey: `allocation-line-${editableLineCounter}`,
-    accountId: "",
+    accountId: defaultExpenseAccountId ?? "",
     fundId: "",
     amount: "",
     description: "",
@@ -85,9 +88,10 @@ export type LoadedAllocationLine = {
 
 export function buildEditableLinesFromDetails(
   lines: LoadedAllocationLine[],
+  defaultExpenseAccountId: string | null = null,
 ): EditableAllocationLine[] {
   if (lines.length === 0) {
-    return [createBlankEditableLine()];
+    return [createBlankEditableLine(defaultExpenseAccountId)];
   }
 
   return lines.map((line, index) => ({
@@ -202,6 +206,7 @@ export function ExpenseAllocationEditor({
   expense,
   accountOptions,
   fundOptions,
+  defaultExpenseAccountId = null,
 }: ExpenseAllocationEditorProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -247,9 +252,11 @@ export function ExpenseAllocationEditor({
       return;
     }
 
-    setEditableLines(buildEditableLinesFromDetails(result.lines));
+    setEditableLines(
+      buildEditableLinesFromDetails(result.lines, defaultExpenseAccountId),
+    );
     setLinesLoaded(true);
-  }, [expense.id]);
+  }, [defaultExpenseAccountId, expense.id]);
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen);
@@ -283,7 +290,7 @@ export function ExpenseAllocationEditor({
         return currentLines;
       }
 
-      return [...currentLines, createBlankEditableLine()];
+      return [...currentLines, createBlankEditableLine(defaultExpenseAccountId)];
     });
   }
 

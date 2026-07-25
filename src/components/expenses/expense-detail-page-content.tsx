@@ -22,6 +22,8 @@ export type ExpenseDetailPageContentProps = {
   accountOptions: ExpenseAccountOption[];
   fundOptions: ExpenseFundOption[];
   creditAccountOptions: ExpenseCreditAccountOption[];
+  defaultExpenseAccountId?: string | null;
+  defaultCreditAccountId?: string | null;
   journalLinkage?: ExpenseJournalLinkage | null;
 };
 
@@ -201,6 +203,8 @@ export function ExpenseDetailPageContent({
   accountOptions,
   fundOptions,
   creditAccountOptions,
+  defaultExpenseAccountId = null,
+  defaultCreditAccountId = null,
   journalLinkage = null,
 }: ExpenseDetailPageContentProps) {
   const isDraft = expense.status === "draft";
@@ -334,6 +338,7 @@ export function ExpenseDetailPageContent({
           {isDraft ? (
             <ExpenseAllocationEditor
               accountOptions={accountOptions}
+              defaultExpenseAccountId={defaultExpenseAccountId}
               expense={toAllocationEditorExpense(expense)}
               fundOptions={fundOptions}
             />
@@ -358,6 +363,7 @@ export function ExpenseDetailPageContent({
         <RecordExpenseSection
           allocationComplete={allocationComplete}
           creditAccountOptions={creditAccountOptions}
+          defaultCreditAccountId={defaultCreditAccountId}
           expenseAmount={Number(expense.total_amount)}
           expenseDescription={expense.description}
           expenseId={expense.id}

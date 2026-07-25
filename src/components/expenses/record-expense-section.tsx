@@ -18,6 +18,7 @@ type RecordExpenseSectionProps = {
   paymentSource: string | null;
   allocationComplete: boolean;
   creditAccountOptions: ExpenseCreditAccountOption[];
+  defaultCreditAccountId?: string | null;
 };
 
 function mapCreditAccountOptions(
@@ -38,6 +39,7 @@ export function RecordExpenseSection({
   paymentSource,
   allocationComplete,
   creditAccountOptions,
+  defaultCreditAccountId = null,
 }: RecordExpenseSectionProps) {
   const router = useRouter();
 
@@ -52,6 +54,7 @@ export function RecordExpenseSection({
     <RecordExpenseForm
       allocationComplete={allocationComplete}
       creditAccounts={mapCreditAccountOptions(creditAccountOptions)}
+      defaultCreditAccountId={defaultCreditAccountId}
       expenseAmount={expenseAmount}
       expenseDescription={expenseDescription}
       expenseId={expenseId}
