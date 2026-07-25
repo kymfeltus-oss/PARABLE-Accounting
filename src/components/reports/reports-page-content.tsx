@@ -297,7 +297,8 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
           <p className="text-sm text-muted-foreground">
             Live from your ministry ledger and operational records. Trial
             Balance, Balance Sheet, Income Statement, and Fund Balance use
-            posted journal lines.
+            posted journal lines. When no dates are chosen, the income statement
+            defaults to the current open accounting period through today.
           </p>
         </div>
 

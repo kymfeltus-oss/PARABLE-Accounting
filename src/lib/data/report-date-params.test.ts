@@ -14,13 +14,34 @@ describe("report-date-params", () => {
     expect(isIsoDateString("")).toBe(false);
   });
 
-  it("defaults to today and YTD through as-of", () => {
+  it("defaults to today and YTD through as-of when no open period exists", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-24T15:00:00.000Z"));
 
     expect(resolveReportDateParams({})).toEqual({
       asOfDate: "2026-07-24",
       periodStartDate: "2026-01-01",
+      periodEndDate: "2026-07-24",
+    });
+  });
+
+  it("defaults income-statement period to the open accounting period", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T15:00:00.000Z"));
+
+    expect(
+      resolveReportDateParams(
+        {},
+        {
+          openPeriod: {
+            startDate: "2026-07-01",
+            endDate: "2026-07-31",
+          },
+        },
+      ),
+    ).toEqual({
+      asOfDate: "2026-07-24",
+      periodStartDate: "2026-07-01",
       periodEndDate: "2026-07-24",
     });
   });
