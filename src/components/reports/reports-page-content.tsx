@@ -248,7 +248,9 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
             Available Reports / Live Summaries
           </h2>
           <p className="text-sm text-muted-foreground">
-            Schema-backed summaries available with the current data model.
+            Live from your ministry ledger and operational records. Trial
+            Balance, Balance Sheet, Income Statement, and Fund Balance use
+            posted journal lines.
           </p>
         </div>
 
@@ -394,7 +396,9 @@ export function ReportsPageContent({ data }: ReportsPageContentProps) {
               {report.id === "fund-balance" ? (
                 <>
                   <p className="mt-2 text-muted-foreground">
-                    As of {formatReportDate(data.financialReports.asOfDate)} · Total:{" "}
+                    As of {formatReportDate(data.financialReports.asOfDate)} ·
+                    Fund equity from balance-sheet accounts (asset − liability +
+                    net asset) · Total:{" "}
                     {formatCurrency(data.financialReports.fundBalance.totalBalance)}
                   </p>
                   <FinancialReportTable

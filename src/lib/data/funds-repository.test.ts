@@ -99,7 +99,7 @@ describe("getFundsData", () => {
 
     expect(result.organizationId).toBe(TEST_ORGANIZATION_ID);
     expect(result.funds).toEqual([]);
-    expect(result.asOfDate).toBe("2026-07-24");
+    expect(result.asOfDate).toBe(new Date().toISOString().slice(0, 10));
     expect(result.counts).toEqual({
       total: 0,
       withGiving: 0,
@@ -282,8 +282,9 @@ describe("getFundsData", () => {
 
     const result = await getFundsData(TEST_ORGANIZATION_ID);
 
-    expect(result.funds[0]?.ledgerBalance).toBe(0);
-    expect(result.asOfDate).toBe("2026-07-24");
+    // Dual-tagged giving (cash + revenue) must show cash equity, not cancel to 0.
+    expect(result.funds[0]?.ledgerBalance).toBe(500);
+    expect(result.asOfDate).toBe(new Date().toISOString().slice(0, 10));
   });
 
   it("throws DataAccessError when Supabase returns an error", async () => {

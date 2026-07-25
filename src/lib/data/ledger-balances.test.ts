@@ -308,8 +308,17 @@ describe("buildIncomeStatement", () => {
 });
 
 describe("buildFundBalanceReport", () => {
-  it("sums credit minus debit by fund for posted lines through as-of date", () => {
+  it("uses balance-sheet natural balances so dual-tagged giving does not cancel to zero", () => {
     const lines: LedgerLineInput[] = [
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "cash",
+        accountType: "asset",
+        fundId: "fund-a",
+        debitAmount: 500,
+        creditAmount: 0,
+      }),
       createLine({
         journalEntryId: "je-1",
         entryDate: "2026-07-01",
@@ -343,6 +352,91 @@ describe("buildFundBalanceReport", () => {
       expect.objectContaining({ id: "fund-a", balance: 500 }),
     ]);
     expect(report.totalBalance).toBe(500);
+  });
+
+  it("decreases fund balance when dual-tagged expenses spend cash", () => {
+    const lines: LedgerLineInput[] = [
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "cash",
+        accountType: "asset",
+        fundId: "fund-a",
+        debitAmount: 500,
+        creditAmount: 0,
+      }),
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "donations",
+        accountType: "revenue",
+        fundId: "fund-a",
+        debitAmount: 0,
+        creditAmount: 500,
+      }),
+      createLine({
+        journalEntryId: "je-2",
+        entryDate: "2026-07-15",
+        accountId: "utilities",
+        accountType: "expense",
+        fundId: "fund-a",
+        debitAmount: 120,
+        creditAmount: 0,
+      }),
+      createLine({
+        journalEntryId: "je-2",
+        entryDate: "2026-07-15",
+        accountId: "cash",
+        accountType: "asset",
+        fundId: "fund-a",
+        debitAmount: 0,
+        creditAmount: 120,
+      }),
+    ];
+
+    const report = buildFundBalanceReport(
+      lines,
+      [{ id: "fund-a", name: "General Fund", code: "GEN" }],
+      "2026-07-31",
+    );
+
+    expect(report.rows).toEqual([
+      expect.objectContaining({ id: "fund-a", balance: 380 }),
+    ]);
+    expect(report.totalBalance).toBe(380);
+  });
+
+  it("subtracts liabilities from fund equity", () => {
+    const lines: LedgerLineInput[] = [
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "expense",
+        accountType: "expense",
+        fundId: "fund-a",
+        debitAmount: 200,
+        creditAmount: 0,
+      }),
+      createLine({
+        journalEntryId: "je-1",
+        entryDate: "2026-07-01",
+        accountId: "ap",
+        accountType: "liability",
+        fundId: "fund-a",
+        debitAmount: 0,
+        creditAmount: 200,
+      }),
+    ];
+
+    const report = buildFundBalanceReport(
+      lines,
+      [{ id: "fund-a", name: "General Fund", code: "GEN" }],
+      "2026-07-31",
+    );
+
+    expect(report.rows).toEqual([
+      expect.objectContaining({ id: "fund-a", balance: -200 }),
+    ]);
   });
 });
 
