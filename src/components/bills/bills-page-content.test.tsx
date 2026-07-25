@@ -60,8 +60,32 @@ describe("BillsPageContent", () => {
   it("renders the honest production empty state", () => {
     render(<BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />);
 
-    expect(screen.getAllByText("No bills yet.").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/Add a vendor first, then come back to create payables/i),
+    ).toBeTruthy();
+    expect(
+      screen.getAllByRole("link", { name: "Go to Vendors" }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("link", { name: "Add a vendor first" }),
+    ).toHaveAttribute("href", "/vendors");
     expect(screen.getByText("No overdue bills.")).toBeTruthy();
+  });
+
+  it("points users to New Bill when vendors exist but bills do not", () => {
+    render(
+      <BillsPageContent
+        data={createEmptyBillsData()}
+        {...emptyFormProps}
+        vendorOptions={[{ id: "vendor-1", name: "Northside Supplies" }]}
+      />,
+    );
+
+    expect(
+      screen.getAllByText(/No bills yet. Use New Bill to create your first payable/i)
+        .length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /New Bill/i })).toBeTruthy();
   });
 
   it("renders live bill props", () => {
@@ -115,14 +139,12 @@ describe("BillsPageContent", () => {
   it("renders related workspace navigation links", () => {
     render(<BillsPageContent data={createEmptyBillsData()} {...emptyFormProps} />);
 
-    expect(screen.getByRole("link", { name: /Vendors/i }).getAttribute("href")).toBe(
-      "/vendors",
-    );
-    expect(
-      screen.getByRole("link", { name: /Expenses/i }).getAttribute("href"),
-    ).toBe("/expenses");
-    expect(screen.getByRole("link", { name: /Banking/i }).getAttribute("href")).toBe(
-      "/banking",
-    );
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"));
+
+    expect(hrefs).toContain("/vendors");
+    expect(hrefs).toContain("/expenses");
+    expect(hrefs).toContain("/banking");
   });
 });

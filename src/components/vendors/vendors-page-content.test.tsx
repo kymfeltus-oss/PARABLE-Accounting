@@ -65,7 +65,12 @@ describe("VendorsPageContent", () => {
   it("renders the honest production empty state", () => {
     render(<VendorsPageContent data={createEmptyVendorsData()} />);
 
-    expect(screen.getAllByText("No vendors yet.").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(/Add a vendor so you can create bills and track payables/i),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /After adding a vendor, go to Bills/i }),
+    ).toHaveAttribute("href", "/bills");
     expect(screen.getByText("No vendor activity yet.")).toBeTruthy();
   });
 
@@ -123,14 +128,12 @@ describe("VendorsPageContent", () => {
   it("renders related workspace navigation links", () => {
     render(<VendorsPageContent data={createEmptyVendorsData()} />);
 
-    expect(screen.getByRole("link", { name: /Bills/i }).getAttribute("href")).toBe(
-      "/bills",
-    );
-    expect(
-      screen.getByRole("link", { name: /Expenses/i }).getAttribute("href"),
-    ).toBe("/expenses");
-    expect(
-      screen.getByRole("link", { name: /Banking/i }).getAttribute("href"),
-    ).toBe("/banking");
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"));
+
+    expect(hrefs).toContain("/bills");
+    expect(hrefs).toContain("/expenses");
+    expect(hrefs).toContain("/banking");
   });
 });
